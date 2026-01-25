@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Material
+import QtQuick.Layouts
 
 Window {
     id: window
@@ -9,7 +10,14 @@ Window {
     visible: true
     title: qsTr("Hello World")
 
+    background: Rectangle {
+
+    }
+
+    color: "black"
+
     Material.theme: Material.Dark
+    Material.accent: Material.LightGreen
 
     Button {
         text: "Rawrrrr7"
@@ -19,16 +27,17 @@ Window {
 
         anchors.centerIn: parent
 
-        background: Rectangle {
-            color: button.down ? "#a0a0a0" : (button.hovered ? "#707070" : "#505050")
-            radius: 5
-        }
-
         Material.background: Material.Blue
         Material.foreground: Material.White
 
         onClicked: {
             console.log("Button was clicked!")
         }
+    }
+
+    TextArea {
+        Layout.fillWidth: true
+
+        Layout.preferredHeight: 100
     }
 }
