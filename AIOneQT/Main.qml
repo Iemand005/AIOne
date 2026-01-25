@@ -1,5 +1,6 @@
 import QtQuick
-import QtQuick.VirtualKeyboard
+import QtQuick.Controls
+import QtQuick.Controls.Material
 
 Window {
     id: window
@@ -8,27 +9,26 @@ Window {
     visible: true
     title: qsTr("Hello World")
 
-    InputPanel {
-        id: inputPanel
-        z: 99
-        y: window.height
-        width: window.width
+    Material.theme: Material.Dark
 
-        states: State {
-            name: "visible"
-            when: inputPanel.active
-            PropertyChanges {
-                inputPanel.y: window.height - inputPanel.height
-            }
+    Button {
+        text: "Rawrrrr7"
+
+        width: 150
+        height: 50
+
+        anchors.centerIn: parent
+
+        background: Rectangle {
+            color: button.down ? "#a0a0a0" : (button.hovered ? "#707070" : "#505050")
+            radius: 5
         }
-        transitions: Transition {
-            from: ""
-            to: "visible"
-            reversible: true
-            NumberAnimation {
-                properties: "y"
-                easing.type: Easing.InOutQuad
-            }
+
+        Material.background: Material.Blue
+        Material.foreground: Material.White
+
+        onClicked: {
+            console.log("Button was clicked!")
         }
     }
 }
