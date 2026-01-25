@@ -11,4 +11,4 @@ int main() {
   llama_model *model = llama_model_load_from_file(model_path.c_str(), model_params);
 
 
-} 
+}

@@ -1,0 +1,18 @@
+{
+  "version": 8,
+  "configurePresets": [
+    {
+      "name": "qt-desktop",
+      "displayName": "Qt Desktop Build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.10.1/mingw_64",
+        "CMAKE_BUILD_TYPE": "Release"
+      },
+      "environment": {
+        "PATH": "C:/Qt/6.10.1/mingw_64/bin;${env:PATH}"
+      }
+    }
+  ]
+}
