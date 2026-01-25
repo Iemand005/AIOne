@@ -1,10 +1,16 @@
 #include "inputhandler.h"
 
 #include <QDebug>
+#include <iostream>
 
 InputHandler::InputHandler(QObject *parent)
     : QObject{parent}
-{}
+{
+    llama_backend_init();
+    ggml_backend_load_all();
+
+    std::cout << "Llama.cpp System Info: " << llama_print_system_info() << std::endl;
+}
 
 
 void InputHandler::handleButtonClick() {
@@ -26,4 +32,10 @@ void InputHandler::loadModel(const QString &path) {
 
     llama_model_ptr model(llama_model_load_from_file(path.toStdString().c_str(), model_params));
     this->model = std::move(model);
+}
+
+void InputHandler::prompt(const QString &message) {
+    qDebug() << "Generating response to:" << message;
+
+    // const llama_vocab * vocab = llama_model_get_vocab(model);
 }

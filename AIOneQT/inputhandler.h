@@ -18,6 +18,8 @@ public slots:
 
     void loadModel(const QString &path);
 
+    void prompt(const QString &message);
+
 signals:
     void responseSent(const QString &response);
 };

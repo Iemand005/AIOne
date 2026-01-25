@@ -48,6 +48,7 @@ Window {
         anchors.left: parent.left
 
         TextArea {
+            id: messageField
             Layout.fillWidth: true
             Layout.fillHeight: true
         }
@@ -63,7 +64,7 @@ Window {
 
             onClicked: {
                 console.log("Button was clicked!")
-                inputHandler.handleButtonClickWithParam("HRawrrar ello")
+                inputHandler.prompt(messageField.text)
             }
         }
     }
