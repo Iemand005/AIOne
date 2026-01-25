@@ -20,6 +20,7 @@ add_compile_definitions(_WIN32_WINNT=0x0A00)
 add_compile_definitions(GGML_WIN_VER=0x0A00)
 add_compile_definitions(NTDDI_VERSION=0x0A000000)
 
+
 add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick)
