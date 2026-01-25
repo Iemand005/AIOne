@@ -10,16 +10,11 @@ get_filename_component(LLAMA_CPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/
 # set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "Disable examples" FORCE)
 # set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static lib" FORCE)
 
-set(GGML_NATIVE OFF CACHE BOOL "Disable platform-specific optimizations" FORCE)
-set(LLAMA_NATIVE OFF CACHE BOOL "Disable native CPU optimizations" FORCE)
+# set(GGML_NATIVE OFF CACHE BOOL "Disable platform-specific optimizations" FORCE)
+# set(LLAMA_NATIVE OFF CACHE BOOL "Disable native CPU optimizations" FORCE)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_WIN32_WINNT=0x0A00")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_WIN32_WINNT=0x0A00")
 
-add_compile_definitions(_WIN32_WINNT=0x0A00)
-add_compile_definitions(GGML_WIN_VER=0x0A00)
-add_compile_definitions(NTDDI_VERSION=0x0A000000)
-
+set(LLAMA_VULKAN ON CACHE BOOL "Enable Vulkan" FORCE)
 
 add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
 
