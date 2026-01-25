@@ -9,11 +9,6 @@ Window {
     height: 480
     visible: true
     title: qsTr("Hello World")
-
-    background: Rectangle {
-
-    }
-
     color: "black"
 
     Material.theme: Material.Dark
