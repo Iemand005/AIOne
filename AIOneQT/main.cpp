@@ -1,5 +1,8 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
+
+#include "inputhandler.h"
 
 int main(int argc, char *argv[])
 {
@@ -15,6 +18,10 @@ int main(int argc, char *argv[])
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
     engine.loadFromModule("AIOneQT", "Main");
+
+    InputHandler inputHandler;
+
+    engine.rootContext()->setContextProperty("inputHandler", &inputHandler);
 
     return app.exec();
 }

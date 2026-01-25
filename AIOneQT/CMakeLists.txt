@@ -16,6 +16,7 @@ qt_add_qml_module(appAIOneQT
     URI AIOneQT
     QML_FILES
         Main.qml
+        SOURCES inputhandler.h inputhandler.cpp
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

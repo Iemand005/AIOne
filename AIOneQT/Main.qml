@@ -32,6 +32,7 @@ Window {
 
         onClicked: {
             console.log("Button was clicked!")
+            inputHandler.handleButtonClickWithParam("HRawrrar ello")
         }
     }
 
