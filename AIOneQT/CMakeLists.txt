@@ -47,6 +47,8 @@ set_target_properties(appAIOneQT PROPERTIES
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
+
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
 target_link_libraries(appAIOneQT
@@ -54,12 +56,10 @@ target_link_libraries(appAIOneQT
     PRIVATE llama
 )
 
-# target_include_directories(appAIOneQT PRIVATE
-#     ${LLAMA_CPP_DIR}
-#     ${CMAKE_CURRENT_SOURCE_DIR}/../llama.cpp
-# )
-
-
+target_include_directories(appAIOneQT PRIVATE
+    ${LLAMA_CPP_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../llama.cpp
+)
 
 include(GNUInstallDirs)
 install(TARGETS appAIOneQT

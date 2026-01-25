@@ -14,26 +14,57 @@ Window {
     Material.theme: Material.Dark
     Material.accent: Material.LightGreen
 
-    Button {
-        text: "Rawrrrr7"
 
-        width: 150
-        height: 50
 
-        anchors.centerIn: parent
+    RowLayout {
+        TextArea {
+            id: modelPath
+            Layout.fillWidth: true
 
-        Material.background: Material.Blue
-        Material.foreground: Material.White
+            Layout.preferredHeight: 100
+        }
 
-        onClicked: {
-            console.log("Button was clicked!")
-            inputHandler.handleButtonClickWithParam("HRawrrar ello")
+        Button {
+            text: "Load Model"
+
+            Material.background: Material.Orange
+            Material.foreground: Material.Black
+
+            onClicked: {
+                console.log("Button was clicked!")
+                inputHandler.handleButtonClickWithParam("HRawrrar ello")
+            }
         }
     }
 
-    TextArea {
+    RowLayout {
         Layout.fillWidth: true
+        Layout.minimumHeight: 50
+        spacing: 10
+        anchors.margins: 10
 
-        Layout.preferredHeight: 100
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        anchors.left: parent.left
+
+        TextArea {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+        }
+
+        Button {
+            text: "Send"
+
+            width: 150
+            height: 50
+
+            Material.background: Material.Orange
+            Material.foreground: Material.Black
+
+            onClicked: {
+                console.log("Button was clicked!")
+                inputHandler.handleButtonClickWithParam("HRawrrar ello")
+            }
+        }
     }
 }
