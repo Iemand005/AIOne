@@ -18,7 +18,7 @@ Window {
 
     RowLayout {
         TextArea {
-            id: modelPath
+            id: modelPathField
             Layout.fillWidth: true
 
             Layout.preferredHeight: 100
@@ -32,7 +32,7 @@ Window {
 
             onClicked: {
                 console.log("Button was clicked!")
-                inputHandler.handleButtonClickWithParam("HRawrrar ello")
+                inputHandler.loadModel(modelPathField.text)
             }
         }
     }
