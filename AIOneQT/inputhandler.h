@@ -2,7 +2,9 @@
 #define INPUTHANDLER_H
 
 #include <QObject>
-#include <QJSEngine>
+#include <QString>
+#include <QThread>
+#include <QMutex>
 
 #include "../src/modelfactory.hpp"
 
@@ -17,18 +19,21 @@ public:
 
     std::unique_ptr<LLModel> llm;
 
-    void callJsFunction(const QJSValue &function, const QVariantList &args = {});
-
 public slots:
     void handleButtonClick();
     void handleButtonClickWithParam(const QString &message);
 
     void loadModel(const QString &path);
 
-    void prompt(const QString &message, const QJSValue &tokenCallback);
+    void prompt(const QString &message);
 
 signals:
     void responseSent(const QString &response);
+    void tokenReceived(const QString &token);
+
+private:
+    QThread *m_workerThread = nullptr;
+    QMutex m_mutex;
 };
 
 #endif // INPUTHANDLER_H

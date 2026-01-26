@@ -33,31 +33,30 @@ void UIHandler::loadModel(const QString &path) {
     this->llm = modelFactory->loadLLM(path.toStdString());
 }
 
-void UIHandler::prompt(const QString &message, const QJSValue &tokenCallback) {
+void UIHandler::prompt(const QString &message) {
     qDebug() << "Generating response to:" << message;
 
-    QString *response = new QString();
-
-    this->llm->prompt(message.toStdString(), [this, tokenCallback](const std::string &token) {
-        callJsFunction(tokenCallback, {QString(token.c_str())});
-    });
-
-    emit responseSent(*response);
-}
-
-void UIHandler::callJsFunction(const QJSValue &function, const QVariantList &args)
-{
-    if (!function.isCallable()) {
+    if (m_workerThread && m_workerThread->isRunning()) {
+        qWarning() << "Already processing a prompt";
         return;
     }
 
-    QJSValueList jsArgs;
-    for (const QVariant &arg : args) {
-        jsArgs << QJSValue(arg.toString());
-    }
+    m_workerThread = new QThread();
 
-    QJSValue result = function.call(jsArgs);
-    if (result.isError()) {
-        qWarning() << result.toString();
-    }
+    QObject::connect(m_workerThread, &QThread::started, [this, message]() {
+        QMutexLocker locker(&m_mutex);
+
+
+        this->llm->prompt(message.toStdString(), [this](const std::string &token) {
+            tokenReceived(QString(token.c_str()));
+        });
+
+        m_workerThread->quit();
+    });
+    QObject::connect(m_workerThread, &QThread::finished, [this]() {
+        m_workerThread->deleteLater();
+        m_workerThread = nullptr;
+    });
+
+    m_workerThread->start();
 }

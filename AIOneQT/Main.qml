@@ -20,14 +20,10 @@ Window {
     Connections {
         target: inputHandler
         function onTokenReceived(token) {
-            Qt.callLater(function() {
-                currentResponse += token
-                if (messageList.count > 0) {
-                    var lastIndex = messageList.count - 1
-                    messageList.setProperty(lastIndex, "text", currentResponse)
-                }
-                messageListView.model = messageListView.model
-            })
+            currentResponse += token
+            if (messageList.count > 0) {
+                messageList.setProperty(messageList.count - 1, "text", currentResponse)
+            }
         }
     }
 
@@ -134,16 +130,7 @@ Window {
                     messageField.text = ""
                     messageListView.positionViewAtEnd()
 
-                    inputHandler.prompt(userMessage, function(token) {
-                        Qt.callLater(function() {
-                            currentResponse += token
-                            if (messageList.count > 0) {
-                                var lastIndex = messageList.count - 1
-                                messageList.setProperty(lastIndex, "text", currentResponse)
-                            }
-                            messageListView.model = messageListView.model
-                        })
-                    })
+                    inputHandler.prompt(userMessage)
                 }
             }
         }
