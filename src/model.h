@@ -1,7 +1,8 @@
 #pragma once
 
-#include <llama-cpp.h>
+#include <string>
 
 class Model {
-
+public:
+    bool loadModel(const std::string& path);
 };

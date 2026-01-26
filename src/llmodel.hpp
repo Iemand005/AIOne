@@ -1,13 +1,14 @@
 #pragma once
 
-#include <llama-cpp.h>
 #include <string>
 #include <iostream>
-#include <functional>>
+#include <functional>
+
+#include <llama-cpp.h>
 
 #include "model.h"
 
-class LLModel : Model
+class LLModel : public Model
 {
     llama_model_ptr model;
     // using MessageResponse = std::function<>();
