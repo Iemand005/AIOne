@@ -4,3 +4,6 @@
 [submodule "thirdparty/stable-diffusion.cpp"]
 	path = thirdparty/stable-diffusion.cpp
 	url = https://github.com/leejet/stable-diffusion.cpp.git
+[submodule "thirdparty/OpenCL-SDK"]
+	path = thirdparty/OpenCL-SDK
+	url = https://github.com/KhronosGroup/OpenCL-SDK.git
