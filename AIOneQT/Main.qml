@@ -210,6 +210,11 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 Material.background: Material.Purple
                 Material.foreground: Material.Black
+
+                onClicked: function() {
+                    console.log("Fine.. I'll make one gimage for u bro", "oh and da promp is he", sdPromptField.text)
+                    inputHandler.generateImage(sdPromptField.text)
+                }
             }
 
             Rectangle {

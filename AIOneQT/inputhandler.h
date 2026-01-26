@@ -28,6 +28,7 @@ public slots:
     void loadSDModel(const QString &path);
 
     void prompt(const QString &message);
+    void generateImage(const QString &prompt);
 
 signals:
     void responseSent(const QString &response);

@@ -61,3 +61,7 @@ void UIHandler::prompt(const QString &message) {
 
     workerThread->start();
 }
+
+void UIHandler::generateImage(const QString &prompt) {
+    sdm->generateImage(prompt.toStdString());
+}

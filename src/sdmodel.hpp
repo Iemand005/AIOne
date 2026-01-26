@@ -36,9 +36,28 @@ public:
     }
 
     void generateImage(const std::string &prompt) {
-        sd_img_gen_params_t img_gen_params = {0};
+        sd_img_gen_params_t img_gen_params{};
 
-        results     = generate_image(sd_ctx, &img_gen_params);
-        num_results = gen_params.batch_count;
+        img_gen_params.loras = nullptr;
+        img_gen_params.prompt = prompt.c_str();
+        img_gen_params.negative_prompt = "";
+        img_gen_params.clip_skip = -1;
+        img_gen_params.ref_images = nullptr;
+
+        sd_sample_params_t sample_params{};
+        sd_sample_params_init(&sample_params);
+        sample_params.sample_steps = 20;
+        sample_params.guidance.txt_cfg = 7.0f;
+
+        img_gen_params.sample_params = sample_params;
+        img_gen_params.strength = 0.0f;
+        img_gen_params.seed = 42;
+        img_gen_params.batch_count = 1;
+        img_gen_params.control_image = sd_image_t{0, 0, 3, nullptr};
+        img_gen_params.control_strength = 0.0f;
+
+
+        auto results = generate_image(ctx, &img_gen_params);
+        int num_results = img_gen_params.batch_count;
     }
 };
