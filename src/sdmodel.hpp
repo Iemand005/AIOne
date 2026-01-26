@@ -17,26 +17,57 @@ public:
             free_sd_ctx(ctx);
             ctx = nullptr;
         }
-        
-        // Set up context parameters
-        sd_ctx_params_t params = {0};
-        params.model_path = path.c_str();
-        params.vae_path = nullptr;
-        params.taesd_path = nullptr;
-        params.control_net_path = nullptr;
-        params.vae_decode_only = true;
-        params.free_params_immediately = true;
-        params.n_threads = -1;
-        params.wtype = SD_TYPE_COUNT;
-        params.rng_type = CPU_RNG;
 
-        
+        sd_ctx_params_t params;
+        sd_ctx_params_init(&params);  // THIS IS CRITICAL - call the init function!
+
+        // Set only the necessary fields for SD 1.5
+        params.model_path = path.c_str();
+
+        // For SD 1.5, clip paths should be empty (model contains CLIP)
+        params.clip_l_path = "";
+        params.clip_g_path = "";
+
+        // VAE is usually inside the model, but can be external
+        params.vae_path = "";
+
+        // FP16 model needs FP16 computation
+        params.wtype = SD_TYPE_F16;  // MUST match your model format
+
+        // Threads
+        params.n_threads = 0;  // 0 = auto-detect
+
+        // RNG settings
+        params.rng_type = STD_DEFAULT_RNG;
+        params.sampler_rng_type = STD_DEFAULT_RNG;
+
+        // Important for SD 1.5
+        params.prediction = EPS_PRED;  // SD 1.5 uses epsilon prediction
+
+        // Memory settings
+        params.vae_decode_only = true;
+        params.free_params_immediately = false;  // Set to false for stability
+
+        // Performance settings
+        params.offload_params_to_cpu = false;
+        params.enable_mmap = true;
+
+        // Tensor type rules - important for FP16 models
+        params.tensor_type_rules = "";
+
         ctx = new_sd_ctx(&params);
-        return ctx != nullptr;
+
+        if (!ctx) {
+            std::cerr << "Failed to load model: " << path << std::endl;
+            return false;
+        }
+
+        return true;
     }
 
     void generateImage(const std::string &prompt) {
-        sd_img_gen_params_t img_gen_params{};
+        sd_img_gen_params_t img_gen_params;
+        sd_img_gen_params_init(&img_gen_params);
 
         img_gen_params.prompt = prompt.c_str();
         img_gen_params.negative_prompt = "";
