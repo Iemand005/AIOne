@@ -35,7 +35,7 @@ public:
         params.wtype = SD_TYPE_F16;  // MUST match your model format
 
         // Threads
-        params.n_threads = 0;  // 0 = auto-detect
+        params.n_threads = 20;  // 0 = auto-detect
 
         // RNG settings
         params.rng_type = STD_DEFAULT_RNG;
@@ -65,7 +65,7 @@ public:
         return true;
     }
 
-    void generateImage(const std::string &prompt) {
+    sd_image_t generateImage(const std::string &prompt) {
         sd_img_gen_params_t img_gen_params;
         sd_img_gen_params_init(&img_gen_params);
 
@@ -110,5 +110,7 @@ public:
 
         sd_image_t* results = generate_image(ctx, &img_gen_params);
         auto num_results = img_gen_params.batch_count;
+        if (!num_results) return {};
+        return results[0];
     }
 };

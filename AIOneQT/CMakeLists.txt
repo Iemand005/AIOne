@@ -27,6 +27,18 @@ enable_language(C)
 
 
 set(LLAMA_VULKAN ON CACHE BOOL "Enable Vulkan" FORCE)
+set(LLAMA_VULKAN ON CACHE BOOL "Enable Vulkan support" FORCE)
+set(LLAMA_GGML_VULKAN ON CACHE BOOL "" FORCE)
+
+
+set(LLAMA_METAL OFF CACHE BOOL "" FORCE)
+set(LLAMA_CUDA OFF CACHE BOOL "" FORCE)
+set(LLAMA_CLBLAST OFF CACHE BOOL "" FORCE) # oPENcl
+
+# Other llama.cpp options
+set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
 add_subdirectory(${STABLE_DIFFUSION_CPP_DIR} ${CMAKE_BINARY_DIR}/stable-diffusion.cpp_build)
