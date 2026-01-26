@@ -4,6 +4,8 @@ project(AIOneQT VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(AIONE_OPENCL "Enable OpenCL support via CLBlast" ON)
+
 if(MSVC)
     # set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>")
     #     set(CMAKE_COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/pdb")
@@ -22,6 +24,7 @@ endif()
 
 get_filename_component(LLAMA_CPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/llama.cpp" ABSOLUTE)
 get_filename_component(STABLE_DIFFUSION_CPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/stable-diffusion.cpp" ABSOLUTE)
+get_filename_component(OPENCL_SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/OpenCL-SDK" ABSOLUTE)
 
 enable_language(C)
 
@@ -53,6 +56,16 @@ if(WIN32)
         set(Vulkan_LIBRARY "${VULKAN_SDK_PATH}/Lib/vulkan-1.lib")
         set(glslc_EXECUTABLE "${VULKAN_SDK_PATH}/Bin/glslc.exe")
     endif()
+
+
+endif()
+
+if (AIONE_OPENCL)
+    add_subdirectory(${OPENCL_SDK_DIR} ${CMAKE_BINARY_DIR}/OpenCL-SDK_build)
+
+    set(OpenCL_ROOT ${CMAKE_BINARY_DIR}/OpenCL-SDK_build)
+    set(OpenCL_INCLUDE_DIR "${OpenCL_ROOT}/include")
+    set(OpenCL_LIBRARY "${OpenCL_ROOT}/lib/OpenCL.lib")
 endif()
 
 
