@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
 
-# Set compiler flags BEFORE project() for external projects
 if(MSVC)
     set(CMAKE_C_FLAGS_INIT "/FS")
     set(CMAKE_CXX_FLAGS_INIT "/FS")
@@ -11,9 +10,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Options
 option(AIONE_OPENCL "Enable OpenCL support via CLBlast" OFF)
-option(AIONE_VULKAN "Enable Vulkan support" ON)  # Main control switch
+option(AIONE_VULKAN "Enable Vulkan support" ON) # Here's da vulkaannn
 
-# Platform-specific settings
 if(MSVC)
     add_compile_options(/FS /bigobj /MP /W3 /wd4244 /wd4267)
     string(APPEND CMAKE_C_FLAGS " /FS")
@@ -85,7 +83,6 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(LLAMA_METAL OFF CACHE BOOL "" FORCE)
 set(LLAMA_CUDA OFF CACHE BOOL "" FORCE)
 
-# Disable Vulkan shader validation/compilation that causes PDB conflicts
 if(AIONE_VULKAN)
     set(GGML_VULKAN_VALIDATE OFF CACHE BOOL "" FORCE)
     set(GGML_VULKAN_CHECK_RESULTS OFF CACHE BOOL "" FORCE)
@@ -93,7 +90,6 @@ if(AIONE_VULKAN)
     set(GGML_VULKAN_SHADER_DEBUG_INFO OFF CACHE BOOL "" FORCE)
 endif()
 
-# Force /FS flag for all external projects to prevent PDB conflicts
 if(MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /FS" CACHE STRING "" FORCE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FS" CACHE STRING "" FORCE)
