@@ -15,87 +15,101 @@ Window {
     Material.theme: Material.Dark
     Material.accent: Material.LightGreen
 
-    // InputHandler {
-    //     id: inputHandler
-    //     onGenerationComplete: {
-    //         console.log("Done! Full text:", fullText)
-    //     }
-    // }
 
-
-    RowLayout {
-
-        FileDialog {
-            id: fileDialog
-            title: "Please choose a gguf file"
-
-            nameFilters: ["GGUF files (*.gguf)"]
-
-            onAccepted: {
-                if (selectedFile) console.log("There is a file", selectedFile)
-
-                var path = selectedFile.toString().replace("file:///", "")
-                console.log("Selected file:", path, selectedFile)
-                inputHandler.loadModel(path)
-            }
-
-            onRejected: {
-                console.log("File selection cancelled")
-            }
-        }
-
-        Button {
-            text: "Load Model"
-
-            Material.background: Material.Orange
-            Material.foreground: Material.Black
-
-            onClicked: {
-                console.log("Button was clicked!")
-                fileDialog.open()
-                // inputHandler.loadModel(modelPathField.text)
-            }
-        }
-    }
-
-    ListView {
-        model: ListModel {
-            id: messageList
-        }
-        delegate: Text { text: model.text }
-    }
-
-    RowLayout {
+    ColumnLayout {
+        Layout.fillHeight: true
         Layout.fillWidth: true
-        Layout.minimumHeight: 50
-        spacing: 10
-        anchors.margins: 10
 
-        anchors.bottom: parent.bottom
-        anchors.right: parent.right
-        anchors.left: parent.left
+        RowLayout {
+            FileDialog {
+                id: fileDialog
+                title: "Please choose a gguf file"
+                nameFilters: ["GGUF files (*.gguf)"]
 
-        TextArea {
-            id: messageField
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+                onAccepted: {
+                    if (selectedFile) console.log("There is a file", selectedFile)
+                    var path = selectedFile.toString().replace("file:///", "")
+                    console.log("Selected file:", path, selectedFile)
+                    inputHandler.loadModel(path)
+                }
+
+                onRejected: {
+                    console.log("File selection cancelled")
+                }
+            }
+
+            Button {
+                text: "Load Model"
+                Material.background: Material.Orange
+                Material.foreground: Material.Black
+
+                onClicked: {
+                    console.log("Button was clicked!")
+                    fileDialog.open()
+                }
+            }
         }
 
-        Button {
-            text: "Send"
+        ListView {
+            id: messageListView
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            anchors.margins: 10
 
-            width: 150
-            height: 50
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
 
-            Material.background: Material.Orange
-            Material.foreground: Material.Black
+            model: ListModel {
+                id: messageList
+            }
+            delegate: Text {
+                text: model.text
+                color: "white"
+                font.pixelSize: 14
+            }
+        }
 
-            onClicked: {
-                console.log("Button was clicked!")
-                inputHandler.prompt(messageField.text, function (response) {
-                    console.log("I GOT A REPONSE", response)
-                    messageList.append({"text": response})
-                })
+        RowLayout {
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.margins: 10
+            spacing: 10
+
+            TextArea {
+                id: messageField
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+
+            Button {
+                text: "Send"
+                width: 150
+                height: 50
+                Material.background: Material.Orange
+                Material.foreground: Material.Black
+
+                onClicked: {
+                    console.log("Button was clicked!")
+                    messageList.append({"text": "You: " + messageField.text})
+
+                    messageList.append({"text": "Assistant: "})
+                    var currentResponse = "Assistant: "
+
+                    inputHandler.prompt(messageField.text, function(token) {
+                        console.log("got a token", token)
+
+                        currentResponse += token
+                        if (messageList.count > 0) {
+                            messageList.setProperty(messageList.count - 1, "text", currentResponse)
+                        } else {
+                            messageList.append({"text": token})
+                            currentResponse = token
+                        }
+                    })
+
+                    messageField.text = ""
+                }
             }
         }
     }
