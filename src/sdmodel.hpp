@@ -1,11 +1,19 @@
 #pragma once
 #include <string>
+#include <cstdlib>
 
 #include <stable-diffusion.h>
 
 #include "model.h"
 
-
+// Cross-platform environment variable setter
+inline void setEnvironmentVariable(const std::string& name, const std::string& value) {
+#ifdef _WIN32
+    _putenv((name + "=" + value).c_str());
+#else
+    setenv(name.c_str(), value.c_str(), 1);
+#endif
+}
 
 class SDModel : public Model {
     sd_ctx_t* ctx = nullptr;
@@ -14,15 +22,8 @@ public:
         loadModel(path);
     }
 
-
     void selectDevice(int device) {
-        std::string baseStr("SD_VK_DEVICE")
-        #ifdef _WIN32
-            auto varStr = baseStr + "=" + device; 
-            _putenv(baseStr.c_str());
-        #else
-            setenv("SD_VK_DEVICE", "1", 1);
-        #endif
+        setEnvironmentVariable("SD_VK_DEVICE", std::to_string(device));
     }
 
     bool loadModel(const std::string& path) {
