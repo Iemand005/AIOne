@@ -28,6 +28,12 @@ void UIHandler::loadModel(const QString &path) {
     this->llm = modelFactory->loadLLM(path.toStdString());
 }
 
+void UIHandler::loadSDModel(const QString &path) {
+    qDebug() << "Loading model at:" << path;
+
+    this->sdm = modelFactory->loadSDM(path.toStdString());
+}
+
 void UIHandler::prompt(const QString &message) {
     qDebug() << "Generating response to:" << message;
 

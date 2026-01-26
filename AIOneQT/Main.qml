@@ -163,6 +163,42 @@ ApplicationWindow {
             anchors.margins: 20
             spacing: 10
 
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 40
+                Layout.leftMargin: 10
+                Layout.rightMargin: 10
+                Layout.topMargin: 10
+
+                FileDialog {
+                    id: sdFileDialog
+                    title: "Please choose a safetensors file"
+                    nameFilters: ["SafeTensors files (*.safetensors)"]
+
+                    onAccepted: {
+                        if (selectedFile) console.log("There is a file", selectedFile)
+                        var path = selectedFile.toString().replace("file:///", "")
+                        console.log("Selected file:", path, selectedFile)
+                        inputHandler.loadSDModel(path)
+                    }
+
+                    onRejected: {
+                        console.log("File selection cancelled")
+                    }
+                }
+
+                Button {
+                    text: "Load Model"
+                    Material.background: Material.Orange
+                    Material.foreground: Material.Black
+
+                    onClicked: {
+                        console.log("Button was clicked!")
+                        sdFileDialog.open()
+                    }
+                }
+            }
+
             TextField {
                 id: sdPromptField
                 Layout.fillWidth: true

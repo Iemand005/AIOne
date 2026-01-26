@@ -18,12 +18,14 @@ public:
     std::unique_ptr<ModelFactory> modelFactory;
 
     std::unique_ptr<LLModel> llm;
+    std::unique_ptr<SDModel> sdm;
 
 public slots:
     void handleButtonClick();
     void handleButtonClickWithParam(const QString &message);
 
     void loadModel(const QString &path);
+    void loadSDModel(const QString &path);
 
     void prompt(const QString &message);
 
