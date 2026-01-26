@@ -14,6 +14,12 @@ Window {
     Material.theme: Material.Dark
     Material.accent: Material.LightGreen
 
+    InputHandler {
+        id: inputHandler
+        onGenerationComplete: {
+            console.log("Done! Full text:", fullText)
+        }
+    }
 
 
     RowLayout {

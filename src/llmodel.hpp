@@ -12,7 +12,7 @@ class LLModel : Model
     llama_model_ptr model;
     // using MessageResponse = std::function<>();
 public:
-    typedef std::function<bool(const std::string &token, bool is_first)> TokenCallback;
+    typedef std::function<bool(const std::string &token)> TokenCallback;
 
     const int maxTokens = 40;
 
@@ -32,7 +32,15 @@ public:
         this->model = std::move(model);
     }
 
-    const char *prompt(std::string prompt)
+    std::string prompt(std::string prompt) {
+        std::string response;
+        prompt(prompt, [&response](std::string &token) {
+            // *response =  *response + token;
+        });
+        return response;
+    }
+
+    void prompt(std::string prompt, TokenCallback callback)
     {
         const llama_vocab *vocab = llama_model_get_vocab(model.get());
         const int promptTokenLen = -llama_tokenize(vocab, prompt.c_str(), prompt.size(), NULL, 0, true, true);
@@ -75,10 +83,6 @@ public:
             // create a new batch (size of remaining prompt tokens, max `n_batch` length)
             size_t batchSize = std::min(remainingTokens, (size_t)contextParams.n_batch);
             batch = llama_batch_get_one(promptTokens.data() + i, batchSize);
-
-            // std::cout << "===================" << std::endl;
-            // std::cout << "Processing " << std::to_string(batchSize) << " out of " << std::to_string(remainingTokens) << " tokens" << std::endl;
-            // std::cout << "===================" << std::endl;
 
             // if the model has an encoder, process input using encoder
             // in that case, the decoder is used on the "decoder start token" after this loop
@@ -155,6 +159,7 @@ public:
             // TODO send to callback
             std::string text(buf, n);
             std::cout << text.c_str();
+            callback(text);
 
             // wrap token in batch for decoding
             batch = llama_batch_get_one(&newTokenId, 1);

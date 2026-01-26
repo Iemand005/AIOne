@@ -36,7 +36,10 @@ void InputHandler::loadModel(const QString &path) {
 void InputHandler::prompt(const QString &message) {
     qDebug() << "Generating response to:" << message;
 
-    this->llm->prompt(message.toStdString());
+    // std::string response = this->llm->prompt(message.toStdString());
+    QString response;
+
+    emit responseSent(QString(response.c_str()));
 
     // const llama_vocab * vocab = llama_model_get_vocab(model);
 }
