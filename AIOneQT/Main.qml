@@ -70,7 +70,9 @@ Window {
 
             onClicked: {
                 console.log("Button was clicked!")
-                inputHandler.prompt(messageField.text)
+                inputHandler.prompt(messageField.text, function (response) {
+                    console.log("I GOT A REPONSE", response)
+                })
             }
         }
     }

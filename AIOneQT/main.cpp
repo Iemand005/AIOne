@@ -21,9 +21,9 @@ int main(int argc, char *argv[])
         Qt::QueuedConnection);
     engine.loadFromModule("AIOneQT", "Main");
 
-    qmlRegisterType<InputHandler>("AI", 1, 0, "InputHandler");
+    qmlRegisterType<UIHandler>("AI", 1, 0, "InputHandler");
 
-    InputHandler inputHandler;
+    UIHandler inputHandler;
 
     engine.rootContext()->setContextProperty("inputHandler", &inputHandler);
 

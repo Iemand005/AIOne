@@ -4,16 +4,14 @@
 #include <QObject>
 #include <QJSEngine>
 
-
 #include "../src/modelfactory.hpp"
 
-class InputHandler : public QObject
+class UIHandler : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(bool running READ running NOTIFY runningChanged)
 
 public:
-    explicit InputHandler(QObject *parent = nullptr);
+    explicit UIHandler(QObject *parent = nullptr);
 
     std::unique_ptr<ModelFactory> modelFactory;
 

@@ -3,7 +3,7 @@
 #include <QDebug>
 #include <iostream>
 
-InputHandler::InputHandler(QObject *parent)
+UIHandler::UIHandler(QObject *parent)
     : QObject{parent}
 {
     modelFactory = std::make_unique<ModelFactory>();
@@ -12,17 +12,17 @@ InputHandler::InputHandler(QObject *parent)
 }
 
 
-void InputHandler::handleButtonClick() {
+void UIHandler::handleButtonClick() {
     qDebug() << "Button clicked from C++!";
 
     emit responseSent("Clicked handled in C++!");
 }
 
-void InputHandler::handleButtonClickWithParam(const QString &message) {
+void UIHandler::handleButtonClickWithParam(const QString &message) {
     qDebug() << "Received from QML:" << message;
 }
 
-void InputHandler::loadModel(const QString &path) {
+void UIHandler::loadModel(const QString &path) {
     qDebug() << "Loading model at:" << path;
 
 
@@ -33,10 +33,9 @@ void InputHandler::loadModel(const QString &path) {
     this->llm = modelFactory->loadLLM(path.toStdString());
 }
 
-void InputHandler::prompt(const QString &message, const QJSValue &tokenCallback) {
+void UIHandler::prompt(const QString &message, const QJSValue &tokenCallback) {
     qDebug() << "Generating response to:" << message;
 
-    // std::string response = this->llm->prompt(message.toStdString());
     QString *response = new QString();
 
     this->llm->prompt(message.toStdString(), [this, tokenCallback](const std::string &token) {
@@ -44,10 +43,21 @@ void InputHandler::prompt(const QString &message, const QJSValue &tokenCallback)
     });
 
     emit responseSent(*response);
-
-    // const llama_vocab * vocab = llama_model_get_vocab(model);
 }
 
-void InputHandler::callJsFunction(const QJSValue &function, const QVariantList &args) {
+void UIHandler::callJsFunction(const QJSValue &function, const QVariantList &args)
+{
+    if (!function.isCallable()) {
+        return;
+    }
 
+    QJSValueList jsArgs;
+    for (const QVariant &arg : args) {
+        jsArgs << QJSValue(arg.toString());
+    }
+
+    QJSValue result = function.call(jsArgs);
+    if (result.isError()) {
+        qWarning() << result.toString();
+    }
 }
