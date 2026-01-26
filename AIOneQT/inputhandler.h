@@ -37,7 +37,9 @@ signals:
 
 private:
     QThread *workerThread = nullptr;
+    QThread *sdWorkerThread = nullptr;  // Separate thread for SD operations
     QMutex mutex;
+    QMutex sdMutex;  // Mutex for SD model operations
 };
 
 #endif // INPUTHANDLER_H

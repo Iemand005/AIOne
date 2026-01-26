@@ -19,6 +19,8 @@ inline void setEnvironmentVariable(const std::string& name, const std::string& v
 class SDModel : public Model {
     sd_ctx_t* ctx = nullptr;
     std::string modelPath;  // Store the path to keep it alive
+    std::string lastPrompt;  // Store the last prompt to keep it alive
+    sd_image_t lastResult = {};  // Store the last result
 public:
     SDModel(std::string path) {
         loadModel(path);
@@ -104,10 +106,13 @@ public:
             return {};
         }
 
+        // Store the prompt to keep it alive
+        lastPrompt = prompt;
+
         sd_img_gen_params_t img_gen_params;
         sd_img_gen_params_init(&img_gen_params);
 
-        img_gen_params.prompt = prompt.c_str();
+        img_gen_params.prompt = lastPrompt.c_str();  // Use stored prompt
         img_gen_params.negative_prompt = "";
 
         img_gen_params.width = width;
@@ -148,7 +153,16 @@ public:
 
         sd_image_t* results = generate_image(ctx, &img_gen_params);
         auto num_results = img_gen_params.batch_count;
-        if (!num_results) return {};
-        return results[0];
+        if (!num_results || !results) return {};
+        
+        lastResult = results[0];
+        return lastResult;
+    }
+
+    ~SDModel() {
+        if (ctx) {
+            free_sd_ctx(ctx);
+            ctx = nullptr;
+        }
     }
 };

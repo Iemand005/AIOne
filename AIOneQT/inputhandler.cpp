@@ -78,9 +78,33 @@ void UIHandler::loadModel(const QString &path) {
 }
 
 void UIHandler::loadSDModel(const QString &path) {
-    qDebug() << "Loading model at:" << path;
+    qDebug() << "Loading SD model at:" << path;
+    
+    if (sdWorkerThread && sdWorkerThread->isRunning()) {
+        qWarning() << "Already loading SD model";
+        return;
+    }
 
-    this->sdm = modelFactory->loadSDM(path.toStdString());
+    sdWorkerThread = new QThread();
+
+    QObject::connect(sdWorkerThread, &QThread::started, [this, path]() {
+        QMutexLocker locker(&sdMutex);
+        try {
+            this->sdm = modelFactory->loadSDM(path.toStdString());
+            qDebug() << "SD model loaded successfully";
+        } catch (const std::exception &e) {
+            qCritical() << "Failed to load SD model:" << e.what();
+            this->sdm = nullptr;
+        }
+        sdWorkerThread->quit();
+    });
+    
+    QObject::connect(sdWorkerThread, &QThread::finished, [this]() {
+        sdWorkerThread->deleteLater();
+        sdWorkerThread = nullptr;
+    });
+
+    sdWorkerThread->start();
 }
 
 void UIHandler::prompt(const QString &message) {
@@ -112,14 +136,58 @@ void UIHandler::prompt(const QString &message) {
 }
 
 void UIHandler::generateImage(const QString &prompt) {
-    sd_image_t image = sdm->generateImage(prompt.toStdString());
+    qDebug() << "Generating image for:" << prompt;
     
-    // Convert to QImage
-    QImage qimage = convertToQImage(image);
-    
-    // Emit signal to display in QML
-    emit imageGenerated(qimage);
-    
-    // Also save as PNG
-    saveImageAsPNG(image, (prompt + "test.png").toStdString());
+    // Check if model is loaded
+    if (!sdm) {
+        qWarning() << "SD model not loaded";
+        return;
+    }
+
+    // Check if already generating
+    if (sdWorkerThread && sdWorkerThread->isRunning()) {
+        qWarning() << "Already generating an image";
+        return;
+    }
+
+    // Run image generation on a worker thread
+    sdWorkerThread = new QThread();
+
+    QObject::connect(sdWorkerThread, &QThread::started, [this, prompt]() {
+        QMutexLocker locker(&sdMutex);
+        try {
+            if (!sdm) {
+                qWarning() << "SD model disappeared during generation";
+                return;
+            }
+
+            sd_image_t image = sdm->generateImage(prompt.toStdString());
+            
+            if (!image.data) {
+                qWarning() << "Failed to generate image";
+                return;
+            }
+
+            // Convert to QImage (this is thread-safe)
+            QImage qimage = convertToQImage(image);
+            
+            // Emit signal to display in QML (Qt handles thread-safe signal emission)
+            emit imageGenerated(qimage);
+            
+            // Save as PNG
+            saveImageAsPNG(image, (prompt + "test.png").toStdString());
+            
+            qDebug() << "Image generation completed successfully";
+        } catch (const std::exception &e) {
+            qCritical() << "Image generation failed:" << e.what();
+        }
+        sdWorkerThread->quit();
+    });
+
+    QObject::connect(sdWorkerThread, &QThread::finished, [this]() {
+        sdWorkerThread->deleteLater();
+        sdWorkerThread = nullptr;
+    });
+
+    sdWorkerThread->start();
 }
