@@ -14,7 +14,21 @@ public:
         loadModel(path);
     }
 
+
+    void selectDevice(int device) {
+        std::string baseStr("SD_VK_DEVICE")
+        #ifdef _WIN32
+            auto varStr = baseStr + "=" + device; 
+            _putenv(baseStr.c_str());
+        #else
+            setenv("SD_VK_DEVICE", "1", 1);
+        #endif
+    }
+
     bool loadModel(const std::string& path) {
+
+        
+
         if (ctx) {
             free_sd_ctx(ctx);
             ctx = nullptr;
