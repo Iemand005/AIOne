@@ -12,7 +12,7 @@ class LLModel : Model
     llama_model_ptr model;
     // using MessageResponse = std::function<>();
 public:
-    typedef std::function<bool(const std::string &token)> TokenCallback;
+    typedef std::function<void(const std::string &token)> TokenCallback;
 
     const int maxTokens = 40;
 
@@ -32,13 +32,13 @@ public:
         this->model = std::move(model);
     }
 
-    std::string prompt(std::string prompt) {
-        std::string response;
-        prompt(prompt, [&response](std::string &token) {
-            // *response =  *response + token;
-        });
-        return response;
-    }
+    // std::string prompt(std::string prompt) {
+    //     std::string response;
+    //     // prompt(prompt, [&response](std::string &token) {
+    //     //     // *response =  *response + token;
+    //     // });
+    //     return response;
+    // }
 
     void prompt(std::string prompt, TokenCallback callback)
     {
@@ -170,8 +170,6 @@ public:
 
         llama_sampler_free(sampler);
         llama_free(context);
-
-        return"";
     }
 
     void Destroy()

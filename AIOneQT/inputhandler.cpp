@@ -33,13 +33,21 @@ void InputHandler::loadModel(const QString &path) {
     this->llm = modelFactory->loadLLM(path.toStdString());
 }
 
-void InputHandler::prompt(const QString &message) {
+void InputHandler::prompt(const QString &message, const QJSValue &tokenCallback) {
     qDebug() << "Generating response to:" << message;
 
     // std::string response = this->llm->prompt(message.toStdString());
-    QString response;
+    QString *response = new QString();
 
-    emit responseSent(QString(response.c_str()));
+    this->llm->prompt(message.toStdString(), [this, tokenCallback](const std::string &token) {
+        callJsFunction(tokenCallback, {QString(token.c_str())});
+    });
+
+    emit responseSent(*response);
 
     // const llama_vocab * vocab = llama_model_get_vocab(model);
+}
+
+void InputHandler::callJsFunction(const QJSValue &function, const QVariantList &args) {
+
 }
