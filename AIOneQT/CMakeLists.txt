@@ -5,12 +5,19 @@ project(AIOneQT VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(MSVC)
-    # Fix for large object files in stable-diffusion.cpp
-    add_compile_options(/bigobj)
+    # set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>")
+    #     set(CMAKE_COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/pdb")
+    # set(CMAKE_MSVC_PARALLEL 4)
+    # add_compile_options(/FS)
+    add_compile_options(/FS)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /FS")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FS")
+        add_compile_options(/wd4244)
+    # # Fix for large object files in stable-diffusion.cpp
+    add_compile_options(/bigobj /MP /W3)
     
-    add_compile_options(/MP)  # Enable parallel builds
-    add_definitions(-DNOMINMAX)  # Disable min/max macros
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)  # Disable secure CRT warnings
+    # add_compile_options(/MP)  # Enable parallel builds
+    add_definitions(-DNOMINMAX -D_CRT_SECURE_NO_WARNINGS)
 endif()
 
 get_filename_component(LLAMA_CPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/llama.cpp" ABSOLUTE)
@@ -25,15 +32,37 @@ enable_language(C)
 # set(GGML_NATIVE OFF CACHE BOOL "Disable platform-specific optimizations" FORCE)
 # set(LLAMA_NATIVE OFF CACHE BOOL "Disable native CPU optimizations" FORCE)
 
+set(SD_VULKAN OFF CACHE BOOL "" FORCE)
+# set(LLAMA_VULKAN ON CACHE BOOL "Enable Vulkan" FORCE)
+# set(LLAMA_VULKAN ON CACHE BOOL "Enable Vulkan support" FORCE)
+# set(LLAMA_GGML_VULKAN ON CACHE BOOL "" FORCE)
+# set(SD_VULKAN ON CACHE BOOL "" FORCE)
+# set(LLAMA_GGML_VULKAN ON CACHE BOOL "" FORCE)
+set(GGML_VULKAN OFF CACHE BOOL "" FORCE)
 
-set(LLAMA_VULKAN ON CACHE BOOL "Enable Vulkan" FORCE)
-set(LLAMA_VULKAN ON CACHE BOOL "Enable Vulkan support" FORCE)
-set(LLAMA_GGML_VULKAN ON CACHE BOOL "" FORCE)
+if(WIN32)
+    # Common Vulkan SDK locations on Windows
+    set(VULKAN_SDK_PATH "$ENV{VULKAN_SDK}")
+    if(NOT VULKAN_SDK_PATH)
+        set(VULKAN_SDK_PATH "C:/VulkanSDK/1.4.321")  # Adjust version
+    endif()
 
+    if(EXISTS "${VULKAN_SDK_PATH}")
+        message(STATUS "Using Vulkan SDK at: ${VULKAN_SDK_PATH}")
+        set(Vulkan_INCLUDE_DIR "${VULKAN_SDK_PATH}/Include")
+        set(Vulkan_LIBRARY "${VULKAN_SDK_PATH}/Lib/vulkan-1.lib")
+        set(glslc_EXECUTABLE "${VULKAN_SDK_PATH}/Bin/glslc.exe")
+    endif()
+endif()
+
+
+set(LLAMA_CLBLAST ON CACHE BOOL "" FORCE)
+set(SD_OPENCL ON CACHE BOOL "" FORCE)
+set(GGML_OPENCL ON CACHE BOOL "" FORCE)
 
 set(LLAMA_METAL OFF CACHE BOOL "" FORCE)
 set(LLAMA_CUDA OFF CACHE BOOL "" FORCE)
-set(LLAMA_CLBLAST OFF CACHE BOOL "" FORCE) # oPENcl
+# set(LLAMA_CLBLAST OFF CACHE BOOL "" FORCE) # oPENcl
 
 # Other llama.cpp options
 set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)

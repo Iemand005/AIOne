@@ -7,3 +7,9 @@
 [submodule "thirdparty/OpenCL-SDK"]
 	path = thirdparty/OpenCL-SDK
 	url = https://github.com/KhronosGroup/OpenCL-SDK.git
+[submodule "tclap"]
+	path = tclap
+	url = https://github.com/mirror/tclap.git
+[submodule "thirdparty/tclap"]
+	path = thirdparty/tclap
+	url = https://github.com/mirror/tclap.git
