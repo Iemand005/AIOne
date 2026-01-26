@@ -11,19 +11,26 @@
 class LLModel : public Model
 {
     llama_model_ptr model;
+    std::unique_ptr<ggml_backend_dev_t> devices;
     // using MessageResponse = std::function<>();
 public:
     typedef std::function<void(const std::string &token)> TokenCallback;
 
     const int maxTokens = 40;
 
-    LLModel()
-    {
-    }
+    LLModel(){}
 
     LLModel(std::string path)
     {
+        loadModel(path);
+    }
+
+    bool loadModel(const std::string &path)
+    {
+        devices = std::make_unique<ggml_backend_dev_t>(ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_GPU));
+
         llama_model_params model_params = llama_model_default_params();
+        model_params.devices = devices.get();
         llama_model_ptr model(llama_model_load_from_file(path.c_str(), model_params));
         if (!model)
         {
@@ -31,8 +38,8 @@ public:
         }
 
         this->model = std::move(model);
+        return true;
     }
-
     // std::string prompt(std::string prompt) {
     //     std::string response;
     //     // prompt(prompt, [&response](std::string &token) {

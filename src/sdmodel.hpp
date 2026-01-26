@@ -5,6 +5,8 @@
 
 #include "model.h"
 
+
+
 class SDModel : public Model {
     sd_ctx_t* ctx = nullptr;
 public:
@@ -19,6 +21,7 @@ public:
         }
 
         sd_ctx_params_t params;
+        // params.sd_ctx_params_t.
         sd_ctx_params_init(&params);  // THIS IS CRITICAL - call the init function!
 
         // Set only the necessary fields for SD 1.5
@@ -54,6 +57,8 @@ public:
 
         // Tensor type rules - important for FP16 models
         params.tensor_type_rules = "";
+
+
 
         ctx = new_sd_ctx(&params);
 
