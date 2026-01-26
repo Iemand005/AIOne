@@ -76,7 +76,7 @@ public:
         img_gen_params.height = 100;
 
         sd_sample_params_init(&img_gen_params.sample_params);
-        img_gen_params.sample_params.sample_steps = 1;
+        img_gen_params.sample_params.sample_steps = 10;
         img_gen_params.sample_params.sample_method = EULER_A_SAMPLE_METHOD;
         img_gen_params.sample_params.scheduler = KARRAS_SCHEDULER;
 
