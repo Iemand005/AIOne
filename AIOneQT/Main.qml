@@ -16,6 +16,7 @@ ApplicationWindow {
 
     property string currentResponse: ""
     property bool hasImage: false
+    property int imageCounter: 0
 
     Connections {
         target: inputHandler
@@ -27,9 +28,9 @@ ApplicationWindow {
         }
         function onImageGenerated(image) {
             hasImage = true
-            generatedImageDisplay.source = ""  // Reset
-            generatedImageDisplay.source = "image://generated/image"  // Load from provider
-            console.log("Image generated successfully")
+            imageCounter++  // Increment to force cache buster
+            generatedImageDisplay.source = "image://generated/image?id=" + imageCounter
+            console.log("Image generated successfully, counter:", imageCounter)
         }
     }
 

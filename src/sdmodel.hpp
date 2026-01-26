@@ -9,7 +9,8 @@
 // Cross-platform environment variable setter
 inline void setEnvironmentVariable(const std::string& name, const std::string& value) {
 #ifdef _WIN32
-    _putenv((name + "=" + value).c_str());
+    // Use _putenv_s for thread-safe operation and proper memory handling
+    _putenv_s(name.c_str(), value.c_str());
 #else
     setenv(name.c_str(), value.c_str(), 1);
 #endif
@@ -17,6 +18,7 @@ inline void setEnvironmentVariable(const std::string& name, const std::string& v
 
 class SDModel : public Model {
     sd_ctx_t* ctx = nullptr;
+    std::string modelPath;  // Store the path to keep it alive
 public:
     SDModel(std::string path) {
         loadModel(path);
@@ -27,6 +29,7 @@ public:
     }
 
     bool loadModel(const std::string& path) {
+        modelPath = path;  // Store the path
 
         auto device = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_GPU);
         if (!device) 
@@ -50,7 +53,7 @@ public:
         sd_ctx_params_init(&params);  // THIS IS CRITICAL - call the init function!
 
         // Set only the necessary fields for SD 1.5
-        params.model_path = path.c_str();
+        params.model_path = modelPath.c_str();  // Use stored path
 
         // For SD 1.5, clip paths should be empty (model contains CLIP)
         params.clip_l_path = "";
@@ -95,18 +98,23 @@ public:
         return true;
     }
 
-    sd_image_t generateImage(const std::string &prompt) {
+    sd_image_t generateImage(const std::string &prompt, int width = 512, int height = 512, int steps = 25) {
+        if (!ctx) {
+            std::cerr << "Error: Model not loaded. Call loadModel() first!" << std::endl;
+            return {};
+        }
+
         sd_img_gen_params_t img_gen_params;
         sd_img_gen_params_init(&img_gen_params);
 
         img_gen_params.prompt = prompt.c_str();
         img_gen_params.negative_prompt = "";
 
-        img_gen_params.width = 100;
-        img_gen_params.height = 100;
+        img_gen_params.width = width;
+        img_gen_params.height = height;
 
         sd_sample_params_init(&img_gen_params.sample_params);
-        img_gen_params.sample_params.sample_steps = 10;
+        img_gen_params.sample_params.sample_steps = steps;
         img_gen_params.sample_params.sample_method = EULER_A_SAMPLE_METHOD;
         img_gen_params.sample_params.scheduler = KARRAS_SCHEDULER;
 
