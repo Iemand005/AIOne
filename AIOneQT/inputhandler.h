@@ -32,8 +32,8 @@ signals:
     void tokenReceived(const QString &token);
 
 private:
-    QThread *m_workerThread = nullptr;
-    QMutex m_mutex;
+    QThread *workerThread = nullptr;
+    QMutex mutex;
 };
 
 #endif // INPUTHANDLER_H

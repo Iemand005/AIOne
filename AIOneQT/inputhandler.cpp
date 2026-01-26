@@ -31,27 +31,27 @@ void UIHandler::loadModel(const QString &path) {
 void UIHandler::prompt(const QString &message) {
     qDebug() << "Generating response to:" << message;
 
-    if (m_workerThread && m_workerThread->isRunning()) {
+    if (workerThread && workerThread->isRunning()) {
         qWarning() << "Already processing a prompt";
         return;
     }
 
-    m_workerThread = new QThread();
+    workerThread = new QThread();
 
-    QObject::connect(m_workerThread, &QThread::started, [this, message]() {
-        QMutexLocker locker(&m_mutex);
+    QObject::connect(workerThread, &QThread::started, [this, message]() {
+        QMutexLocker locker(&mutex);
 
 
         this->llm->prompt(message.toStdString(), [this](const std::string &token) {
             tokenReceived(QString(token.c_str()));
         });
 
-        m_workerThread->quit();
+        workerThread->quit();
     });
-    QObject::connect(m_workerThread, &QThread::finished, [this]() {
-        m_workerThread->deleteLater();
-        m_workerThread = nullptr;
+    QObject::connect(workerThread, &QThread::finished, [this]() {
+        workerThread->deleteLater();
+        workerThread = nullptr;
     });
 
-    m_workerThread->start();
+    workerThread->start();
 }
