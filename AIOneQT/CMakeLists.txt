@@ -4,7 +4,19 @@ project(AIOneQT VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(MSVC)
+    # Fix for large object files in stable-diffusion.cpp
+    add_compile_options(/bigobj)
+    
+    add_compile_options(/MP)  # Enable parallel builds
+    add_definitions(-DNOMINMAX)  # Disable min/max macros
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)  # Disable secure CRT warnings
+endif()
+
 get_filename_component(LLAMA_CPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/llama.cpp" ABSOLUTE)
+get_filename_component(STABLE_DIFFUSION_CPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/stable-diffusion.cpp" ABSOLUTE)
+
+enable_language(C)
 
 # set(LLAMA_BUILD_TESTS OFF CACHE BOOL "Disable tests" FORCE)
 # set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "Disable examples" FORCE)
@@ -17,6 +29,7 @@ get_filename_component(LLAMA_CPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/
 set(LLAMA_VULKAN ON CACHE BOOL "Enable Vulkan" FORCE)
 
 add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
+add_subdirectory(${STABLE_DIFFUSION_CPP_DIR} ${CMAKE_BINARY_DIR}/stable-diffusion.cpp_build)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick)
 
@@ -49,11 +62,13 @@ set_target_properties(appAIOneQT PROPERTIES
 target_link_libraries(appAIOneQT
     PRIVATE Qt6::Quick
     PRIVATE llama
+    PRIVATE stable-diffusion
 )
 
 target_include_directories(appAIOneQT PRIVATE
     ${LLAMA_CPP_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../llama.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/llama.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/stable-diffusion.cpp
 )
 
 include(GNUInstallDirs)

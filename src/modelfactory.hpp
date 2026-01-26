@@ -20,6 +20,10 @@ public:
         return std::make_unique<LLModel>(path);
     }
 
+    std::unique_ptr<SDModel> loadSDM(std::string path) {
+        return std::make_unique<SDModel>(path);
+    }
+
     const char *systemInfoStr() {
         return llama_print_system_info();
     }
