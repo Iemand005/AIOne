@@ -113,5 +113,13 @@ void UIHandler::prompt(const QString &message) {
 
 void UIHandler::generateImage(const QString &prompt) {
     sd_image_t image = sdm->generateImage(prompt.toStdString());
+    
+    // Convert to QImage
+    QImage qimage = convertToQImage(image);
+    
+    // Emit signal to display in QML
+    emit imageGenerated(qimage);
+    
+    // Also save as PNG
     saveImageAsPNG(image, (prompt + "test.png").toStdString());
 }

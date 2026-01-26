@@ -33,6 +33,7 @@ public slots:
 signals:
     void responseSent(const QString &response);
     void tokenReceived(const QString &token);
+    void imageGenerated(const QImage &image);
 
 private:
     QThread *workerThread = nullptr;

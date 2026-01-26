@@ -15,6 +15,7 @@ ApplicationWindow {
     Material.accent: Material.LightGreen
 
     property string currentResponse: ""
+    property bool hasImage: false
 
     Connections {
         target: inputHandler
@@ -23,6 +24,12 @@ ApplicationWindow {
             if (messageList.count > 0) {
                 messageList.setProperty(messageList.count - 1, "text", currentResponse)
             }
+        }
+        function onImageGenerated(image) {
+            hasImage = true
+            generatedImageDisplay.source = ""  // Reset
+            generatedImageDisplay.source = "image://generated/image"  // Load from provider
+            console.log("Image generated successfully")
         }
     }
 
@@ -229,10 +236,18 @@ ApplicationWindow {
                 border.color: "#333"
                 border.width: 1
 
+                Image {
+                    id: generatedImageDisplay
+                    anchors.fill: parent
+                    fillMode: Image.PreserveAspectFit
+                    asynchronous: true
+                }
+
                 Text {
                     anchors.centerIn: parent
                     text: "Generated image will appear here"
                     color: "#888"
+                    visible: generatedImageDisplay.source === ""
                 }
             }
         }

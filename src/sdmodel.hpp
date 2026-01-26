@@ -22,12 +22,22 @@ public:
         loadModel(path);
     }
 
-    void selectDevice(int device) {
+    void selectDevice(int device = 1) {
         setEnvironmentVariable("SD_VK_DEVICE", std::to_string(device));
     }
 
     bool loadModel(const std::string& path) {
 
+        auto device = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_GPU);
+        if (!device) 
+        {
+            device = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_IGPU);
+            if (!device) {
+                device = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_CPU);
+            }
+        }
+
+        selectDevice();
         
 
         if (ctx) {

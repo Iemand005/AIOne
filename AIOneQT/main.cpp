@@ -1,10 +1,27 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQuickImageProvider>
+#include <QImage>
 
 #include "inputhandler.h"
 
-
+class GeneratedImageProvider : public QQuickImageProvider {
+public:
+    GeneratedImageProvider() : QQuickImageProvider(QQuickImageProvider::Pixmap) {}
+    
+    QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize) override {
+        Q_UNUSED(id);
+        Q_UNUSED(requestedSize);
+        
+        if (size) {
+            *size = lastImage.size();
+        }
+        return QPixmap::fromImage(lastImage);
+    }
+    
+    QImage lastImage;
+};
 
 int main(int argc, char *argv[])
 {
@@ -19,13 +36,21 @@ int main(int argc, char *argv[])
         &app,
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
-    engine.loadFromModule("AIOneQT", "Main");
+    
+    GeneratedImageProvider *imageProvider = new GeneratedImageProvider();
+    engine.addImageProvider(QLatin1String("generated"), imageProvider);
 
     qmlRegisterType<UIHandler>("AI", 1, 0, "InputHandler");
 
     UIHandler inputHandler;
+    
+    QObject::connect(&inputHandler, &UIHandler::imageGenerated, [imageProvider](const QImage &image) {
+        imageProvider->lastImage = image;
+    });
 
     engine.rootContext()->setContextProperty("inputHandler", &inputHandler);
+    
+    engine.loadFromModule("AIOneQT", "Main");
 
     return app.exec();
 }
