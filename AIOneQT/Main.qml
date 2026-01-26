@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Material
 import QtQuick.Layouts
+import QtQuick.Dialogs
 
 Window {
     id: window
@@ -23,11 +24,24 @@ Window {
 
 
     RowLayout {
-        TextArea {
-            id: modelPathField
-            Layout.fillWidth: true
 
-            Layout.preferredHeight: 100
+        FileDialog {
+            id: fileDialog
+            title: "Please choose a gguf file"
+
+            nameFilters: ["GGUF files (*.gguf)"]
+
+            onAccepted: {
+                if (selectedFile) console.log("There is a file", selectedFile)
+
+                var path = selectedFile.toString().replace("file:///", "")
+                console.log("Selected file:", path, selectedFile)
+                inputHandler.loadModel(path)
+            }
+
+            onRejected: {
+                console.log("File selection cancelled")
+            }
         }
 
         Button {
@@ -38,9 +52,17 @@ Window {
 
             onClicked: {
                 console.log("Button was clicked!")
-                inputHandler.loadModel(modelPathField.text)
+                fileDialog.open()
+                // inputHandler.loadModel(modelPathField.text)
             }
         }
+    }
+
+    ListView {
+        model: ListModel {
+            id: messageList
+        }
+        delegate: Text { text: model.text }
     }
 
     RowLayout {
@@ -72,6 +94,7 @@ Window {
                 console.log("Button was clicked!")
                 inputHandler.prompt(messageField.text, function (response) {
                     console.log("I GOT A REPONSE", response)
+                    messageList.append({"text": response})
                 })
             }
         }
