@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)  # llama.cpp requires 3.13+
+cmake_minimum_required(VERSION 3.19)  # llama.cpp requires 3.13+
 project(MyLlamaProject)
 
 # Set your preferred C++ standard (llama.cpp uses C++11)

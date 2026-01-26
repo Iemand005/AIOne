@@ -41,15 +41,19 @@ ApplicationWindow {
     }
 
     StackLayout {
+        // Layout.top: tabBar.bottom
         anchors.top: tabBar.bottom
+        Layout.fillWidth: true
+        // Layout.bottom: parent.bottom
+        anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.bottom: parent.bottom
         currentIndex: tabBar.currentIndex
 
         // LLM Tab
         ColumnLayout {
             anchors.fill: parent
+            Layout.fillWidth: true
             spacing: 0
 
             RowLayout {
@@ -159,8 +163,9 @@ ApplicationWindow {
 
         // Stable Diffusion Tab
         ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 20
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.margins: 20
             spacing: 10
 
             RowLayout {
