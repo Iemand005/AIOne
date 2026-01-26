@@ -2,7 +2,7 @@
 #define INPUTHANDLER_H
 
 #include <QObject>
-#include "../src/model.hpp"
+#include "../src/modelfactory.hpp"
 
 class InputHandler : public QObject
 {
@@ -10,7 +10,9 @@ class InputHandler : public QObject
 public:
     explicit InputHandler(QObject *parent = nullptr);
 
-    std::unique_ptr<Model> model;
+    std::unique_ptr<ModelFactory> modelFactory;
+
+    std::unique_ptr<LLModel> llm;
 
 public slots:
     void handleButtonClick();

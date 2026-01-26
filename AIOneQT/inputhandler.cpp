@@ -6,10 +6,9 @@
 InputHandler::InputHandler(QObject *parent)
     : QObject{parent}
 {
-    llama_backend_init();
-    ggml_backend_load_all();
+    modelFactory = std::make_unique<ModelFactory>();
 
-    std::cout << "Llama.cpp System Info: " << llama_print_system_info() << std::endl;
+    std::cout << "Llama.cpp System Info: " << modelFactory->systemInfoStr() << std::endl;
 }
 
 
@@ -31,11 +30,13 @@ void InputHandler::loadModel(const QString &path) {
     // // llama_model *model = llama_model_load_from_file(path.toStdString().c_str(), model_params);
 
     // llama_model_ptr model(llama_model_load_from_file(path.toStdString().c_str(), model_params));
-    this->model = std::make_unique<Model>(path.toStdString());
+    this->llm = modelFactory->loadLLM(path.toStdString());
 }
 
 void InputHandler::prompt(const QString &message) {
     qDebug() << "Generating response to:" << message;
+
+    this->llm->prompt(message.toStdString());
 
     // const llama_vocab * vocab = llama_model_get_vocab(model);
 }
