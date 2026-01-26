@@ -15,12 +15,12 @@ public:
         initializedLlama = true;
     }
 
-    std::unique_ptr<LLModel> loadLLM(std::string path) {
+    std::unique_ptr<LLModel> loadLLM(const std::string &path) {
         initLlama();
         return std::make_unique<LLModel>(path);
     }
 
-    std::unique_ptr<SDModel> loadSDM(std::string path) {
+    std::unique_ptr<SDModel> loadSDM(const std::string &path) {
         return std::make_unique<SDModel>(path);
     }
 

@@ -6,10 +6,8 @@
 
 #include "model.h"
 
-// Cross-platform environment variable setter
 inline void setEnvironmentVariable(const std::string& name, const std::string& value) {
 #ifdef _WIN32
-    // Use _putenv_s for thread-safe operation and proper memory handling
     _putenv_s(name.c_str(), value.c_str());
 #else
     setenv(name.c_str(), value.c_str(), 1);
@@ -18,9 +16,17 @@ inline void setEnvironmentVariable(const std::string& name, const std::string& v
 
 class SDModel : public Model {
     sd_ctx_t* ctx = nullptr;
-    std::string modelPath;  // Store the path to keep it alive
-    std::string lastPrompt;  // Store the last prompt to keep it alive
-    sd_image_t lastResult = {};  // Store the last result
+    std::string modelPath;
+    std::string lastPrompt; 
+    
+    struct SafeImage {
+        std::vector<uint8_t> data;
+        int width = 0;
+        int height = 0;
+        int channel = 0;
+    };
+    SafeImage lastResult;
+
 public:
     SDModel(std::string path) {
         loadModel(path);
@@ -31,7 +37,7 @@ public:
     }
 
     bool loadModel(const std::string& path) {
-        modelPath = path;  // Store the path
+        modelPath = path; 
 
         auto device = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_GPU);
         if (!device) 
@@ -52,29 +58,24 @@ public:
 
         sd_ctx_params_t params;
         // params.sd_ctx_params_t.
-        sd_ctx_params_init(&params);  // THIS IS CRITICAL - call the init function!
+        sd_ctx_params_init(&params); 
 
         // Set only the necessary fields for SD 1.5
-        params.model_path = modelPath.c_str();  // Use stored path
+        params.model_path = modelPath.c_str();
 
         // For SD 1.5, clip paths should be empty (model contains CLIP)
         params.clip_l_path = "";
         params.clip_g_path = "";
 
-        // VAE is usually inside the model, but can be external
         params.vae_path = "";
 
-        // FP16 model needs FP16 computation
         params.wtype = SD_TYPE_F16;  // MUST match your model format
 
-        // Threads
         params.n_threads = 20;  // 0 = auto-detect
 
-        // RNG settings
         params.rng_type = STD_DEFAULT_RNG;
         params.sampler_rng_type = STD_DEFAULT_RNG;
 
-        // Important for SD 1.5
         params.prediction = EPS_PRED;  // SD 1.5 uses epsilon prediction
 
         // Memory settings
@@ -83,9 +84,11 @@ public:
 
         // Performance settings
         params.offload_params_to_cpu = false;
+        params.keep_vae_on_cpu = false;
+        params.keep_clip_on_cpu = false;
+        params.keep_control_net_on_cpu = false;
         params.enable_mmap = true;
 
-        // Tensor type rules - important for FP16 models
         params.tensor_type_rules = "";
 
 
@@ -151,12 +154,35 @@ public:
         img_gen_params.loras = nullptr;
         img_gen_params.lora_count = 0;
 
+        // Call the library function - do NOT store or delete the returned pointer!
         sd_image_t* results = generate_image(ctx, &img_gen_params);
         auto num_results = img_gen_params.batch_count;
-        if (!num_results || !results) return {};
         
-        lastResult = results[0];
-        return lastResult;
+        if (!num_results || !results || !results[0].data) {
+            std::cerr << "Image generation failed or returned empty result" << std::endl;
+            return {};
+        }
+
+        // CRITICAL: Copy the image data into our own buffer immediately
+        // Do NOT store the pointer - the library manages that memory
+        const sd_image_t& source = results[0];
+        
+        lastResult.width = source.width;
+        lastResult.height = source.height;
+        lastResult.channel = source.channel;
+        
+        // Copy pixel data
+        size_t dataSize = (size_t)source.width * source.height * source.channel;
+        lastResult.data.assign(source.data, source.data + dataSize);
+
+        // Create a return value with our copied data
+        sd_image_t safeCopy;
+        safeCopy.width = lastResult.width;
+        safeCopy.height = lastResult.height;
+        safeCopy.channel = lastResult.channel;
+        safeCopy.data = lastResult.data.data();  // Point to our safe buffer
+        
+        return safeCopy;
     }
 
     ~SDModel() {

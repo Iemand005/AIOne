@@ -12,6 +12,8 @@ class LLModel : public Model
 {
     llama_model_ptr model;
     std::array<ggml_backend_dev_t, 2> devices = {nullptr, nullptr};  // NULL-terminated array
+    std::string modelPath;  // Store the path to keep it alive
+    std::string lastPrompt;  // Store the last prompt to keep it alive
     // using MessageResponse = std::function<>();
 public:
     typedef std::function<void(const std::string &token)> TokenCallback;
@@ -20,13 +22,15 @@ public:
 
     LLModel(){}
 
-    LLModel(std::string path)
+    LLModel(const std::string &path)
     {
         loadModel(path);
     }
 
     bool loadModel(const std::string &path)
     {
+        modelPath = path;  // Store the path to keep it alive
+        
         devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_GPU);
         if (!devices[0]) {
             devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_IGPU);
@@ -38,7 +42,7 @@ public:
 
         llama_model_params model_params = llama_model_default_params();
         model_params.devices = devices.data();  // Pass pointer to NULL-terminated array
-        llama_model_ptr model(llama_model_load_from_file(path.c_str(), model_params));
+        llama_model_ptr model(llama_model_load_from_file(modelPath.c_str(), model_params));
         if (!model)
         {
             std::cerr << "Failed to load model" << std::endl;
@@ -57,12 +61,14 @@ public:
 
     void prompt(std::string prompt, TokenCallback callback)
     {
+        lastPrompt = prompt;  // Store the prompt to keep it alive
+        
         const llama_vocab *vocab = llama_model_get_vocab(model.get());
-        const int promptTokenLen = -llama_tokenize(vocab, prompt.c_str(), prompt.size(), NULL, 0, true, true);
+        const int promptTokenLen = -llama_tokenize(vocab, lastPrompt.c_str(), lastPrompt.size(), NULL, 0, true, true);
 
         // tokenize prompt
         std::vector<llama_token> promptTokens(promptTokenLen);
-        if (llama_tokenize(vocab, prompt.c_str(), prompt.size(), promptTokens.data(), promptTokenLen, true, true) < 0)
+        if (llama_tokenize(vocab, lastPrompt.c_str(), lastPrompt.size(), promptTokens.data(), promptTokenLen, true, true) < 0)
         {
             std::cerr << "Failed to tokenize the prompt" << std::endl;
         }
@@ -190,5 +196,9 @@ public:
     void Destroy()
     {
         llama_model_free(model.get());
+    }
+
+    ~LLModel() {
+        // Smart pointers handle cleanup automatically
     }
 };
