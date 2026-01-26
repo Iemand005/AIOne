@@ -3,8 +3,6 @@
 #include <QDebug>
 #include <iostream>
 
-#include "../src/model.h"
-
 InputHandler::InputHandler(QObject *parent)
     : QObject{parent}
 {

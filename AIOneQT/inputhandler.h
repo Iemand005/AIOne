@@ -2,7 +2,7 @@
 #define INPUTHANDLER_H
 
 #include <QObject>
-#include <llama-cpp.h>
+#include "../src/model.hpp"
 
 class InputHandler : public QObject
 {
@@ -10,7 +10,7 @@ class InputHandler : public QObject
 public:
     explicit InputHandler(QObject *parent = nullptr);
 
-    llama_model_ptr model;
+    std::unique_ptr<Model> model;
 
 public slots:
     void handleButtonClick();
