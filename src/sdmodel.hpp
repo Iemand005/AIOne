@@ -19,7 +19,7 @@ public:
         }
         
         // Set up context parameters
-        sd_ctx_params_t params = {};
+        sd_ctx_params_t params = {0};
         params.model_path = path.c_str();
         params.vae_path = nullptr;
         params.taesd_path = nullptr;
@@ -36,35 +36,7 @@ public:
     }
 
     void generateImage(const std::string &prompt) {
-        sd_img_gen_params_t img_gen_params = {
-            gen_params.lora_vec.data(),
-            static_cast<uint32_t>(gen_params.lora_vec.size()),
-            gen_params.prompt.c_str(),
-            gen_params.negative_prompt.c_str(),
-            gen_params.clip_skip,
-            init_image,
-            ref_images.data(),
-            (int)ref_images.size(),
-            gen_params.auto_resize_ref_image,
-            gen_params.increase_ref_index,
-            mask_image,
-            gen_params.get_resolved_width(),
-            gen_params.get_resolved_height(),
-            gen_params.sample_params,
-            gen_params.strength,
-            gen_params.seed,
-            gen_params.batch_count,
-            control_image,
-            gen_params.control_strength,
-            {
-                pmid_images.data(),
-                (int)pmid_images.size(),
-                gen_params.pm_id_embed_path.c_str(),
-                gen_params.pm_style_strength,
-            },  // pm_params
-            ctx_params.vae_tiling_params,
-            gen_params.cache_params,
-        };
+        sd_img_gen_params_t img_gen_params = {0};
 
         results     = generate_image(sd_ctx, &img_gen_params);
         num_results = gen_params.batch_count;
