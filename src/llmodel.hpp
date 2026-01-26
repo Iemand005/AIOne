@@ -11,7 +11,7 @@
 class LLModel : public Model
 {
     llama_model_ptr model;
-    std::unique_ptr<ggml_backend_dev_t> devices;
+    std::array<ggml_backend_dev_t, 2> devices = {nullptr, nullptr};  // NULL-terminated array
     // using MessageResponse = std::function<>();
 public:
     typedef std::function<void(const std::string &token)> TokenCallback;
@@ -27,10 +27,17 @@ public:
 
     bool loadModel(const std::string &path)
     {
-        devices = std::make_unique<ggml_backend_dev_t>(ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_GPU));
+        devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_GPU);
+        if (!devices[0]) {
+            devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_IGPU);
+            if (!devices[0]) {
+                devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_CPU);
+            }
+        }
+        devices[1] = nullptr;  // NULL-terminate the array
 
         llama_model_params model_params = llama_model_default_params();
-        model_params.devices = devices.get();
+        model_params.devices = devices.data();  // Pass pointer to NULL-terminated array
         llama_model_ptr model(llama_model_load_from_file(path.c_str(), model_params));
         if (!model)
         {
