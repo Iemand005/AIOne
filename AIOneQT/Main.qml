@@ -17,115 +17,134 @@ Window {
 
     property string currentResponse: ""
 
-    function addToken(token) {
-        currentResponse += token
-        if (messageList.count > 0) {
-            messageList.setProperty(messageList.count - 1, "text", currentResponse)
-        }
-        // Auto-scroll to bottom
-        messageListView.positionViewAtEnd()
-    }
-
-    RowLayout {
-        FileDialog {
-            id: fileDialog
-            title: "Please choose a gguf file"
-            nameFilters: ["GGUF files (*.gguf)"]
-
-            onAccepted: {
-                if (selectedFile) console.log("There is a file", selectedFile)
-                var path = selectedFile.toString().replace("file:///", "")
-                console.log("Selected file:", path, selectedFile)
-                inputHandler.loadModel(path)
-            }
-
-            onRejected: {
-                console.log("File selection cancelled")
-            }
-        }
-
-        Button {
-            text: "Load Model"
-            Material.background: Material.Orange
-            Material.foreground: Material.Black
-
-            onClicked: {
-                console.log("Button was clicked!")
-                fileDialog.open()
-            }
+    Connections {
+        target: inputHandler
+        function onTokenReceived(token) {
+            Qt.callLater(function() {
+                currentResponse += token
+                if (messageList.count > 0) {
+                    var lastIndex = messageList.count - 1
+                    messageList.setProperty(lastIndex, "text", currentResponse)
+                }
+                messageListView.model = messageListView.model
+            })
         }
     }
 
-    ListView {
-        id: messageListView
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: messageField.top
-        anchors.margins: 10
-        spacing: 10
+    ColumnLayout {
+        anchors.fill: parent
+        spacing: 0
 
-        model: ListModel {
-            id: messageList
-        }
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 40
+            Layout.leftMargin: 10
+            Layout.rightMargin: 10
+            Layout.topMargin: 10
 
-        delegate: Rectangle {
-            width: messageListView.width
-            height: content.height + 20
-            color: model.text.startsWith("You:") ? "#2a2a2a" : "#1a1a1a"
-            radius: 5
+            FileDialog {
+                id: fileDialog
+                title: "Please choose a gguf file"
+                nameFilters: ["GGUF files (*.gguf)"]
 
-            Text {
-                id: content
-                width: parent.width - 20
-                anchors.centerIn: parent
-                text: model.text
-                color: model.text.startsWith("You:") ? "#88ff88" : "white"
-                font.pixelSize: 14
-                wrapMode: Text.WordWrap
+                onAccepted: {
+                    if (selectedFile) console.log("There is a file", selectedFile)
+                    var path = selectedFile.toString().replace("file:///", "")
+                    console.log("Selected file:", path, selectedFile)
+                    inputHandler.loadModel(path)
+                }
+
+                onRejected: {
+                    console.log("File selection cancelled")
+                }
+            }
+
+            Button {
+                text: "Load Model"
+                Material.background: Material.Orange
+                Material.foreground: Material.Black
+
+                onClicked: {
+                    console.log("Button was clicked!")
+                    fileDialog.open()
+                }
             }
         }
-    }
 
-    RowLayout {
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.margins: 10
-        spacing: 10
-
-        TextArea {
-            id: messageField
+        ListView {
+            id: messageListView
             Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.margins: 10
+            spacing: 10
+
+            model: ListModel {
+                id: messageList
+            }
+
+            delegate: Rectangle {
+                width: messageListView.width
+                height: content.height + 20
+                color: model.text.startsWith("You:") ? "#2a2a2a" : "#1a1a1a"
+                radius: 5
+
+                Text {
+                    id: content
+                    width: parent.width - 20
+                    anchors.centerIn: parent
+                    text: model.text
+                    color: model.text.startsWith("You:") ? "#88ff88" : "white"
+                    font.pixelSize: 14
+                    wrapMode: Text.WordWrap
+                }
+            }
         }
 
-        Button {
-            text: "Send"
-            width: 150
-            height: 50
-            Material.background: Material.Orange
-            Material.foreground: Material.Black
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.maximumHeight: 60
+            Layout.leftMargin: 10
+            Layout.rightMargin: 10
+            Layout.bottomMargin: 10
+            spacing: 10
 
-            onClicked: {
-                if (messageField.text.trim() === "") return
+            TextArea {
+                id: messageField
+                Layout.fillWidth: true
+                Layout.minimumHeight: 40
+                Layout.maximumHeight: 60
+            }
 
-                console.log("Button was clicked!")
+            Button {
+                text: "Send"
+                Layout.minimumWidth: 100
+                Layout.minimumHeight: 40
+                Material.background: Material.Orange
+                Material.foreground: Material.Black
 
-                // Add user message to list
-                messageList.append({"text": "You: " + messageField.text})
+                onClicked: {
+                    if (messageField.text.trim() === "") return
 
-                // Add empty assistant message that will be updated token-by-token
-                messageList.append({"text": "Assistant: "})
-                currentResponse = "Assistant: "
+                    messageList.append({"text": "You: " + messageField.text})
 
-                // Clear the response before starting
-                inputHandler.prompt(messageField.text, function(token) {
-                    window.addToken(token)
-                })
+                    currentResponse = "Assistant: "
+                    messageList.append({"text": currentResponse})
 
-                messageField.text = ""
-                messageListView.positionViewAtEnd()
+                    var userMessage = messageField.text
+                    messageField.text = ""
+                    messageListView.positionViewAtEnd()
+
+                    inputHandler.prompt(userMessage, function(token) {
+                        Qt.callLater(function() {
+                            currentResponse += token
+                            if (messageList.count > 0) {
+                                var lastIndex = messageList.count - 1
+                                messageList.setProperty(lastIndex, "text", currentResponse)
+                            }
+                            messageListView.model = messageListView.model
+                        })
+                    })
+                }
             }
         }
     }
