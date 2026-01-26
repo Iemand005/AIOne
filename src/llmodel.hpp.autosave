@@ -130,12 +130,9 @@ public:
 
         if (llama_model_has_encoder(model.get()))
         {
-            // set decoder start token to be decoded
             llama_token startTokenId = llama_model_decoder_start_token(model.get());
             if (startTokenId == LLAMA_TOKEN_NULL)
-            {
                 startTokenId = llama_vocab_bos(vocab);
-            }
 
             // this batch will be processed in generation loop
             batch = llama_batch_get_one(&startTokenId, 1);
@@ -159,9 +156,7 @@ public:
 
             // if "end of generation" token emitted, stop generation
             if (llama_vocab_is_eog(vocab, newTokenId))
-            {
                 break;
-            }
 
             // convert token to text
             char buf[128];
@@ -172,7 +167,6 @@ public:
             }
 
             // write text
-            // TODO send to callback
             std::string text(buf, n);
             std::cout << text.c_str();
             callback(text);

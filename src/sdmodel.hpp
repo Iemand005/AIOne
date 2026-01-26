@@ -28,6 +28,7 @@ class SDModel : public Model {
     SafeImage lastResult;
 
 public:
+    SDModel(){}
     SDModel(std::string path) {
         loadModel(path);
     }

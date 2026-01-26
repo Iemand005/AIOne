@@ -73,8 +73,35 @@ void UIHandler::handleButtonClickWithParam(const QString &message) {
 
 void UIHandler::loadModel(const QString &path) {
     qDebug() << "Loading model at:" << path;
+    
+    if (llmWorkerThread && llmWorkerThread->isRunning()) {
+        qWarning() << "Already loading LLM model";
+        return;
+    }
 
-    this->llm = modelFactory->loadLLM(path.toStdString());
+    std::string pathStr = path.toStdString();
+    llmWorkerThread = new QThread();
+
+    this->llm = modelFactory->loadLLM(pathStr);
+
+    // QObject::connect(llmWorkerThread, &QThread::started, [this, pathStr]() {
+    //     QMutexLocker locker(&llmMutex);
+    //     try {
+    //         this->llm = modelFactory->loadLLM(pathStr);
+    //         qDebug() << "LLM model loaded successfully";
+    //     } catch (const std::exception &e) {
+    //         qCritical() << "Failed to load LLM model:" << e.what();
+    //         this->llm = nullptr;
+    //     }
+    //     llmWorkerThread->quit();
+    // });
+    
+    // QObject::connect(llmWorkerThread, &QThread::finished, [this]() {
+    //     llmWorkerThread->deleteLater();
+    //     llmWorkerThread = nullptr;
+    // });
+
+    // llmWorkerThread->start();
 }
 
 void UIHandler::loadSDModel(const QString &path) {
@@ -85,12 +112,13 @@ void UIHandler::loadSDModel(const QString &path) {
         return;
     }
 
+    std::string pathStr = path.toStdString();
     sdWorkerThread = new QThread();
 
-    QObject::connect(sdWorkerThread, &QThread::started, [this, path]() {
+    QObject::connect(sdWorkerThread, &QThread::started, [this, pathStr]() {
         QMutexLocker locker(&sdMutex);
         try {
-            this->sdm = modelFactory->loadSDM(path.toStdString());
+            this->sdm = modelFactory->loadSDM(pathStr);
             qDebug() << "SD model loaded successfully";
         } catch (const std::exception &e) {
             qCritical() << "Failed to load SD model:" << e.what();
@@ -118,8 +146,12 @@ void UIHandler::prompt(const QString &message) {
     workerThread = new QThread();
 
     QObject::connect(workerThread, &QThread::started, [this, message]() {
-        QMutexLocker locker(&mutex);
+        QMutexLocker locker(&llmMutex);
 
+        if (!llm) {
+            qWarning() << "LLM model not loaded";
+            return;
+        }
 
         this->llm->prompt(message.toStdString(), [this](const std::string &token) {
             tokenReceived(QString(token.c_str()));

@@ -24,6 +24,7 @@ ApplicationWindow {
             currentResponse += token
             if (messageList.count > 0) {
                 messageList.setProperty(messageList.count - 1, "text", currentResponse)
+                messageListView.positionViewAtEnd()
             }
         }
         function onImageGenerated(image) {
