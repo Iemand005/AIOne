@@ -4,7 +4,7 @@ project(AIOneQT VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(AIONE_OPENCL "Enable OpenCL support via CLBlast" ON)
+option(AIONE_OPENCL "Enable OpenCL support via CLBlast" OFF)
 
 if(MSVC)
     # set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>")
@@ -15,6 +15,7 @@ if(MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /FS")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FS")
         add_compile_options(/wd4244)
+        add_compile_options(/wd4267)
     # # Fix for large object files in stable-diffusion.cpp
     add_compile_options(/bigobj /MP /W3)
     
@@ -22,9 +23,11 @@ if(MSVC)
     add_definitions(-DNOMINMAX -D_CRT_SECURE_NO_WARNINGS)
 endif()
 
-get_filename_component(LLAMA_CPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/llama.cpp" ABSOLUTE)
-get_filename_component(STABLE_DIFFUSION_CPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/stable-diffusion.cpp" ABSOLUTE)
-get_filename_component(OPENCL_SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/OpenCL-SDK" ABSOLUTE)
+get_filename_component(THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty" ABSOLUTE)
+
+set(LLAMA_CPP_DIR "${THIRD_PARTY_DIR}/llama.cpp")
+set(STABLE_DIFFUSION_CPP_DIR "${THIRD_PARTY_DIR}/stable-diffusion.cpp")
+
 
 enable_language(C)
 
@@ -44,6 +47,7 @@ set(SD_VULKAN OFF CACHE BOOL "" FORCE)
 set(GGML_VULKAN OFF CACHE BOOL "" FORCE)
 
 if(WIN32)
+    set(OPENCL_SDK_DIR "${THIRD_PARTY_DIR}/OpenCL-SDK")
     # Common Vulkan SDK locations on Windows
     set(VULKAN_SDK_PATH "$ENV{VULKAN_SDK}")
     if(NOT VULKAN_SDK_PATH)
@@ -61,17 +65,34 @@ if(WIN32)
 endif()
 
 if (AIONE_OPENCL)
+    if(NOT TCLAP_INCLUDE_PATH)
+        set(TCLAP_INCLUDE_PATH "../thirdparty/tclap/include")
+    endif()
+
+    if(NOT Stb_INCLUDE_PATH)
+        set(Stb_INCLUDE_PATH "../thirdparty/stb")
+    endif()
+
     add_subdirectory(${OPENCL_SDK_DIR} ${CMAKE_BINARY_DIR}/OpenCL-SDK_build)
+
+    set(OpenCL_TARGET OpenCL)
 
     set(OpenCL_ROOT ${CMAKE_BINARY_DIR}/OpenCL-SDK_build)
     set(OpenCL_INCLUDE_DIR "${OpenCL_ROOT}/include")
     set(OpenCL_LIBRARY "${OpenCL_ROOT}/lib/OpenCL.lib")
+
+    # add_dependencies(llama ${OpenCL_TARGET})
 endif()
 
-
-set(LLAMA_CLBLAST ON CACHE BOOL "" FORCE)
-set(SD_OPENCL ON CACHE BOOL "" FORCE)
-set(GGML_OPENCL ON CACHE BOOL "" FORCE)
+if(AIONE_OPENCL)
+    set(LLAMA_CLBLAST ON CACHE BOOL "Enable CLBlast for OpenCL" FORCE)
+    set(SD_OPENCL ON CACHE BOOL "Enable Stable Diffusion OpenCL" FORCE)
+    set(GGML_OPENCL ON CACHE BOOL "Enable GGML OpenCL backend" FORCE)
+else()
+    set(LLAMA_CLBLAST OFF CACHE BOOL "Disable CLBlast" FORCE)
+    set(SD_OPENCL OFF CACHE BOOL "Disable Stable Diffusion OpenCL" FORCE)
+    set(GGML_OPENCL OFF CACHE BOOL "Disable GGML OpenCL" FORCE)
+endif()
 
 set(LLAMA_METAL OFF CACHE BOOL "" FORCE)
 set(LLAMA_CUDA OFF CACHE BOOL "" FORCE)
