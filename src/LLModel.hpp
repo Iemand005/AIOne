@@ -5,6 +5,7 @@
 #include <functional>
 
 #include <llama-cpp.h>
+#include <ggml-backend.h>
 
 #include "model.h"
 
@@ -51,7 +52,7 @@ public:
         }
         catch (std::exception ex)
         {
-            std::cerr << "Modeal loading exceot" << ex.what();
+            std::cerr << "Model loading exception: " << ex.what();
         }
 
         return true;
@@ -187,13 +188,17 @@ public:
         llama_free(context);
     }
 
-    void Destroy()
+    void destroy()
     {
-        llama_model_free(model.get());
+        if (model != NULL) {
+            llama_model_free(model.get());
+            model = NULL;
+        }
     }
 
     ~LLModel()
     {
+        destroy();
         // Smart pointers handle cleanup automatically
     }
 };
