@@ -4,7 +4,7 @@
 #include <QQuickImageProvider>
 #include <QImage>
 
-#include "inputhandler.h"
+#include "UIHandler.h"
 
 class GeneratedImageProvider : public QQuickImageProvider {
 public:
