@@ -4,7 +4,7 @@
 
 #include <stable-diffusion.h>
 
-#include "model.h"
+#include "Model.hpp"
 
 inline void setEnvironmentVariable(const std::string& name, const std::string& value) {
 #ifdef _WIN32

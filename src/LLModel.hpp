@@ -7,7 +7,7 @@
 #include <llama-cpp.h>
 #include <ggml-backend.h>
 
-#include "model.h"
+#include "Model.hpp"
 
 class LLModel : public Model
 {
