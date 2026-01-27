@@ -14,7 +14,7 @@ option(AIONE_VULKAN "Enable Vulkan support" ON) # Here's da vulkaannn
 
 set(QT_VERSION, "6.10.1")
 
-set(Qt6_DIR "/Qt/${QT_VERSION}/msvc2022_64/lib/cmake/Qt6")
+set(Qt6_DIR "/Qt/6.10.1/msvc2022_64/lib/cmake/Qt6")
 set(CMAKE_PREFIX_PATH "C:/Qt/${QT_VERSION}/msvc2022_64" ${CMAKE_PREFIX_PATH})
 
 if(MSVC)
