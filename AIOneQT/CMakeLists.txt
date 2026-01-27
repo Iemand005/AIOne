@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Options
 option(AIONE_OPENCL "Enable OpenCL support via CLBlast" OFF)
-option(AIONE_VULKAN "Enable Vulkan support" ON) # Here's da vulkaannn
+option(AIONE_VULKAN "Enable Vulkan support" OFF) # Here's da vulkaannn
 
 set(QT_VERSION, "6.10.1")
 

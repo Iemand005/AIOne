@@ -5,7 +5,8 @@
 enum PreferredDevice : uint8_t
 {
     ANY,
-    DGPU,
+    CPU,
     IGPU,
-    CPU
+    DGPU,
+    ACCELERATOR
 };
