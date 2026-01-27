@@ -9,7 +9,7 @@ ApplicationWindow {
     width: 640
     height: 480
     visible: true
-    title: qsTr("Hello World")
+    title: qsTr("AIOne")
 
     Material.theme: Material.Dark
     Material.accent: Material.LightGreen
@@ -42,7 +42,7 @@ ApplicationWindow {
         anchors.right: parent.right
 
         TabButton {
-            text: "LLM Chat"
+            text: "Chat"
         }
         TabButton {
             text: "Stable Diffusion"
@@ -61,7 +61,7 @@ ApplicationWindow {
 
         // LLM Tab
         ColumnLayout {
-            anchors.fill: parent
+            // anchors.fill: parent
             Layout.fillWidth: true
             spacing: 0
 
@@ -89,10 +89,8 @@ ApplicationWindow {
                     }
                 }
 
-                Button {
+                AIOButton {
                     text: "Load Model"
-                    Material.background: Material.Orange
-                    Material.foreground: Material.Black
 
                     onClicked: {
                         console.log("Button was clicked!")
@@ -145,12 +143,10 @@ ApplicationWindow {
                     Layout.maximumHeight: 60
                 }
 
-                Button {
+                AIOButton {
                     text: "Send"
                     Layout.minimumWidth: 100
                     Layout.minimumHeight: 40
-                    Material.background: Material.Orange
-                    Material.foreground: Material.Black
 
                     onClicked: {
                         if (messageField.text.trim() === "") return
@@ -201,10 +197,8 @@ ApplicationWindow {
                     }
                 }
 
-                Button {
+                AIOButton {
                     text: "Load Model"
-                    Material.background: Material.Orange
-                    Material.foreground: Material.Black
 
                     onClicked: {
                         console.log("Button was clicked!")
@@ -219,11 +213,10 @@ ApplicationWindow {
                 placeholderText: "Enter prompt for image generation..."
             }
 
-            Button {
+            AIOButton {
                 text: "Generate Image"
                 Layout.fillWidth: true
-                Material.background: Material.Purple
-                Material.foreground: Material.Black
+                backgroundColor: Material.Purple
 
                 onClicked: function() {
                     console.log("Fine.. I'll make one gimage for u bro", "oh and da promp is he", sdPromptField.text)

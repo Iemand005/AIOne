@@ -103,6 +103,11 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /FS" CACHE STRING "" FORCE)
 endif()
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(QT_QML_DEBUG)
+    add_compile_definitions(QT_DECLARATIVE_DEBUG)
+endif()
+
 add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
 
 add_subdirectory(${STABLE_DIFFUSION_CPP_DIR} ${CMAKE_BINARY_DIR}/stable-diffusion.cpp_build)
@@ -130,6 +135,7 @@ qt_add_qml_module(appAIOneQT
     QML_FILES
         Main.qml
         SOURCES UIHandler.h UIHandler.cpp
+        QML_FILES AIOButton.qml
 )
 
 if(AIONE_VULKAN)
