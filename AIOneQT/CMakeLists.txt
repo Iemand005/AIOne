@@ -5,7 +5,7 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS_INIT "/FS")
 endif()
 
-project(AIOneQT VERSION 0.1 LANGUAGES CXX C)
+project(AIOne VERSION 0.1 LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Options
@@ -126,12 +126,12 @@ endif()
 find_package(Qt6 REQUIRED COMPONENTS Quick)
 qt_standard_project_setup(REQUIRES 6.8)
 
-qt_add_executable(appAIOneQT
+qt_add_executable(AIOne
     main.cpp
 )
 
-qt_add_qml_module(appAIOneQT
-    URI AIOneQT
+qt_add_qml_module(AIOne
+    URI AIOne
     QML_FILES
         Main.qml
         SOURCES UIHandler.h UIHandler.cpp
@@ -139,21 +139,21 @@ qt_add_qml_module(appAIOneQT
 )
 
 if(AIONE_VULKAN)
-    target_link_libraries(appAIOneQT PRIVATE Vulkan::Vulkan)
+    target_link_libraries(AIOne PRIVATE Vulkan::Vulkan)
 endif()
 
-target_link_libraries(appAIOneQT
+target_link_libraries(AIOne
     PRIVATE Qt6::Quick
     PRIVATE llama
     PRIVATE stable-diffusion
 )
 
-target_include_directories(appAIOneQT PRIVATE
+target_include_directories(AIOne PRIVATE
     ${LLAMA_CPP_DIR}
     ${STABLE_DIFFUSION_CPP_DIR}
 )
 
-set_target_properties(appAIOneQT PROPERTIES
+set_target_properties(AIOne PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     DEBUG_POSTFIX "d"
 )

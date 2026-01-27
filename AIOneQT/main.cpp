@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
     engine.rootContext()->setContextProperty("inputHandler", &inputHandler);
     
-    engine.loadFromModule("AIOneQT", "Main");
+    engine.loadFromModule("AIOne", "Main");
 
     return app.exec();
 }
