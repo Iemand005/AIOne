@@ -9,104 +9,113 @@
 #include <ggml-backend.h>
 
 #include "Model.hpp"
+#include "ModelOptions.hpp"
+#include "PreferredDevice.hpp"
+#include "TextGenerationOptions.hpp"
+#include "TextContext.hpp"
+#include "TextContextOptions.hpp"
 
 class LLModel : public Model
 {
     llama_model_ptr model;
     std::array<ggml_backend_dev_t, 2> devices = {nullptr, nullptr};
     std::string modelPath;
-    std::string lastPrompt;
-
+    const llama_vocab *vocab;
+    llama_sampler sampler;
+    
 public:
     typedef std::function<void(const std::string &token)> TokenCallback;
 
     const int maxTokens = 400;
 
-    LLModel() {}
-
-    LLModel(const std::string &path)
-    {
-        loadModel(path);
-    }
-
-    bool loadModel(const std::string &path)
+    LLModel(const std::string &path, const ModelOptions &options)
     {
         modelPath = path;
-
-        devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_GPU);
-        if (!devices[0])
-            devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_IGPU);
-        if (!devices[0])
-            devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_CPU);
-
-        try
-        {
-
-            llama_model_params model_params = llama_model_default_params();
-            model_params.devices = devices.data();
-            llama_model_ptr model(llama_model_load_from_file(modelPath.c_str(), model_params));
-            if (!model)
-            {
-                std::cerr << "Failed to load model" << std::endl;
-                return false;
-            }
-
-            this->model = std::move(model);
-        }
-        catch (std::exception ex)
-        {
-            std::cerr << "Model loading exception: " << ex.what();
+        
+        switch (options.device) {
+            case PreferredDevice::ANY:
+            case PreferredDevice::DGPU:
+                devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_GPU);
+                if (devices[0]) break;
+            case PreferredDevice::IGPU:
+                devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_IGPU);
+                if (devices[0]) break;
+            case PreferredDevice::CPU:
+                devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_CPU);
+                if (devices[0]) break;
+            default:
+                throw std::runtime_error("No compatible device found");
         }
 
-        return true;
+        llama_model_params modelParams = llama_model_default_params();
+        modelParams.devices = devices.data();
+        modelParams.n_gpu_layers = options.offloadLayers;
+
+        llama_model_ptr model(llama_model_load_from_file(modelPath.c_str(), modelParams));
+        if (!model)
+        {
+            throw std::runtime_error("Failed to load model");
+        }
+
+        this->model = std::move(model);
+        vocab = llama_model_get_vocab(this->model.get());
     }
-    // std::string prompt(std::string prompt) {
-    //     std::string response;
-    //     // prompt(prompt, [&response](std::string &token) {
-    //     //     // *response =  *response + token;
-    //     // });
-    //     return response;
-    // }
 
-    void prompt(std::string prompt, TokenCallback callback)
-    {
-        lastPrompt = prompt;
+    std::string getModelPath() {
+        return modelPath;
+    }
 
-        const llama_vocab *vocab = llama_model_get_vocab(model.get());
-        const int promptTokenLen = -llama_tokenize(vocab, lastPrompt.c_str(), lastPrompt.size(), NULL, 0, true, true);
-
-        // tokenize prompt
+    std::vector<llama_token> tokenize(std::string prompt, bool addSpecialTokens) {
+        const int promptTokenLen = -llama_tokenize(vocab, prompt.c_str(), prompt.size(), NULL, 0, addSpecialTokens, true);
         std::vector<llama_token> promptTokens(promptTokenLen);
-        if (llama_tokenize(vocab, lastPrompt.c_str(), lastPrompt.size(), promptTokens.data(), promptTokenLen, true, true) < 0)
+
+        if (llama_tokenize(vocab, prompt.c_str(), prompt.size(), promptTokens.data(), promptTokenLen, addSpecialTokens, true) < 0)
         {
-            std::cerr << "Failed to tokenize the prompt" << std::endl;
+            throw std::runtime_error("Failed to tokenize the prompt");
         }
 
-        auto contextParams = llama_context_default_params();
-        contextParams.n_ctx = promptTokenLen + maxTokens - 1; // context size
-        contextParams.n_batch = 512;
+        return promptTokens;
+    }
 
-        llama_context *context = llama_init_from_model(model.get(), contextParams);
+    TextContext newContext() {
+        return newContext(TextContextOptions());
+    }
 
-        if (context == NULL)
-        {
-            std::cerr << "Failed to initialize a context window" << std::endl;
-        }
+    TextContext newContext(TextContextOptions options) {
+        return TextContext(model.get(), options);
+    }
 
-        auto samplerParams = llama_sampler_chain_default_params();
+    void complete(TextContext context, std::string prompt, TokenCallback callback) {
+        complete(context, prompt, callback, TextGenerationOptions());
+    }
+
+    void complete(TextContext context, std::string prompt, TokenCallback callback, TextGenerationOptions options) {
+        // tokenize prompt
+        std::vector<llama_token> promptTokens = tokenize(prompt, true);
+
+        llama_sampler_chain_params samplerParams = llama_sampler_chain_default_params();
         samplerParams.no_perf = false; // TODO disable?
 
         llama_sampler *sampler = llama_sampler_chain_init(samplerParams);
-        llama_sampler_chain_add(sampler, llama_sampler_init_greedy());
+        llama_sampler_chain_add(sampler, llama_sampler_init_min_p(options.minP, 1));
+        llama_sampler_chain_add(sampler, llama_sampler_init_temp(options.temperature));
+        llama_sampler_chain_add(sampler, llama_sampler_init_dist(options.seed));
 
         llama_batch batch;
+        uint32_t maxBatchSize = context.getBatchSize();
 
-        for (size_t i = 0; i < promptTokenLen; i += contextParams.n_batch)
+        // TODO everything down here
+        // I want to move the encoding/decoding somewhat to the context, since
+        // that'll have to manage the cache and stuff, but I'm sure there's a better way
+        // I'll look into it later :3
+        // (perhaps a built-in way to compare against cached tokens)
+
+        for (size_t i = 0; i < promptTokens.size(); i += maxBatchSize)
         {
-            size_t remainingTokens = promptTokenLen - i;
+            size_t remainingTokens = promptTokens.size() - i;
 
-            // create a new batch (size of remaining prompt tokens, max `n_batch` length)
-            size_t batchSize = std::min(remainingTokens, (size_t)contextParams.n_batch);
+            // create a new batch (size of remaining prompt tokens, max `maxBatchSize` length)
+            size_t batchSize = std::min(remainingTokens, (size_t)maxBatchSize);
             batch = llama_batch_get_one(promptTokens.data() + i, batchSize);
 
             // if the model has an encoder, process input using encoder
