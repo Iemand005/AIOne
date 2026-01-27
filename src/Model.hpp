@@ -5,7 +5,7 @@
 
 class Model {
 public:
-    virtual bool loadModel(const std::string& path) = 0;
+    bool loadModel(const std::string& path);
 
-    virtual ggml_backend_device *getBackend() = 0;
+    ggml_backend_device *getBackend();
 };
