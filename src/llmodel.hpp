@@ -11,16 +11,16 @@
 class LLModel : public Model
 {
     llama_model_ptr model;
-    std::array<ggml_backend_dev_t, 2> devices = {nullptr, nullptr};  // NULL-terminated array
-    std::string modelPath;  // Store the path to keep it alive
-    std::string lastPrompt;  // Store the last prompt to keep it alive
+    std::array<ggml_backend_dev_t, 2> devices = {nullptr, nullptr}; // NULL-terminated array
+    std::string modelPath;                                          // Store the path to keep it alive
+    std::string lastPrompt;                                         // Store the last prompt to keep it alive
     // using MessageResponse = std::function<>();
 public:
     typedef std::function<void(const std::string &token)> TokenCallback;
 
     const int maxTokens = 400;
 
-    LLModel(){}
+    LLModel() {}
 
     LLModel(const std::string &path)
     {
@@ -29,26 +29,33 @@ public:
 
     bool loadModel(const std::string &path)
     {
-        modelPath = path;  // Store the path to keep it alive
-        
+        modelPath = path; // Store the path to keep it alive
+
         devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_GPU);
-        if (!devices[0]) {
+        if (!devices[0])
             devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_IGPU);
-            if (!devices[0]) {
-                devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_CPU);
-            }
-        }
-        devices[1] = nullptr;  // NULL-terminate the array
+        if (!devices[0])
+            devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_CPU);
 
-        llama_model_params model_params = llama_model_default_params();
-        model_params.devices = devices.data();  // Pass pointer to NULL-terminated array
-        llama_model_ptr model(llama_model_load_from_file(modelPath.c_str(), model_params));
-        if (!model)
+        devices[1] = nullptr; // NULL-terminate the array
+        try
         {
-            std::cerr << "Failed to load model" << std::endl;
+
+            llama_model_params model_params = llama_model_default_params();
+            model_params.devices = devices.data();
+            llama_model_ptr model(llama_model_load_from_file(modelPath.c_str(), model_params));
+            if (!model)
+            {
+                std::cerr << "Failed to load model" << std::endl;
+            }
+
+            this->model = std::move(model);
+        }
+        catch (std::exception ex)
+        {
+            std::cerr << "Modeal loading exceot" << ex.what();
         }
 
-        this->model = std::move(model);
         return true;
     }
     // std::string prompt(std::string prompt) {
@@ -62,7 +69,7 @@ public:
     void prompt(std::string prompt, TokenCallback callback)
     {
         lastPrompt = prompt;
-        
+
         const llama_vocab *vocab = llama_model_get_vocab(model.get());
         const int promptTokenLen = -llama_tokenize(vocab, lastPrompt.c_str(), lastPrompt.size(), NULL, 0, true, true);
 
@@ -187,7 +194,8 @@ public:
         llama_model_free(model.get());
     }
 
-    ~LLModel() {
+    ~LLModel()
+    {
         // Smart pointers handle cleanup automatically
     }
 };

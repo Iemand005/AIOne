@@ -1,6 +1,10 @@
 #pragma once
-#include <llama-cpp.h>
+
 #include <string>
+#include <locale>
+#include <codecvt>
+
+#include <llama-cpp.h>
 
 #include "llmodel.hpp"
 #include "sdmodel.hpp"
@@ -9,6 +13,7 @@ class ModelFactory {
     bool initializedLlama = false;
 public:
     void initLlama() {
+        std::locale::global(std::locale(".UTF-8"));
         if (initializedLlama) return;
         // llama_backend_init();
         // ggml_backend_load_all();
