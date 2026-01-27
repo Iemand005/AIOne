@@ -13,6 +13,7 @@ option(AIONE_OPENCL "Enable OpenCL support via CLBlast" OFF)
 option(AIONE_VULKAN "Enable Vulkan support" ON) # Here's da vulkaannn
 
 set(Qt6_DIR "/Qt/6.10.1/msvc2022_64/lib/cmake/Qt6")
+set(CMAKE_PREFIX_PATH "C:/Qt/6.10.1/msvc2022_64" ${CMAKE_PREFIX_PATH})
 
 if(MSVC)
     add_compile_options(/FS /bigobj /MP /W3 /wd4244 /wd4267)
