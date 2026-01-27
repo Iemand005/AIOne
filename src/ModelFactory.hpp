@@ -4,8 +4,8 @@
 
 #include <llama-cpp.h>
 
-#include "llmodel.hpp"
-#include "sdmodel.hpp"
+#include "LLModel.hpp"
+#include "SDModel.hpp"
 
 class ModelFactory {
     bool initializedLlama = false;

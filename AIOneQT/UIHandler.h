@@ -6,7 +6,7 @@
 #include <QThread>
 #include <QMutex>
 
-#include "../src/modelfactory.hpp"
+#include "../src/ModelFactory.hpp"
 
 class UIHandler : public QObject
 {
