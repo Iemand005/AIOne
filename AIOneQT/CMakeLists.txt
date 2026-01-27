@@ -12,6 +12,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(AIONE_OPENCL "Enable OpenCL support via CLBlast" OFF)
 option(AIONE_VULKAN "Enable Vulkan support" ON) # Here's da vulkaannn
 
+set(Qt6_DIR "/Qt/6.10.1/msvc2022_64/lib/cmake/Qt6")
+
 if(MSVC)
     add_compile_options(/FS /bigobj /MP /W3 /wd4244 /wd4267)
     string(APPEND CMAKE_C_FLAGS " /FS")

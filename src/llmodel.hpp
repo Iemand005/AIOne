@@ -11,10 +11,9 @@
 class LLModel : public Model
 {
     llama_model_ptr model;
-    std::array<ggml_backend_dev_t, 2> devices = {nullptr, nullptr}; // NULL-terminated array
-    std::string modelPath;                                          // Store the path to keep it alive
-    std::string lastPrompt;                                         // Store the last prompt to keep it alive
-    // using MessageResponse = std::function<>();
+    std::array<ggml_backend_dev_t, 2> devices = {nullptr, nullptr};
+    std::string modelPath;
+    std::string lastPrompt;
 public:
     typedef std::function<void(const std::string &token)> TokenCallback;
 
@@ -29,7 +28,7 @@ public:
 
     bool loadModel(const std::string &path)
     {
-        modelPath = path; // Store the path to keep it alive
+        modelPath = path;
 
         devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_GPU);
         if (!devices[0])
@@ -37,7 +36,6 @@ public:
         if (!devices[0])
             devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_CPU);
 
-        devices[1] = nullptr; // NULL-terminate the array
         try
         {
 

@@ -50,38 +50,30 @@ public:
         }
 
         selectDevice();
-        
 
-        if (ctx) {
-            free_sd_ctx(ctx);
-            ctx = nullptr;
-        }
+        if (ctx) free_sd_ctx(ctx);
 
         sd_ctx_params_t params;
-        // params.sd_ctx_params_t.
         sd_ctx_params_init(&params); 
 
-        // Set only the necessary fields for SD 1.5
         params.model_path = modelPath.c_str();
 
-        // For SD 1.5, clip paths should be empty (model contains CLIP)
         params.clip_l_path = "";
         params.clip_g_path = "";
 
         params.vae_path = "";
 
-        params.wtype = SD_TYPE_F16;  // MUST match your model format
+        params.wtype = SD_TYPE_F16;
 
         params.n_threads = 20;  // 0 = auto-detect
 
         params.rng_type = STD_DEFAULT_RNG;
         params.sampler_rng_type = STD_DEFAULT_RNG;
 
-        params.prediction = EPS_PRED;  // SD 1.5 uses epsilon prediction
+        params.prediction = EPS_PRED;
 
-        // Memory settings
         params.vae_decode_only = true;
-        params.free_params_immediately = false;  // Set to false for stability
+        params.free_params_immediately = false;
 
         // Performance settings
         params.offload_params_to_cpu = false;
@@ -91,8 +83,6 @@ public:
         params.enable_mmap = true;
 
         params.tensor_type_rules = "";
-
-
 
         ctx = new_sd_ctx(&params);
 
@@ -119,6 +109,7 @@ public:
         img_gen_params.prompt = lastPrompt.c_str();  // Use stored prompt
         img_gen_params.negative_prompt = "";
 
+        // SDXL works best with 512x512 or larger
         img_gen_params.width = width;
         img_gen_params.height = height;
 
@@ -140,7 +131,8 @@ public:
         img_gen_params.pm_params.id_embed_path = nullptr;
         img_gen_params.pm_params.style_strength = 0.0f;
 
-        img_gen_params.vae_tiling_params.enabled = false;
+        // CRITICAL FOR SDXL: Enable VAE tiling to handle large resolutions
+        img_gen_params.vae_tiling_params.enabled = true;  // CHANGED: Enable VAE tiling
         img_gen_params.vae_tiling_params.tile_size_x = 512;
         img_gen_params.vae_tiling_params.tile_size_y = 512;
         img_gen_params.vae_tiling_params.target_overlap = 0.2f;

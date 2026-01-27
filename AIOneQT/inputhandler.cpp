@@ -82,26 +82,28 @@ void UIHandler::loadModel(const QString &path) {
     std::string pathStr = path.toStdString();
     llmWorkerThread = new QThread();
 
-    this->llm = modelFactory->loadLLM(pathStr);
+    llmWorkerThread->setStackSize(256 * 1024 * 1024);
 
-    // QObject::connect(llmWorkerThread, &QThread::started, [this, pathStr]() {
-    //     QMutexLocker locker(&llmMutex);
-    //     try {
-    //         this->llm = modelFactory->loadLLM(pathStr);
-    //         qDebug() << "LLM model loaded successfully";
-    //     } catch (const std::exception &e) {
-    //         qCritical() << "Failed to load LLM model:" << e.what();
-    //         this->llm = nullptr;
-    //     }
-    //     llmWorkerThread->quit();
-    // });
+    // this->llm = modelFactory->loadLLM(pathStr);
+
+    QObject::connect(llmWorkerThread, &QThread::started, [this, pathStr]() {
+        QMutexLocker locker(&llmMutex);
+        try {
+            this->llm = modelFactory->loadLLM(pathStr);
+            qDebug() << "LLM model loaded successfully";
+        } catch (const std::exception &e) {
+            qCritical() << "Failed to load LLM model:" << e.what();
+            this->llm = nullptr;
+        }
+        llmWorkerThread->quit();
+    });
     
-    // QObject::connect(llmWorkerThread, &QThread::finished, [this]() {
-    //     llmWorkerThread->deleteLater();
-    //     llmWorkerThread = nullptr;
-    // });
+    QObject::connect(llmWorkerThread, &QThread::finished, [this]() {
+        llmWorkerThread->deleteLater();
+        llmWorkerThread = nullptr;
+    });
 
-    // llmWorkerThread->start();
+    llmWorkerThread->start();
 }
 
 void UIHandler::loadSDModel(const QString &path) {
@@ -114,6 +116,9 @@ void UIHandler::loadSDModel(const QString &path) {
 
     std::string pathStr = path.toStdString();
     sdWorkerThread = new QThread();
+    
+    // Increase stack size to 8MB for complex tokenizer patterns
+    sdWorkerThread->setStackSize(8 * 1024 * 1024);
 
     QObject::connect(sdWorkerThread, &QThread::started, [this, pathStr]() {
         QMutexLocker locker(&sdMutex);
