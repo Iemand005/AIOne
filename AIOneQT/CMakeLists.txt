@@ -129,7 +129,7 @@ qt_add_qml_module(appAIOneQT
     URI AIOneQT
     QML_FILES
         Main.qml
-        SOURCES inputhandler.h inputhandler.cpp
+        SOURCES UIHandler.h UIHandler.cpp
 )
 
 if(AIONE_VULKAN)
