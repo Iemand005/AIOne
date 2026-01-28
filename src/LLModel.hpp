@@ -292,12 +292,14 @@ public:
         size_t bestCached = 0;
         size_t bestIndex = 0;
 
-        for (size_t i = 0; i < registeredContexts.size(); i++) {
-            size_t cacheMissIndex = registeredContexts[i].findCache(promptTokens);
+        if (registeredContexts.size() > 1) {
+            for (size_t i = 0; i < registeredContexts.size(); i++) {
+                size_t cacheMissIndex = registeredContexts[i].findCache(promptTokens);
 
-            if (cacheMissIndex > bestCached) {
-                bestCached = cacheMissIndex;
-                bestIndex = i;
+                if (cacheMissIndex > bestCached) {
+                    bestCached = cacheMissIndex;
+                    bestIndex = i;
+                }
             }
         }
 
