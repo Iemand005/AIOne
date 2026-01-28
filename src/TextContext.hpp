@@ -8,7 +8,7 @@
 #include <algorithm>
 
 #include <llama-cpp.h>
-#include <llama-context.h>
+// #include <src/llama-context.h>
 #include <ggml-backend.h>
 
 #include "LLModel.hpp"
@@ -36,6 +36,7 @@ class TextContext
 
 public:
     TextContext(LLModel *modelWrapper, llama_model *model, llama_context *context) : modelWrapper(modelWrapper), model(model), context(context) {
+        this->modelWrapper = modelWrapper;
         seqId = modelWrapper->claimSeqId();
     }
 

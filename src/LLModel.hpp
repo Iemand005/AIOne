@@ -1,4 +1,4 @@
-#pragma once
+// #pragma once
 
 #include <string>
 #include <iostream>
@@ -9,7 +9,7 @@
 
 #include <llama-cpp.h>
 #include <ggml-backend.h>
-#include <common.h>
+// #include <common/common.h>
 
 #include "Model.hpp"
 #include "TextModelOptions.hpp"
