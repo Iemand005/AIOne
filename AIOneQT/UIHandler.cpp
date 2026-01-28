@@ -31,7 +31,6 @@ bool saveImageAsPNG(const sd_image_t& image, const std::string& filename) {
 
 QImage convertToQImage(const sd_image_t& sd_img) {
     if (sd_img.channel == 3) {
-        // Convert RGB to RGBA QImage
         QImage image(sd_img.width, sd_img.height, QImage::Format_RGB32);
 
         for (int y = 0; y < sd_img.height; y++) {
@@ -44,7 +43,6 @@ QImage convertToQImage(const sd_image_t& sd_img) {
         }
         return image;
     } else if (sd_img.channel == 4) {
-        // Already RGBA
         return QImage(sd_img.data, sd_img.width, sd_img.height,
                       sd_img.width * 4, QImage::Format_RGBA8888).copy();
     }
@@ -84,26 +82,26 @@ void UIHandler::loadModel(const QString &path) {
 
     llmWorkerThread->setStackSize(256 * 1024 * 1024);
 
-    // this->llm = modelFactory->loadLLM(pathStr);
+    this->llm = modelFactory->loadLLM(pathStr);
 
-    QObject::connect(llmWorkerThread, &QThread::started, [this, pathStr]() {
-        QMutexLocker locker(&llmMutex);
-        try {
-            this->llm = modelFactory->loadLLM(pathStr);
-            qDebug() << "LLM model loaded successfully";
-        } catch (const std::exception &e) {
-            qCritical() << "Failed to load LLM model:" << e.what();
-            this->llm = nullptr;
-        }
-        llmWorkerThread->quit();
-    });
+    // QObject::connect(llmWorkerThread, &QThread::started, [this, pathStr]() {
+    //     QMutexLocker locker(&llmMutex);
+    //     try {
+    //         this->llm = modelFactory->loadLLM(pathStr);
+    //         qDebug() << "LLM model loaded successfully";
+    //     } catch (const std::exception &e) {
+    //         qCritical() << "Failed to load LLM model:" << e.what();
+    //         this->llm = nullptr;
+    //     }
+    //     llmWorkerThread->quit();
+    // });
     
-    QObject::connect(llmWorkerThread, &QThread::finished, [this]() {
-        llmWorkerThread->deleteLater();
-        llmWorkerThread = nullptr;
-    });
+    // QObject::connect(llmWorkerThread, &QThread::finished, [this]() {
+    //     llmWorkerThread->deleteLater();
+    //     llmWorkerThread = nullptr;
+    // });
 
-    llmWorkerThread->start();
+    // llmWorkerThread->start();
 }
 
 void UIHandler::loadSDModel(const QString &path) {
@@ -117,7 +115,6 @@ void UIHandler::loadSDModel(const QString &path) {
     std::string pathStr = path.toStdString();
     sdWorkerThread = new QThread();
     
-    // Increase stack size to 8MB for complex tokenizer patterns
     sdWorkerThread->setStackSize(8 * 1024 * 1024);
 
     QObject::connect(sdWorkerThread, &QThread::started, [this, pathStr]() {
@@ -175,19 +172,16 @@ void UIHandler::prompt(const QString &message) {
 void UIHandler::generateImage(const QString &prompt) {
     qDebug() << "Generating image for:" << prompt;
     
-    // Check if model is loaded
     if (!sdm) {
         qWarning() << "SD model not loaded";
         return;
     }
 
-    // Check if already generating
     if (sdWorkerThread && sdWorkerThread->isRunning()) {
         qWarning() << "Already generating an image";
         return;
     }
 
-    // Run image generation on a worker thread
     sdWorkerThread = new QThread();
 
     QObject::connect(sdWorkerThread, &QThread::started, [this, prompt]() {

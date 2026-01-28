@@ -136,6 +136,7 @@ qt_add_qml_module(AIOne
         Main.qml
         SOURCES UIHandler.h UIHandler.cpp
         QML_FILES AIOButton.ui.qml
+        SOURCES ../src/LLModel.hpp ../src/LLModel2.hpp ../src/Model.hpp ../src/ModelFactory.hpp ../src/ModelOptions.hpp ../src/PreferredDevice.hpp ../src/SDModel.hpp ../src/TextContext.hpp ../src/TextContextOptions.hpp ../src/TextGenerationOptions.hpp
 )
 
 if(AIONE_VULKAN)

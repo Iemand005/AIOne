@@ -44,6 +44,8 @@ public:
 
             llama_model_params model_params = llama_model_default_params();
             model_params.devices = devices.data();
+            model_params.n_gpu_layers = 20;
+            model_params.vocab_only= false;
             llama_model_ptr model(llama_model_load_from_file(modelPath.c_str(), model_params));
             if (!model)
             {

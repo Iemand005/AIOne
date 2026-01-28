@@ -101,7 +101,7 @@ ApplicationWindow {
                 // }
 
                 ListView {
-                    Layout.width: 10
+                    // Layout.width: 10
                     model: ListModel {
                         ListElement { text: "Banana" }
                         ListElement { text: "Apple" }
@@ -349,10 +349,8 @@ ApplicationWindow {
 
                     editable: true
                     model: ListModel {
-                        id: model
-                        ListElement { text: "Banana" }
-                        ListElement { text: "Apple" }
-                        ListElement { text: "Coconut" }
+                        id: deviceList
+                        ListElement { text: "Auto" }
                     }
                     onAccepted: {
                         if (find(editText) === -1)
