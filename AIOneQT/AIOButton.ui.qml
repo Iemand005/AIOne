@@ -3,10 +3,10 @@ import QtQuick.Controls
 import QtQuick.Controls.Material
 
 Button {
-    id: aioButton
+    id: aioButton/*
     property color backgroundColor: Material.Orange
-    
-    Material.background: backgroundColor
+    */
+    Material.background: Material.accent
     contentItem: Text {
         text: aioButton.text
         color: "black"

@@ -101,7 +101,7 @@ ApplicationWindow {
                 // }
 
                 ListView {
-                    Layout.width: 10
+                    // Layout.width: 10
                     model: ListModel {
                         ListElement { text: "Banana" }
                         ListElement { text: "Apple" }

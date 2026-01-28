@@ -135,7 +135,7 @@ qt_add_qml_module(AIOne
     QML_FILES
         Main.qml
         SOURCES UIHandler.h UIHandler.cpp
-        QML_FILES AIOButton.qml
+        QML_FILES AIOButton.ui.qml
 )
 
 if(AIONE_VULKAN)
