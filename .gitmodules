@@ -1,18 +1,6 @@
-[submodule "thirdparty/llama.cpp"]
-	path = thirdparty/llama.cpp
-	url = https://github.com/ggml-org/llama.cpp.git
-[submodule "thirdparty/stable-diffusion.cpp"]
-	path = thirdparty/stable-diffusion.cpp
-	url = https://github.com/leejet/stable-diffusion.cpp.git
-[submodule "thirdparty/OpenCL-SDK"]
-	path = thirdparty/OpenCL-SDK
-	url = https://github.com/KhronosGroup/OpenCL-SDK.git
-[submodule "thirdparty/tclap"]
-	path = thirdparty/tclap
-	url = https://github.com/mirror/tclap.git
-[submodule "thirdparty/stb"]
-	path = thirdparty/stb
-	url = https://github.com/nothings/stb
-[submodule "thirdparty/ggml"]
-	path = thirdparty/ggml
-	url = https://github.com/ggerganov/ggml
+[submodule "external/llama.cpp"]
+	path = external/llama.cpp
+	url = https://github.com/Iemand005/llama.cpp.git
+[submodule "external/stable-diffusion.cpp"]
+	path = external/stable-diffusion.cpp
+	url = https://github.com/Iemand005/stable-diffusion.cpp
