@@ -19,14 +19,14 @@ int main(int argc, char* argv[]) {
 
   llama_model *model = llama_model_load_from_file(modelPath.c_str(), modelParams);
 
-  if (model == NULL) {
+  if (model == nullptr) {
     std::cerr << "Failed to load model" << std::endl;
     return 1;
   }
 
   // calculate amount of tokens in prompt to allocate
   const llama_vocab *vocab = llama_model_get_vocab(model);
-  const int promptTokenLen = -llama_tokenize(vocab, prompt.c_str(), prompt.size(), NULL, 0, true, true);
+  const int promptTokenLen = -llama_tokenize(vocab, prompt.c_str(), prompt.size(), nullptr, 0, true, true);
 
   // tokenize prompt
   std::vector<llama_token> promptTokens(promptTokenLen);
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
 
   llama_context *context = llama_init_from_model(model, contextParams);
 
-  if (context == NULL) {
+  if (context == nullptr) {
     std::cerr << "Failed to initialize a context window" << std::endl;
     return 3;
   }
