@@ -6,12 +6,13 @@
 #include "TextContext.hpp"
 #include "LLModel.hpp"
 
-TextContext::TextContext(LLModel *modelWrapper, llama_context *context) : modelWrapper(modelWrapper), context(context) {
+TextContext::TextContext(LLModel *modelWrapper, std::shared_ptr<llama_context> context) : modelWrapper(modelWrapper) {
     seqId = modelWrapper->claimSeqId();
+    this->context = context;
 }
 
 bool TextContext::isValid() {
-    return modelWrapper->isValid(context);
+    return modelWrapper->isValid(context.get());
 }
 
 bool TextContext::isConnectedTo(LLModel *model) {
@@ -20,7 +21,7 @@ bool TextContext::isConnectedTo(LLModel *model) {
 
 void TextContext::destroy() {
     if (context != nullptr) {
-        llama_free(context);
+        llama_free(context.get());
         modelWrapper->releaseSeqId(seqId);
 
         context = nullptr;

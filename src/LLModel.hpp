@@ -9,6 +9,7 @@
 
 #include <llama-cpp.h>
 #include <ggml-backend.h>
+#include <llama-context.h>
 // #include <common/common.h>
 
 #include "Model.hpp"
@@ -25,7 +26,7 @@ class LLModel : public Model
     // llama.cpp stuff
     llama_model_ptr model;
     std::array<ggml_backend_dev_t, 2> devices = {nullptr, nullptr};
-    std::shared_ptr<llama_context> context = nullptr;
+    std::shared_ptr<TextContext> context = nullptr;
     const llama_vocab *vocab = nullptr;
     llama_sampler sampler;
 
@@ -150,7 +151,7 @@ public:
         vocab = llama_model_get_vocab(this->model.get());
 
         // create llama context
-        if (!resetWithOptions(options)) {
+        if (!context->resetWithOptions(options)) {
             throw std::runtime_error("Failed to create context");
         }
     }
@@ -163,35 +164,17 @@ public:
         return generating;
     }
 
-    bool resetWithOptions(const TextContextOptions &options) {
-        if (generating) {
-            return false;
-        }
 
-        if (context != nullptr) {
-            llama_free(context.get());
-        }
-
-        // recreate context with new options
-        // the `TextContext` class automatically throws when their
-        // llama context does not match the new llama context
-        llama_context_params contextParams = llama_context_default_params();
-        contextParams.n_ctx = options.contextLength;
-        contextParams.n_batch = options.evalBatchSize;
-        
-        context = std::make_shared<llama_context>(llama_init_from_model(model.get(), contextParams));
-        if (context == nullptr) {
-            return false;
-        }
-
-        return true;
-    }
 
     // used by `TextContent`
     // checks if the llama context has been recreated
     bool isValid(llama_context *context) {
-        return context == this->context.get();
+        return context == this->context->getContext();
     }
+
+    // bool isGenerating() {
+    //     return generating;
+    // }
 
     llama_seq_id claimSeqId() {
         std::lock_guard<std::mutex> lock(mtx);
@@ -235,7 +218,7 @@ public:
     }
 
     TextContext newContext() {
-        return TextContext(this, context.get());
+        return TextContext(this, context);
     }
 
     bool registerContext(std::shared_ptr<TextContext> context) {
@@ -406,7 +389,7 @@ public:
             setBatch(batch, &startTokenId, 1);
         }
 
-        context = std::make_shared<llama_context>(textContext->getContext());
+        // context = textContext->getContext()
 
         // generation loop
         size_t pos = 0;
