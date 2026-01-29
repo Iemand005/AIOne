@@ -20,7 +20,7 @@ class LLModel;
 class TextContext
 {
     LLModel *modelWrapper;
-    llama_model *const model;
+    // llama_model *const model;
     llama_context *context;
     std::vector<llama_chat_message> messages;
     std::vector<llama_token> cache;
@@ -37,7 +37,18 @@ class TextContext
     }
 
 public:
-    TextContext(LLModel *modelWrapper, llama_model *model, llama_context *context);
+    // TextContext(LLModel& m) {
+    //     this->model = m->
+    // }
+    TextContext(LLModel *modelWrapper, llama_context *context);
+
+    bool operator==(const TextContext& other) const {
+        return this->seqId == other.seqId;
+    }
+
+    bool operator!=(const TextContext& other) const {
+        return !(*this == other);
+    }
 
     bool isValid();
 

@@ -6,7 +6,7 @@
 #include "TextContext.hpp"
 #include "LLModel.hpp"
 
-TextContext::TextContext(LLModel *modelWrapper, llama_model *model, llama_context *context) : modelWrapper(modelWrapper), model(model), context(context) {
+TextContext::TextContext(LLModel *modelWrapper, llama_context *context) : modelWrapper(modelWrapper), context(context) {
     seqId = modelWrapper->claimSeqId();
 }
 

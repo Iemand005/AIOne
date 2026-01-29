@@ -67,6 +67,10 @@ class LLModel : public Model
         batch.seq_id[maxBatchSize] = nullptr; // `llama_batch_init` does this so, so shall I
     }
 
+    llama_model *getLlamaModel() {
+        return model.get();
+    }
+
     /**
      * Warning: you are responsible for ensuring the `batchSize` does not exceed the batch's
      * `maxBatchSize`, else you will leak memory
@@ -231,7 +235,7 @@ public:
     }
 
     TextContext newContext() {
-        return TextContext(this, model.get(), context);
+        return TextContext(this, context);
     }
 
     bool registerContext(TextContext context) {
