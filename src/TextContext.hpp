@@ -23,7 +23,8 @@ class TextContext
 {
     LLModel *modelWrapper;
     // llama_model *const model;
-    std::unique_ptr<llama_context> context = nullptr;
+    llama_context *context; // Kept alive by LLModel
+
     std::vector<llama_chat_message> messages;
     std::vector<llama_token> cache;
     llama_seq_id seqId;
@@ -42,7 +43,7 @@ public:
     // TextContext(LLModel& m) {
     //     this->model = m->
     // }
-    TextContext(LLModel *modelWrapper, std::shared_ptr<llama_context> context);
+    TextContext(LLModel *modelWrapper, llama_context *context);
 
     bool operator==(const TextContext& other) const {
         return this->seqId == other.seqId;
@@ -57,7 +58,7 @@ public:
     bool isConnectedTo(LLModel *model);
 
     llama_context *getContext() {
-        return context.get();
+        return context;
     }
 
     llama_seq_id getSeqId() {
@@ -66,25 +67,25 @@ public:
 
     uint32_t getContextLength() {
         throwIfFreed();
-        return llama_n_ctx(context.get());
+        return llama_n_ctx(context);
     }
 
     uint32_t getUsedContextLength() {
         throwIfFreed();
         
         // gets the last index in the kv cache, and adds 1 to get the length
-        return llama_memory_seq_pos_max(llama_get_memory(context.get()), seqId) + 1;
+        return llama_memory_seq_pos_max(llama_get_memory(context), seqId) + 1;
     }
 
     uint32_t getLastIndex() {
         throwIfFreed();
         
         // gets the last index in the kv cache
-        return llama_memory_seq_pos_max(llama_get_memory(context.get()), seqId);
+        return llama_memory_seq_pos_max(llama_get_memory(context), seqId);
     }
 
     uint32_t getBatchSize() {
-        return llama_n_batch(context.get());
+        return llama_n_batch(context);
     }
 
     /**
@@ -114,7 +115,7 @@ public:
         // truncate cached context starting from `cacheMissIndex`
         // (if it's after the cached context size, skip truncation because whole cached prompt matched)
         if (cacheMissIndex < cache.size()) {
-            llama_memory_seq_rm(llama_get_memory(context.get()), seqId, cacheMissIndex, -1);
+            llama_memory_seq_rm(llama_get_memory(context), seqId, cacheMissIndex, -1);
         }
 
         // copy only new tokens into the cache
@@ -134,29 +135,7 @@ public:
         return cacheMissIndex;
     }
 
-    bool resetWithOptions(const TextContextOptions &options) {
-        if (generating) {
-            return false;
-        }
 
-        if (context != nullptr) {
-            llama_free(context.get());
-        }
-
-        // recreate context with new options
-        // the `TextContext` class automatically throws when their
-        // llama context does not match the new llama context
-        llama_context_params contextParams = llama_context_default_params();
-        contextParams.n_ctx = options.contextLength;
-        contextParams.n_batch = options.evalBatchSize;
-
-        context = std::make_shared<llama_context>(llama_init_from_model(model.get(), contextParams));
-        if (context == nullptr) {
-            return false;
-        }
-
-        return true;
-    }
 
     void destroy();
 

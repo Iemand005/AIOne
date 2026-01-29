@@ -23,12 +23,16 @@ class LLModel : public Model
 {
     std::string modelPath;
 
-    // llama.cpp stuff
+    // llama.cpp stuff yup
     llama_model_ptr model;
+    llama_context_ptr context = nullptr;
+
     std::array<ggml_backend_dev_t, 2> devices = {nullptr, nullptr};
-    std::shared_ptr<TextContext> context = nullptr;
+    // std::shared_ptr<TextContext> context = nullptr;
     const llama_vocab *vocab = nullptr;
     llama_sampler sampler;
+
+
 
     std::vector<std::shared_ptr<TextContext>> registeredContexts;
     std::deque<llama_seq_id> freeSeqIds;
@@ -151,7 +155,7 @@ public:
         vocab = llama_model_get_vocab(this->model.get());
 
         // create llama context
-        if (!context->resetWithOptions(options)) {
+        if (!resetWithOptions(options)) {
             throw std::runtime_error("Failed to create context");
         }
     }
@@ -169,7 +173,7 @@ public:
     // used by `TextContent`
     // checks if the llama context has been recreated
     bool isValid(llama_context *context) {
-        return context == this->context->getContext();
+        return context == this->context.get();
     }
 
     // bool isGenerating() {
@@ -218,7 +222,31 @@ public:
     }
 
     TextContext newContext() {
-        return TextContext(this, context);
+        return TextContext(this, context.get());
+    }
+
+    bool resetWithOptions(const TextContextOptions &options) {
+        if (generating) {
+            return false;
+        }
+
+        // if (context != nullptr) { // handled by smart pointer deleter
+        //     llama_free(context.get());
+        // }
+
+        // recreate context with new options
+        // the `TextContext` class automatically throws when their
+        // llama context does not match the new llama context
+        llama_context_params contextParams = llama_context_default_params();
+        contextParams.n_ctx = options.contextLength;
+        contextParams.n_batch = options.evalBatchSize;
+
+        context = llama_context_ptr(llama_init_from_model(model.get(), contextParams));
+        if (context == nullptr) {
+            return false;
+        }
+
+        return true;
     }
 
     bool registerContext(std::shared_ptr<TextContext> context) {
@@ -440,15 +468,15 @@ public:
 
     void destroy()
     {
-        if (model != nullptr) {
-            llama_model_free(model.get());
-            model = nullptr;
-        }
+        // if (model != nullptr) { these are smart pointers
+        //     llama_model_free(model.get());
+        //     model = nullptr;
+        // }
 
-        if (context != nullptr) {
-            llama_free(context.get());
-            context = nullptr;
-        }
+        // if (context != nullptr) {
+        //     llama_free(context.get());
+        //     context = nullptr;
+        // }
     }
 
     ~LLModel()
