@@ -279,8 +279,8 @@ public:
      */
     void completeAny(
         std::string prompt,
-        TokenCallback onToken,
-        InputEvalCallback onInputEval,
+        TokenCallback onToken = nullptr,
+        InputEvalCallback onInputEval = nullptr,
         TextGenerationOptions options = TextGenerationOptions()
     ) {
         if (registeredContexts.empty()) {
@@ -312,8 +312,8 @@ public:
     void complete(
         TextContext textContext,
         std::string prompt,
-        TokenCallback onToken,
-        InputEvalCallback onInputEval,
+        TokenCallback onToken = nullptr,
+        InputEvalCallback onInputEval = nullptr,
         TextGenerationOptions options = TextGenerationOptions()
     ) {
         std::vector promptTokens = tokenize(prompt, true);
@@ -324,8 +324,8 @@ public:
         TextContext textContext,
         std::vector<llama_token> &promptTokens,
         size_t cacheMissIndex,
-        TokenCallback onToken,
-        InputEvalCallback onInputEval,
+        TokenCallback onToken = nullptr,
+        InputEvalCallback onInputEval = nullptr,
         TextGenerationOptions options = TextGenerationOptions()
     ) {
         generating = true;
@@ -389,7 +389,7 @@ public:
                 }
             }
 
-            onInputEval((float)i / promptTokens.size());
+            if(onInputEval)onInputEval((float)i / promptTokens.size());
         }
 
         if (llama_model_has_encoder(model.get()))
@@ -435,7 +435,7 @@ public:
             // write text
             std::string text(buf, n);
             // std::cout << text.c_str();
-            onToken(text);
+            if(onToken)onToken(text);
 
             // wrap token in batch for decoding
             setBatch(batch, &newTokenId, 1);
