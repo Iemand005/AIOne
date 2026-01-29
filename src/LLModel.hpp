@@ -238,8 +238,8 @@ public:
         // the `TextContext` class automatically throws when their
         // llama context does not match the new llama context
         llama_context_params contextParams = llama_context_default_params();
-        contextParams.n_ctx = options.contextLength;
-        contextParams.n_batch = options.evalBatchSize;
+        // contextParams.n_ctx = options.contextLength;
+        // contextParams.n_batch = options.evalBatchSize;
 
         llama_context *context = llama_init_from_model(model.get(), contextParams);
 

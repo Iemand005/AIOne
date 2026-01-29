@@ -8,5 +8,5 @@
 struct TextModelOptions : TextContextOptions
 {
     PreferredDevice device = PreferredDevice::ANY;
-    int32_t offloadLayers = 0; // -1 for all layers
+    int32_t offloadLayers = -1; // -1 for all layers
 };

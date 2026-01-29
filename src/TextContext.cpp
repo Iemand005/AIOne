@@ -19,10 +19,10 @@ bool TextContext::isConnectedTo(LLModel *model) {
 }
 
 void TextContext::destroy() {
-    if (context != nullptr) {
-        llama_free(context);
-        modelWrapper->releaseSeqId(seqId);
+    // if (context != nullptr) {
+    //     llama_free(context);
+    //     modelWrapper->releaseSeqId(seqId);
 
-        context = nullptr;
-    }
+    //     context = nullptr;
+    // }
 }
