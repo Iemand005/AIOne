@@ -105,6 +105,13 @@ public:
 
     const int maxTokens = 400;
 
+    LLModel(const std::string &path) {
+        TextModelOptions options{};
+        options.device = PreferredDevice::ANY;
+        options.contextLength = 4096;
+        LLModel(path, options);
+    }    
+
     LLModel(const std::string &path, const TextModelOptions &options)
     {
         modelPath = path;

@@ -11,9 +11,11 @@
 // #include <src/llama-context.h>
 #include <ggml-backend.h>
 
-#include "LLModel.hpp"
+// #include "LLModel.hpp"
 #include "TextContextOptions.hpp"
 #include "ContextInvalidError.hpp"
+
+class LLModel;
 
 class TextContext
 {
@@ -35,17 +37,11 @@ class TextContext
     }
 
 public:
-    TextContext(LLModel *modelWrapper, llama_model *model, llama_context *context) : modelWrapper(modelWrapper), model(model), context(context) {
-        seqId = modelWrapper->claimSeqId();
-    }
+    TextContext(LLModel *modelWrapper, llama_model *model, llama_context *context);
 
-    bool isValid() {
-        return modelWrapper->isValid(context);
-    }
+    bool isValid();
 
-    bool isConnectedTo(LLModel *model) {
-        return modelWrapper == model;
-    }
+    bool isConnectedTo(LLModel *model);
 
     llama_seq_id getSeqId() {
         return seqId;
@@ -121,14 +117,7 @@ public:
         return cacheMissIndex;
     }
 
-    void destroy() {
-        if (context != nullptr) {
-            llama_free(context);
-            modelWrapper->releaseSeqId(seqId);
-
-            context = nullptr;
-        }
-    }
+    void destroy();
 
     ~TextContext() {
         destroy();
