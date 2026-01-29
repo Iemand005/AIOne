@@ -36,7 +36,7 @@ class LLModel : public Model
 
     std::vector<std::shared_ptr<TextContext>> registeredContexts;
     std::deque<llama_seq_id> freeSeqIds;
-    llama_seq_id biggestSeqId;
+    llama_seq_id biggestSeqId = 0;
     bool generating = false;
 
     std::mutex mtx; // thread-safety
@@ -241,10 +241,13 @@ public:
         contextParams.n_ctx = options.contextLength;
         contextParams.n_batch = options.evalBatchSize;
 
-        context = llama_context_ptr(llama_init_from_model(model.get(), contextParams));
+        llama_context *context = llama_init_from_model(model.get(), contextParams);
+
         if (context == nullptr) {
             return false;
         }
+
+        this->context.reset(context);
 
         return true;
     }
