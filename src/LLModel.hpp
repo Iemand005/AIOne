@@ -25,11 +25,11 @@ class LLModel : public Model
     // llama.cpp stuff
     llama_model_ptr model;
     std::array<ggml_backend_dev_t, 2> devices = {nullptr, nullptr};
-    llama_context *context = nullptr;
+    std::shared_ptr<llama_context> context = nullptr;
     const llama_vocab *vocab = nullptr;
     llama_sampler sampler;
 
-    std::vector<TextContext> registeredContexts;
+    std::vector<std::shared_ptr<TextContext>> registeredContexts;
     std::deque<llama_seq_id> freeSeqIds;
     llama_seq_id biggestSeqId;
     bool generating = false;
@@ -169,7 +169,7 @@ public:
         }
 
         if (context != nullptr) {
-            llama_free(context);
+            llama_free(context.get());
         }
 
         // recreate context with new options
@@ -179,7 +179,7 @@ public:
         contextParams.n_ctx = options.contextLength;
         contextParams.n_batch = options.evalBatchSize;
         
-        context = llama_init_from_model(model.get(), contextParams);
+        context = std::make_shared<llama_context>(llama_init_from_model(model.get(), contextParams));
         if (context == nullptr) {
             return false;
         }
@@ -190,7 +190,7 @@ public:
     // used by `TextContent`
     // checks if the llama context has been recreated
     bool isValid(llama_context *context) {
-        return context == this->context;
+        return context == this->context.get();
     }
 
     llama_seq_id claimSeqId() {
@@ -235,11 +235,11 @@ public:
     }
 
     TextContext newContext() {
-        return TextContext(this, context);
+        return TextContext(this, context.get());
     }
 
-    bool registerContext(TextContext context) {
-        if (!context.isConnectedTo(this)) {
+    bool registerContext(std::shared_ptr<TextContext> context) {
+        if (!context->isConnectedTo(this)) {
             return false;
         }
 
@@ -253,7 +253,7 @@ public:
         return false;
     }
 
-    bool unregisterContext(TextContext context) {
+    bool unregisterContext(std::shared_ptr<TextContext> context) {
         auto index = std::find(registeredContexts.begin(), registeredContexts.end(), context);
 
         if (index != registeredContexts.end()) {
@@ -300,7 +300,7 @@ public:
 
         if (registeredContexts.size() > 1) {
             for (size_t i = 0; i < registeredContexts.size(); i++) {
-                size_t cacheMissIndex = registeredContexts[i].findCache(promptTokens);
+                size_t cacheMissIndex = registeredContexts[i]->findCache(promptTokens);
 
                 if (cacheMissIndex > bestCached) {
                     bestCached = cacheMissIndex;
@@ -314,18 +314,18 @@ public:
     }
 
     void complete(
-        TextContext textContext,
+        std::shared_ptr<TextContext> textContext,
         std::string prompt,
         TokenCallback onToken = nullptr,
         InputEvalCallback onInputEval = nullptr,
         TextGenerationOptions options = TextGenerationOptions()
     ) {
         std::vector promptTokens = tokenize(prompt, true);
-        complete(textContext, promptTokens, textContext.findCache(promptTokens), onToken, onInputEval, options);
+        complete(textContext, promptTokens, textContext->findCache(promptTokens), onToken, onInputEval, options);
     }
 
     void complete(
-        TextContext textContext,
+        std::shared_ptr<TextContext> textContext,
         std::vector<llama_token> &promptTokens,
         size_t cacheMissIndex,
         TokenCallback onToken = nullptr,
@@ -335,7 +335,7 @@ public:
         generating = true;
 
         // cache prompt and keep only the ones that were not already in the cache
-        textContext.addCache(promptTokens, cacheMissIndex);
+        textContext->addCache(promptTokens, cacheMissIndex);
         
         if (cacheMissIndex > 0) {
             promptTokens.erase(promptTokens.begin(), promptTokens.begin() + cacheMissIndex);
@@ -350,11 +350,11 @@ public:
         llama_sampler_chain_add(sampler, llama_sampler_init_temp(options.temperature));
         llama_sampler_chain_add(sampler, llama_sampler_init_dist(options.seed));
 
-        uint32_t maxBatchSize = textContext.getBatchSize();
+        uint32_t maxBatchSize = textContext->getBatchSize();
         
         // create a batch once and reuse it
         llama_batch batch = {}; // init pointers with nullptr (see llama_batch_get_one), the `{}` is required
-        initBatch(batch, maxBatchSize, textContext.getSeqId());
+        initBatch(batch, maxBatchSize, textContext->getSeqId());
 
         for (size_t i = 0; i < promptTokens.size(); i += maxBatchSize)
         {
@@ -372,7 +372,7 @@ public:
             // in that case, the last batch will not be decoded, because that'll be done after this loop
             if (llama_model_has_encoder(model.get()))
             {
-                if (llama_encode(context, batch))
+                if (llama_encode(context.get(), batch))
                 {
                     generating = false;
                     throw std::runtime_error("Failed to evaluate input tokens");
@@ -386,7 +386,7 @@ public:
                     break;
                 }
 
-                if (llama_decode(context, batch))
+                if (llama_decode(context.get(), batch))
                 {
                     generating = false;
                     throw std::runtime_error("Failed to evaluate input tokens");
@@ -406,13 +406,15 @@ public:
             setBatch(batch, &startTokenId, 1);
         }
 
+        context = std::make_shared<llama_context>(textContext->getContext());
+
         // generation loop
         size_t pos = 0;
         size_t maxPos = promptTokens.size() + maxTokens;
         while (pos + batch.n_tokens < maxPos)
         {
             // decode last batch (either input or the newly generated token)
-            if (llama_decode(context, batch))
+            if (llama_decode(context.get(), batch))
             {
                 generating = false;
                 throw std::runtime_error("Failed to evaluate input tokens");
@@ -421,7 +423,7 @@ public:
             pos += batch.n_tokens;
 
             // generate a new token
-            llama_token newTokenId = llama_sampler_sample(sampler, context, -1);
+            llama_token newTokenId = llama_sampler_sample(sampler, context.get(), -1);
 
             // if "end of generation" token emitted, stop generation
             if (llama_vocab_is_eog(vocab, newTokenId))
@@ -461,7 +463,7 @@ public:
         }
 
         if (context != nullptr) {
-            llama_free(context);
+            llama_free(context.get());
             context = nullptr;
         }
     }

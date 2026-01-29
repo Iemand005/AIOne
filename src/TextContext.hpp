@@ -54,6 +54,10 @@ public:
 
     bool isConnectedTo(LLModel *model);
 
+    llama_context *getContext() {
+        return context;
+    }
+
     llama_seq_id getSeqId() {
         return seqId;
     }
