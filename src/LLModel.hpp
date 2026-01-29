@@ -25,14 +25,14 @@ class LLModel : public Model
     // llama.cpp stuff
     llama_model_ptr model;
     std::array<ggml_backend_dev_t, 2> devices = {nullptr, nullptr};
-    llama_context *context;
-    const llama_vocab *vocab;
+    llama_context *context = nullptr;
+    const llama_vocab *vocab = nullptr;
     llama_sampler sampler;
 
     std::vector<TextContext> registeredContexts;
     std::deque<llama_seq_id> freeSeqIds;
     llama_seq_id biggestSeqId;
-    bool generating;
+    bool generating = false;
 
     std::mutex mtx; // thread-safety
 
