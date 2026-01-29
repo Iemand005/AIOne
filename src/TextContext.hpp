@@ -36,7 +36,6 @@ class TextContext
 
 public:
     TextContext(LLModel *modelWrapper, llama_model *model, llama_context *context) : modelWrapper(modelWrapper), model(model), context(context) {
-        this->modelWrapper = modelWrapper;
         seqId = modelWrapper->claimSeqId();
     }
 
