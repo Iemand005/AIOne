@@ -19,11 +19,10 @@ void LLModel::initBatch(llama_batch &batch, size_t maxBatchSize, llama_seq_id se
         
         batch.n_tokens = maxBatchSize;
 
-        // create an array with 1 item (seqId)
-        // this pointer will be used for all pointers in `seq_id` because they all use
-        // the same `seqId` anyways, no need to malloc more than necessary
-        batch.n_seq_id = (int32_t*)llamaMalloc(sizeof(int32_t));
-        *batch.n_seq_id = 1;
+        // array with size `n_seq_id(maxBatchSize)`
+        // each item signals the amount of `seq_id`s a token belongs to
+        // in this case, always 1 (set in the loop a little further down the function)
+        batch.n_seq_id = (int32_t*)llamaMalloc(sizeof(int32_t) * maxBatchSize);
 
         // this array is used for all items
         llama_seq_id* seqIdArray = (llama_seq_id*)llamaMalloc(sizeof(llama_seq_id));
@@ -31,6 +30,7 @@ void LLModel::initBatch(llama_batch &batch, size_t maxBatchSize, llama_seq_id se
         
         batch.seq_id = (llama_seq_id**)llamaMalloc(sizeof(llama_seq_id*) * (maxBatchSize + 1));
         for (size_t i = 0; i < maxBatchSize; ++i) {
+            batch.n_seq_id[i] = 1;
             batch.seq_id[i] = seqIdArray;
         }
         batch.seq_id[maxBatchSize] = nullptr; // `llama_batch_init` does this so, so shall I
@@ -161,7 +161,7 @@ llama_model *LLModel::getLlamaModel() {
         return promptTokens;
     }
 
-    void LLModel:: complete(
+    void LLModel::complete(
         std::shared_ptr<MessageContext> messageContext,
         std::vector<llama_token> &promptTokens,
         size_t cacheMissIndex,
@@ -251,7 +251,8 @@ llama_model *LLModel::getLlamaModel() {
         while (pos + batch.n_tokens < maxPos)
         {
             // decode last batch (either input or the newly generated token)
-            if (llama_decode(context.get(), batch))
+            int32_t error = llama_decode(context.get(), batch);
+            if (error)
             {
                 generating = false;
                 throw std::runtime_error("Failed to evaluate input tokens");
