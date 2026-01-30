@@ -2,6 +2,10 @@
 
 #include "LLModel.hpp"
 
+struct LLModel::Llama {
+    
+}
+
 void LLModel::initBatch(llama_batch &batch, size_t maxBatchSize, llama_seq_id seqId){
         // note: `llama_batch_get_one` doesn't allow changing the sequence id (it's always 0)
         // another note: `llama_batch_init` mallocs memory for tokens while the vector
