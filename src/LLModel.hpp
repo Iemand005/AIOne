@@ -28,7 +28,7 @@ class LLModel : public Model
 
     // struct Llama;
     // std::unique_ptr<Llama> llama;
-static void* llamaMalloc(size_t size) {
+    static void* llamaMalloc(size_t size) {
         return malloc(size);  // Or use your static runtime allocator
     }
 

@@ -162,7 +162,7 @@ llama_model *LLModel::getLlamaModel() {
     }
 
     void LLModel:: complete(
-        std::shared_ptr<MessageContext> MessageContext,
+        std::shared_ptr<MessageContext> messageContext,
         std::vector<llama_token> &promptTokens,
         size_t cacheMissIndex,
         TokenCallback onToken,
@@ -172,7 +172,7 @@ llama_model *LLModel::getLlamaModel() {
         generating = true;
 
         // cache prompt and keep only the ones that were not already in the cache
-        MessageContext->addCache(promptTokens, cacheMissIndex);
+        messageContext->addCache(promptTokens, cacheMissIndex);
         
         if (cacheMissIndex > 0) {
             promptTokens.erase(promptTokens.begin(), promptTokens.begin() + cacheMissIndex);
@@ -187,11 +187,11 @@ llama_model *LLModel::getLlamaModel() {
         llama_sampler_chain_add(sampler.get(), llama_sampler_init_temp(options.temperature));
         llama_sampler_chain_add(sampler.get(), llama_sampler_init_dist(options.seed));
 
-        uint32_t maxBatchSize = MessageContext->getBatchSize();
+        uint32_t maxBatchSize = messageContext->getBatchSize();
         
         // create a batch once and reuse it
         llama_batch batch = {}; // init pointers with nullptr (see llama_batch_get_one), the `{}` is required
-        initBatch(batch, maxBatchSize, MessageContext->getSeqId());
+        initBatch(batch, maxBatchSize, messageContext->getSeqId());
 
         for (size_t i = 0; i < promptTokens.size(); i += maxBatchSize)
         {
@@ -243,7 +243,7 @@ llama_model *LLModel::getLlamaModel() {
             setBatch(batch, &startTokenId, 1);
         }
 
-        // context = MessageContext->getContext()
+        // context = messageContext->getContext()
 
         // generation loop
         size_t pos = 0;
