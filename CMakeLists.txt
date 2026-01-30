@@ -149,27 +149,3 @@ target_include_directories(AIOneCore PUBLIC
     $<BUILD_INTERFACE:${STABLE_DIFFUSION_CPP_DIR}>
     $<INSTALL_INTERFACE:include/AIOneCore>
 )
-
-install(TARGETS AIOneCore
-    EXPORT AIOneCoreTargets
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin
-    INCLUDES DESTINATION include/AIOneCore
-    FILE_SET HEADERS DESTINATION include/AIOneCore
-)
-
-install(EXPORT AIOneCoreTargets
-    FILE AIOneCoreConfig.cmake
-    NAMESPACE AIOne::
-    DESTINATION lib/cmake/AIOneCore
-)
-
-install(DIRECTORY src/
-    DESTINATION include/AIOneCore
-    FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
-)
-
-install(FILES UIHandler.h
-    DESTINATION include/AIOneCore
-)
