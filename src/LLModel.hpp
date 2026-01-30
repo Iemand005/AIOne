@@ -15,16 +15,22 @@ struct llama_model;
 struct llama_context;
 struct llama_sampler;
 struct llama_adapter_lora;
-// struct ggml_backend_dev_t;
+struct ggml_backend_dev_t;
 struct llama_batch;
 struct llama_vocab;
-using llama_token = int32_t;  // or whatever type it actually is
-using llama_seq_id = int32_t; // or whatever type
+using llama_token = int32_t;
+using llama_seq_id = int32_t;
 
-// Forward declare the unique_ptr deleters
-struct llama_model_deleter;
-struct llama_context_deleter;
-struct llama_sampler_deleter;
+// Define the deleters (even if empty)
+struct llama_model_deleter {
+    void operator()(llama_model* ptr);
+};
+struct llama_context_deleter {
+    void operator()(llama_context* ptr);
+};
+struct llama_sampler_deleter {
+    void operator()(llama_sampler* ptr);
+};
 
 // Forward declare the typedefs
 using llama_model_ptr = std::unique_ptr<llama_model, llama_model_deleter>;
