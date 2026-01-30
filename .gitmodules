@@ -1,6 +1,7 @@
 [submodule "external/llama.cpp"]
 	path = external/llama.cpp
 	url = https://github.com/Iemand005/llama.cpp.git
+	branch = MSVC-fix
 [submodule "external/stable-diffusion.cpp"]
 	path = external/stable-diffusion.cpp
 	url = https://github.com/Iemand005/stable-diffusion.cpp
