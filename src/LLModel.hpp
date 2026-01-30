@@ -6,6 +6,7 @@
 #include <array>
 #include <deque>
 #include <mutex>
+#include <thread>
 
 #include <llama-cpp.h>
 #include <ggml-backend.h>
@@ -39,6 +40,8 @@ static void* llamaMalloc(size_t size) {
     llama_model_ptr model;
     llama_context_ptr context = nullptr;
     llama_sampler_ptr sampler;
+
+    std::vector<std::thread> generationWorkers = std::vector<std::thread>();
 
     std::vector<ggml_backend_dev_t> devices = {nullptr, nullptr};
     // std::shared_ptr<MessageContext> context = nullptr;
@@ -185,6 +188,15 @@ public:
     }
 
     std::vector<llama_token> tokenize(std::string prompt, bool addSpecialTokens) ;
+
+    void generateAsync(const std::string& prompt, TokenCallback onToken = nullptr, InputEvalCallback onInputEval = nullptr, const TextGenerationOptions& options = TextGenerationOptions()) {
+        std::thread worker([this, prompt, onToken, onInputEval, options]() {
+            completeAny(prompt, onToken, onInputEval, options);
+            // generationWorkers.
+        });
+
+        generationWorkers.push_back(worker);
+    }
 
     /**
      * Complete using any registered context.
