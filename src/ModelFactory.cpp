@@ -1,6 +1,4 @@
 
-#include <llama-cpp.h>
-
 #include "ModelFactory.hpp"
 
 void ModelFactory::initLlama() {

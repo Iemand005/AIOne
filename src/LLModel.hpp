@@ -7,39 +7,13 @@
 #include <deque>
 #include <mutex>
 
-
-// #include <common/common.h>
-// Forward declarations
-
-struct llama_model;
-struct llama_context;
-struct llama_sampler;
-struct llama_adapter_lora;
-struct ggml_backend_dev_t;
-struct llama_batch;
-struct llama_vocab;
-using llama_token = int32_t;
-using llama_seq_id = int32_t;
-
-// Define the deleters (even if empty)
-struct llama_model_deleter {
-    void operator()(llama_model* ptr);
-};
-struct llama_context_deleter {
-    void operator()(llama_context* ptr);
-};
-struct llama_sampler_deleter {
-    void operator()(llama_sampler* ptr);
-};
-
-// Forward declare the typedefs
-using llama_model_ptr = std::unique_ptr<llama_model, llama_model_deleter>;
-using llama_context_ptr = std::unique_ptr<llama_context, llama_context_deleter>;
-using llama_sampler_ptr = std::unique_ptr<llama_sampler, llama_sampler_deleter>;
+#include <llama-cpp.h>
+#include <ggml-backend.h>
+#include <llama-context.h>
 
 #include "Model.hpp"
 #include "TextModelOptions.hpp"
-#include "PreferredDevice.hpp"
+#include "PreferredDevice.h"
 #include "TextGenerationOptions.hpp"
 #include "MessageContext.hpp"
 #include "MessageContextOptions.h"

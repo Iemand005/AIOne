@@ -7,13 +7,9 @@
 #include <stdexcept>
 #include <algorithm>
 
-// #include <llama-cpp.h>
-// // #include <src/llama-context.h>
-// #include <ggml-backend.h>
-
-// #include <llama-context.h>
-
-// #include "LLModel.hpp"
+#include <llama-cpp.h>
+#include <ggml-backend.h>
+#include <llama-context.h>
 
 #include "MessageContextOptions.h"
 #include "ContextInvalidError.hpp"

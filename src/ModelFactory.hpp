@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include <llama-cpp.h>
 
 #include "LLModel.hpp"
 #include "SDModel.hpp"

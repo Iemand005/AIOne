@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "PreferredDevice.hpp"
+#include "PreferredDevice.h"
 #include "MessageContextOptions.h"
 
 struct TextModelOptions : MessageContextOptions
