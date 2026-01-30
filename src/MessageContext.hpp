@@ -14,15 +14,14 @@
 #include <llama-context.h>
 
 // #include "LLModel.hpp"
-#include "TextContextOptions.hpp"
+#include "MessageContextOptions.hpp"
 #include "ContextInvalidError.hpp"
 
 class LLModel;
 
-class TextContext
+class MessageContext
 {
     LLModel *modelWrapper;
-    // llama_model *const model;
     llama_context *context; // Kept alive by LLModel
 
     std::vector<llama_chat_message> messages;
@@ -40,16 +39,13 @@ class TextContext
     }
 
 public:
-    // TextContext(LLModel& m) {
-    //     this->model = m->
-    // }
-    TextContext(LLModel *modelWrapper, llama_context *context);
+    MessageContext(LLModel *modelWrapper, llama_context *context);
 
-    bool operator==(const TextContext& other) const {
+    bool operator==(const MessageContext& other) const {
         return this->seqId == other.seqId;
     }
 
-    bool operator!=(const TextContext& other) const {
+    bool operator!=(const MessageContext& other) const {
         return !(*this == other);
     }
 
@@ -139,8 +135,7 @@ public:
 
     void destroy();
 
-    ~TextContext() {
+    ~MessageContext() {
         destroy();
-        // Smart pointers handle cleanup automatically
     }
 };

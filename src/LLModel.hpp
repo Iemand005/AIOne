@@ -16,8 +16,8 @@
 #include "TextModelOptions.hpp"
 #include "PreferredDevice.hpp"
 #include "TextGenerationOptions.hpp"
-#include "TextContext.hpp"
-#include "TextContextOptions.hpp"
+#include "MessageContext.hpp"
+#include "MessageContextOptions.hpp"
 
 class LLModel : public Model
 {
@@ -26,15 +26,15 @@ class LLModel : public Model
     // llama.cpp stuff yup
     llama_model_ptr model;
     llama_context_ptr context = nullptr;
+    llama_sampler_ptr sampler;
 
     std::array<ggml_backend_dev_t, 2> devices = {nullptr, nullptr};
     // std::shared_ptr<TextContext> context = nullptr;
     const llama_vocab *vocab = nullptr;
-    llama_sampler sampler;
 
 
 
-    std::vector<std::shared_ptr<TextContext>> registeredContexts;
+    std::vector<std::shared_ptr<MessageContext>> registeredContexts;
     std::deque<llama_seq_id> freeSeqIds;
     llama_seq_id biggestSeqId = 0;
     bool generating = false;
@@ -221,8 +221,8 @@ public:
         freeSeqIds.push_back(seqId);
     }
 
-    TextContext newContext() {
-        return TextContext(this, context.get());
+    MessageContext newContext() {
+        return MessageContext(this, context.get());
     }
 
     bool resetWithOptions(const TextContextOptions &options) {
@@ -252,7 +252,7 @@ public:
         return true;
     }
 
-    bool registerContext(std::shared_ptr<TextContext> context) {
+    bool registerContext(std::shared_ptr<MessageContext> context) {
         if (!context->isConnectedTo(this)) {
             return false;
         }
@@ -267,7 +267,7 @@ public:
         return false;
     }
 
-    bool unregisterContext(std::shared_ptr<TextContext> context) {
+    bool unregisterContext(std::shared_ptr<MessageContext> context) {
         auto index = std::find(registeredContexts.begin(), registeredContexts.end(), context);
 
         if (index != registeredContexts.end()) {
@@ -328,7 +328,7 @@ public:
     }
 
     void complete(
-        std::shared_ptr<TextContext> textContext,
+        std::shared_ptr<MessageContext> textContext,
         std::string prompt,
         TokenCallback onToken = nullptr,
         InputEvalCallback onInputEval = nullptr,
@@ -339,7 +339,7 @@ public:
     }
 
     void complete(
-        std::shared_ptr<TextContext> textContext,
+        std::shared_ptr<MessageContext> textContext,
         std::vector<llama_token> &promptTokens,
         size_t cacheMissIndex,
         TokenCallback onToken = nullptr,
@@ -359,10 +359,10 @@ public:
         llama_sampler_chain_params samplerParams = llama_sampler_chain_default_params();
         samplerParams.no_perf = false; // TODO disable?
 
-        llama_sampler *sampler = llama_sampler_chain_init(samplerParams);
-        llama_sampler_chain_add(sampler, llama_sampler_init_min_p(options.minP, 1));
-        llama_sampler_chain_add(sampler, llama_sampler_init_temp(options.temperature));
-        llama_sampler_chain_add(sampler, llama_sampler_init_dist(options.seed));
+        sampler = llama_sampler_ptr(llama_sampler_chain_init(samplerParams));
+        llama_sampler_chain_add(sampler.get(), llama_sampler_init_min_p(options.minP, 1));
+        llama_sampler_chain_add(sampler.get(), llama_sampler_init_temp(options.temperature));
+        llama_sampler_chain_add(sampler.get(), llama_sampler_init_dist(options.seed));
 
         uint32_t maxBatchSize = textContext->getBatchSize();
         
@@ -437,7 +437,7 @@ public:
             pos += batch.n_tokens;
 
             // generate a new token
-            llama_token newTokenId = llama_sampler_sample(sampler, context.get(), -1);
+            llama_token newTokenId = llama_sampler_sample(sampler.get(), context.get(), -1);
 
             // if "end of generation" token emitted, stop generation
             if (llama_vocab_is_eog(vocab, newTokenId))
@@ -462,10 +462,11 @@ public:
 
             // TODO provide generation stats?
             // tokensGenerated++;
+
         }
 
         freeBatch(batch);
-        llama_sampler_free(sampler);
+        // llama_sampler_free(sampler.get()); important: do not free if the sampler has been added to a llama_sampler_chain (via llama_sampler_chain_add)
         generating = false;
     }
 
