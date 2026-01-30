@@ -70,7 +70,7 @@ llama_model *LLModel::getLlamaModel() {
     }
 
     
-    LLModel::LLModel(const std::string &path, const TextModelOptions &options = TextModelOptions{})
+    LLModel::LLModel(const std::string &path, const TextModelOptions &options)
     {
         modelPath = path;
         
@@ -156,9 +156,9 @@ llama_model *LLModel::getLlamaModel() {
         std::shared_ptr<MessageContext> MessageContext,
         std::vector<llama_token> &promptTokens,
         size_t cacheMissIndex,
-        TokenCallback onToken = nullptr,
-        InputEvalCallback onInputEval = nullptr,
-        TextGenerationOptions options = TextGenerationOptions()
+        TokenCallback onToken,
+        InputEvalCallback onInputEval,
+        TextGenerationOptions options
     ) {
         generating = true;
 
