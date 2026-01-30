@@ -161,7 +161,7 @@ llama_model *LLModel::getLlamaModel() {
         return promptTokens;
     }
 
-    void LLModel::complete(
+    TextGenerationStats LLModel::complete(
         std::shared_ptr<MessageContext> messageContext,
         std::vector<llama_token> &promptTokens,
         size_t cacheMissIndex,
@@ -177,6 +177,8 @@ llama_model *LLModel::getLlamaModel() {
         if (cacheMissIndex > 0) {
             promptTokens.erase(promptTokens.begin(), promptTokens.begin() + cacheMissIndex);
         }
+
+        std::cout << std::to_string(cacheMissIndex) + " cached tokens, " + std::to_string(promptTokens.size()) + " tokens to be evaluated" << std::endl;
 
         // init sampler with options
         llama_sampler_chain_params samplerParams = llama_sampler_chain_default_params();
@@ -248,11 +250,11 @@ llama_model *LLModel::getLlamaModel() {
         // generation loop
         size_t pos = 0;
         size_t maxPos = promptTokens.size() + maxTokens;
+        size_t tokensGenerated = 0;
         while (pos + batch.n_tokens < maxPos)
         {
             // decode last batch (either input or the newly generated token)
-            int32_t error = llama_decode(context.get(), batch);
-            if (error)
+            if (llama_decode(context.get(), batch)) // TODO if it fails, it fucks up the context :<
             {
                 generating = false;
                 throw std::runtime_error("Failed to evaluate input tokens");
@@ -284,12 +286,17 @@ llama_model *LLModel::getLlamaModel() {
             // wrap token in batch for decoding
             setBatch(batch, &newTokenId, 1);
 
-            // TODO provide generation stats?
-            // tokensGenerated++;
-
+            tokensGenerated++;
         }
 
         freeBatch(batch);
         // llama_sampler_free(sampler.get()); important: do not free if the sampler has been added to a llama_sampler_chain (via llama_sampler_chain_add)
+
         generating = false;
+
+        return {
+            /*tokensEvaluated = */ promptTokens.size(),
+            /*tokensGenerated = */ tokensGenerated,
+            /*tokensCached    = */ cacheMissIndex
+        };
     }
