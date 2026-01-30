@@ -29,7 +29,7 @@ class LLModel : public Model
     llama_sampler_ptr sampler;
 
     std::array<ggml_backend_dev_t, 2> devices = {nullptr, nullptr};
-    // std::shared_ptr<TextContext> context = nullptr;
+    // std::shared_ptr<MessageContext> context = nullptr;
     const llama_vocab *vocab = nullptr;
 
 
@@ -225,21 +225,18 @@ public:
         return MessageContext(this, context.get());
     }
 
-    bool resetWithOptions(const TextContextOptions &options) {
+    bool resetWithOptions(const MessageContextOptions &options) {
         if (generating) {
             return false;
         }
 
-        // if (context != nullptr) { // handled by smart pointer deleter
-        //     llama_free(context.get());
-        // }
-
         // recreate context with new options
-        // the `TextContext` class automatically throws when their
+        // the `MessageContext` class automatically throws when their
         // llama context does not match the new llama context
         llama_context_params contextParams = llama_context_default_params();
-        // contextParams.n_ctx = options.contextLength;
-        // contextParams.n_batch = options.evalBatchSize;
+        contextParams.n_ctx = options.contextLength;
+        contextParams.n_batch = options.evalBatchSize;
+        contextParams.n_threads = options.threadCount;
 
         llama_context *context = llama_init_from_model(model.get(), contextParams);
 
@@ -328,18 +325,18 @@ public:
     }
 
     void complete(
-        std::shared_ptr<MessageContext> textContext,
+        std::shared_ptr<MessageContext> MessageContext,
         std::string prompt,
         TokenCallback onToken = nullptr,
         InputEvalCallback onInputEval = nullptr,
         TextGenerationOptions options = TextGenerationOptions()
     ) {
         std::vector promptTokens = tokenize(prompt, true);
-        complete(textContext, promptTokens, textContext->findCache(promptTokens), onToken, onInputEval, options);
+        complete(MessageContext, promptTokens, MessageContext->findCache(promptTokens), onToken, onInputEval, options);
     }
 
     void complete(
-        std::shared_ptr<MessageContext> textContext,
+        std::shared_ptr<MessageContext> MessageContext,
         std::vector<llama_token> &promptTokens,
         size_t cacheMissIndex,
         TokenCallback onToken = nullptr,
@@ -349,7 +346,7 @@ public:
         generating = true;
 
         // cache prompt and keep only the ones that were not already in the cache
-        textContext->addCache(promptTokens, cacheMissIndex);
+        MessageContext->addCache(promptTokens, cacheMissIndex);
         
         if (cacheMissIndex > 0) {
             promptTokens.erase(promptTokens.begin(), promptTokens.begin() + cacheMissIndex);
@@ -364,11 +361,11 @@ public:
         llama_sampler_chain_add(sampler.get(), llama_sampler_init_temp(options.temperature));
         llama_sampler_chain_add(sampler.get(), llama_sampler_init_dist(options.seed));
 
-        uint32_t maxBatchSize = textContext->getBatchSize();
+        uint32_t maxBatchSize = MessageContext->getBatchSize();
         
         // create a batch once and reuse it
         llama_batch batch = {}; // init pointers with nullptr (see llama_batch_get_one), the `{}` is required
-        initBatch(batch, maxBatchSize, textContext->getSeqId());
+        initBatch(batch, maxBatchSize, MessageContext->getSeqId());
 
         for (size_t i = 0; i < promptTokens.size(); i += maxBatchSize)
         {
@@ -420,7 +417,7 @@ public:
             setBatch(batch, &startTokenId, 1);
         }
 
-        // context = textContext->getContext()
+        // context = MessageContext->getContext()
 
         // generation loop
         size_t pos = 0;
