@@ -15,7 +15,7 @@
 #include "PreferredDevice.hpp"
 #include "TextGenerationOptions.hpp"
 #include "MessageContext.hpp"
-#include "MessageContextOptions.hpp"
+#include "MessageContextOptions.h"
 
 class LLModel : public Model
 {

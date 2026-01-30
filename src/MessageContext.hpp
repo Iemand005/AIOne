@@ -15,7 +15,7 @@
 
 // #include "LLModel.hpp"
 
-#include "MessageContextOptions.hpp"
+#include "MessageContextOptions.h"
 #include "ContextInvalidError.hpp"
 
 class LLModel;
