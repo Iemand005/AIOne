@@ -4,6 +4,22 @@ project(AIOneCore VERSION 0.1 LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(MSVC)
+    set(CMAKE_C_FLAGS_INIT "/FS")
+    set(CMAKE_CXX_FLAGS_INIT "/FS")
+    add_compile_options(/FS /bigobj /MP /W3 /wd4244 /wd4267)
+    string(APPEND CMAKE_C_FLAGS " /FS")
+    string(APPEND CMAKE_CXX_FLAGS " /FS")
+    set(CMAKE_JOB_POOLS compile=1 link=1)
+    add_definitions(-DNOMINMAX -D_CRT_SECURE_NO_WARNINGS)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebug" CACHE STRING "" FORCE)
+
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /FS" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FS" CACHE STRING "" FORCE)
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /FS" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /FS" CACHE STRING "" FORCE)
+endif()
+
 set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
@@ -136,6 +152,10 @@ add_library(AIOne::Core ALIAS AIOneCore)
 #     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src
 #     FILES ${CORE_HEADERS}
 # )
+
+if(AIONE_VULKAN)
+    target_link_libraries(AIOneCore PRIVATE Vulkan::Vulkan)
+endif()
 
 target_link_libraries(AIOneCore PRIVATE
     llama

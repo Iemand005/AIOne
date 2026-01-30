@@ -18,12 +18,15 @@
 #include "MessageContext.hpp"
 #include "MessageContextOptions.h"
 
+template<typename T>
+using UniquePtr = std::unique_ptr<T>;
+
 class LLModel : public Model
 {
     std::string modelPath;
 
-    struct Llama;
-    std::unique_ptr<Llama> llama;
+    // struct Llama;
+    // std::unique_ptr<Llama> llama;
 
     // llama.cpp stuff yup
     llama_model_ptr model;
