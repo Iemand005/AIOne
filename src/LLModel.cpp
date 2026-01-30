@@ -22,15 +22,14 @@ void LLModel::initBatch(llama_batch &batch, size_t maxBatchSize, llama_seq_id se
         // create an array with 1 item (seqId)
         // this pointer will be used for all pointers in `seq_id` because they all use
         // the same `seqId` anyways, no need to malloc more than necessary
-        int32_t* seqIdArrayLen = (int32_t*)malloc(sizeof(int32_t));
-        *seqIdArrayLen = 1;
-        batch.n_seq_id = seqIdArrayLen;
+        batch.n_seq_id = (int32_t*)llamaMalloc(sizeof(int32_t));
+        *batch.n_seq_id = 1;
 
         // this array is used for all items
-        llama_seq_id* seqIdArray = (llama_seq_id*)malloc(sizeof(llama_seq_id));
+        llama_seq_id* seqIdArray = (llama_seq_id*)llamaMalloc(sizeof(llama_seq_id));
         seqIdArray[0] = seqId;
         
-        batch.seq_id = (llama_seq_id**)malloc(sizeof(llama_seq_id*) * (maxBatchSize + 1));
+        batch.seq_id = (llama_seq_id**)llamaMalloc(sizeof(llama_seq_id*) * (maxBatchSize + 1));
         for (size_t i = 0; i < maxBatchSize; ++i) {
             batch.seq_id[i] = seqIdArray;
         }
@@ -65,16 +64,22 @@ llama_model *LLModel::getLlamaModel() {
     }
 
     void LLModel::freeBatch(llama_batch &batch) {
-        free(batch.n_seq_id);
-        free(batch.seq_id[0]); // free the one array that's reused for all other seq_id items
-        free(batch.seq_id); // free the array that was holding the pointers to that one array
+        // free(batch.n_seq_id);
+        // free(batch.seq_id[0]); // free the one array that's reused for all other seq_id items
+        // free(batch.seq_id); // free the array that was holding the pointers to that one array
+        if (batch.seq_id && batch.seq_id[0])
+            llamaFree(batch.seq_id[0]);
+        if (batch.seq_id)
+            llamaFree(batch.seq_id);
+        if (batch.n_seq_id)
+            llamaFree(batch.n_seq_id);
         batch.token = nullptr; // stop referencing the vector
     }
 
     
-    LLModel::LLModel(const std::string &path, const TextModelOptions &options)
+    LLModel::LLModel(const std::string path, const TextModelOptions &options)
     {
-        modelPath = path;
+        // modelPath = path;
         
         // choose devices based on preferred in options
         // (leaks into next case if preferred device isn't available)
@@ -101,7 +106,9 @@ llama_model *LLModel::getLlamaModel() {
         modelParams.devices = devices.data();
         modelParams.n_gpu_layers = options.offloadLayers;
 
-        llama_model_ptr model(llama_model_load_from_file(modelPath.c_str(), modelParams));
+        char *cpath = _strdup(path.c_str());
+
+        llama_model_ptr model(llama_model_load_from_file(cpath, modelParams));
         if (!model)
         {
             throw std::runtime_error("Failed to load model");

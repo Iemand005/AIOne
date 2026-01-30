@@ -23,10 +23,17 @@ using UniquePtr = std::unique_ptr<T>;
 
 class LLModel : public Model
 {
-    std::string modelPath;
+    // std::string modelPath;
 
     // struct Llama;
     // std::unique_ptr<Llama> llama;
+static void* llamaMalloc(size_t size) {
+        return malloc(size);  // Or use your static runtime allocator
+    }
+
+    static void llamaFree(void* ptr) {
+        free(ptr);
+    }
 
     // llama.cpp stuff yup
     llama_model_ptr model;
@@ -73,12 +80,13 @@ public:
 
     const int maxTokens = 400;
 
+    // LLModel(const std::string &path) : LLModel(path, TextModelOptions{}) {}
 
-    LLModel(const std::string &path, const TextModelOptions &options = TextModelOptions{});
+    LLModel(const std::string path, const TextModelOptions &options = TextModelOptions{});
 
-    std::string getModelPath() {
+    /*std::string getModelPath() {
         return modelPath;
-    }
+    }*/
 
     bool isGenerating() {
         return generating;
@@ -139,6 +147,13 @@ public:
 
     MessageContext newContext() {
         return MessageContext(this, context.get());
+    }
+
+    std::shared_ptr<MessageContext> createContext() {
+        auto context = std::make_shared<MessageContext>(newContext());
+        registerContext(context);
+
+        return context;
     }
 
     bool resetWithOptions(const MessageContextOptions &options) ;
