@@ -1,39 +1,144 @@
-cmake_minimum_required(VERSION 3.19)  # llama.cpp requires 3.13+
-project(MyLlamaProject)
+cmake_minimum_required(VERSION 3.16)
+project(AIOneCore VERSION 0.1 LANGUAGES CXX C)
 
-# Set your preferred C++ standard (llama.cpp uses C++11)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# CRITICAL: Disable llama.cpp's tests and examples (optional but recommended)
 set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-# Set any llama.cpp options BEFORE adding subdirectory
 set(LLAMA_CUBLAS OFF CACHE BOOL "" FORCE)      # Disable CUDA by default
 set(LLAMA_VULKAN OFF CACHE BOOL "" FORCE)      # Disable Vulkan by default
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE) # Static library
 
-# Now add the submodule
-add_subdirectory(llama.cpp)
+get_filename_component(THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external" ABSOLUTE)
+set(LLAMA_CPP_DIR "${THIRD_PARTY_DIR}/llama.cpp")
+set(STABLE_DIFFUSION_CPP_DIR "${THIRD_PARTY_DIR}/stable-diffusion.cpp")
+
+unset(SD_VULKAN CACHE)
+unset(LLAMA_VULKAN CACHE)
+unset(GGML_VULKAN CACHE)
+
+if(AIONE_VULKAN)
+    set(VULKAN_SDK_PATH "C:/VulkanSDK/1.4.335.0")
+    set(CMAKE_PREFIX_PATH "${VULKAN_SDK_PATH};${CMAKE_PREFIX_PATH}" )
+    set(Vulkan_INCLUDE_DIR "${VULKAN_SDK_PATH}/Include" CACHE PATH "Vulkan include dir" FORCE)
+    set(Vulkan_LIBRARY "${VULKAN_SDK_PATH}/Lib/vulkan-1.lib" CACHE FILEPATH "Vulkan library" FORCE)
+
+    set(LLAMA_VULKAN ON CACHE BOOL "Enable Vulkan for llama.cpp" FORCE)
+    set(GGML_VULKAN ON CACHE BOOL "Enable Vulkan for ggml" FORCE)
+    set(SD_VULKAN ON CACHE BOOL "Enable Vulkan for stable-diffusion.cpp" FORCE)
+    message(STATUS "Vulkan support: ENABLED")
+
+    set(GGML_VULKAN_VALIDATE OFF CACHE BOOL "" FORCE)
+    set(GGML_VULKAN_CHECK_RESULTS OFF CACHE BOOL "" FORCE)
+
+    set(GGML_VULKAN_SHADER_SOURCE ON CACHE BOOL "Compile Vulkan shaders from source" FORCE)
+    set(GGML_VULKAN_SHADER_BINARY OFF CACHE BOOL "Use precompiled shader binaries" FORCE)
+
+    add_definitions(-DGGML_USE_VULKAN -DSD_USE_VULKAN)
+else()
+    set(LLAMA_VULKAN OFF CACHE BOOL "" FORCE)
+    set(GGML_VULKAN OFF CACHE BOOL "" FORCE)
+    set(SD_VULKAN OFF CACHE BOOL "" FORCE)
+    message(STATUS "Vulkan support: DISABLED")
+endif()
+
+if(AIONE_VULKAN)
+    set(GGML_VULKAN_VALIDATE OFF CACHE BOOL "" FORCE)
+    set(GGML_VULKAN_CHECK_RESULTS OFF CACHE BOOL "" FORCE)
+    set(GGML_VULKAN_RUN_TESTS OFF CACHE BOOL "" FORCE)
+    set(GGML_VULKAN_SHADER_DEBUG_INFO OFF CACHE BOOL "" FORCE)
+endif()
+
+if(AIONE_VULKAN AND WIN32)
+    # Try multiple possible Vulkan SDK locations
+    if(DEFINED ENV{VULKAN_SDK})
+        set(VULKAN_SDK_PATH "$ENV{VULKAN_SDK}")
+        message(STATUS "Found Vulkan SDK from environment: ${VULKAN_SDK_PATH}")
+    else()
+        if(EXISTS "C:/VulkanSDK/1.4.335.0")
+            set(VULKAN_SDK_PATH "C:/VulkanSDK/1.4.335.0")
+        elseif(EXISTS "C:/VulkanSDK/1.4.250.1")
+            set(VULKAN_SDK_PATH "C:/VulkanSDK/1.4.250.1")
+        elseif(EXISTS "C:/VulkanSDK")
+            set(VULKAN_SDK_PATH "C:/VulkanSDK")
+        else()
+            message(WARNING "Vulkan SDK not found. Please install it or set VULKAN_SDK environment variable")
+        endif()
+    endif()
+
+    if(VULKAN_SDK_PATH AND EXISTS "${VULKAN_SDK_PATH}")
+        message(STATUS "Using Vulkan SDK at: ${VULKAN_SDK_PATH}")
+        set(CMAKE_PREFIX_PATH "${VULKAN_SDK_PATH};${CMAKE_PREFIX_PATH}")
+        set(Vulkan_DIR "${VULKAN_SDK_PATH}/cmake")
+    endif()
+endif()
+
+if(AIONE_OPENCL)
+    set(LLAMA_CLBLAST ON CACHE BOOL "Enable CLBlast for OpenCL" FORCE)
+    set(SD_OPENCL ON CACHE BOOL "Enable Stable Diffusion OpenCL" FORCE)
+    set(GGML_OPENCL ON CACHE BOOL "Enable GGML OpenCL backend" FORCE)
+    message(STATUS "OpenCL support: ENABLED")
+endif()
+
+
+
+set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(LLAMA_METAL OFF CACHE BOOL "" FORCE)
+set(LLAMA_CUDA OFF CACHE BOOL "" FORCE)
+
+
+# Add the submodules
+add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
+add_subdirectory(${STABLE_DIFFUSION_CPP_DIR} ${CMAKE_BINARY_DIR}/stable-diffusion.cpp_build)
+
+# Automatically find all source files in src directory
+file(GLOB_RECURSE CORE_SOURCES 
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
+)
+
+# Automatically find all header files in src directory
+file(GLOB_RECURSE CORE_HEADERS 
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hxx"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hh"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.inl"
+)
+
+message(STATUS "Found ${CORE_SOURCES} source files in AIOneCore/src")
+message(STATUS "Found ${CORE_HEADERS} header files in AIOneCore/src")
 
 # Your executable
-add_executable(app
-    main.cpp
-    # ... other source files
+add_library(AIOneCore STATIC ${AIOneCore_SOURCES})
+
+add_library(AIOne::Core ALIAS AIOneCore)
+
+install(TARGETS AIOneCore
+    EXPORT AIOneCoreTargets
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
 )
 
-# Link against llama.cpp's library
-target_link_libraries(app PRIVATE llama)
-
-# Include llama.cpp's headers
-target_include_directories(app PRIVATE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/llama.cpp
+install(EXPORT AIOneCoreTargets
+    FILE AIOneCoreConfig.cmake
+    NAMESPACE AIOne::
+    DESTINATION lib/cmake/AIOneCore
 )
 
-# Optional: Add definitions to match llama.cpp's config
-target_compile_definitions(app PRIVATE
-    $<$<BOOL:${LLAMA_CUBLAS}>:GGML_USE_CUBLAS>
-    $<$<BOOL:${LLAMA_VULKAN}>:GGML_USE_VULKAN>
+install(DIRECTORY src/
+    DESTINATION include/AIOneCore
+    FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+)
+
+install(FILES UIHandler.h
+    DESTINATION include/AIOneCore
 )
