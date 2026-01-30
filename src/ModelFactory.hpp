@@ -8,9 +8,11 @@
 #include "SDModel.hpp"
 
 class ModelFactory {
+    bool loadedBackends = false;
     bool initializedLlama = false;
 public:
     void initLlama();
+    void loadBackends();
 
     std::unique_ptr<LLModel> loadLLM(const std::string path) {
         initLlama();
