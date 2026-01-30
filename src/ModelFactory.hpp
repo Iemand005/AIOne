@@ -2,7 +2,6 @@
 
 #include <string>
 
-#include <llama-cpp.h>
 
 #include "LLModel.hpp"
 #include "SDModel.hpp"
@@ -10,12 +9,7 @@
 class ModelFactory {
     bool initializedLlama = false;
 public:
-    void initLlama() {
-        if (initializedLlama) return;
-        llama_backend_init();
-        ggml_backend_load_all();
-        initializedLlama = true;
-    }
+    void initLlama();
 
     std::unique_ptr<LLModel> loadLLM(const std::string &path) {
         initLlama();
@@ -30,8 +24,6 @@ public:
         return model;
     }
 
-    const char *systemInfoStr() {
-        return llama_print_system_info();
-    }
+    const char *systemInfoStr() ;
 
 };

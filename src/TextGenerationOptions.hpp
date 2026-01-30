@@ -2,11 +2,11 @@
 
 #include <cstdint>
 
-#include <llama-cpp.h>
+// #include <llama-cpp.h>
 
 struct TextGenerationOptions
 {
     float minP = 0.05f;
     float temperature = 0.8f;
-    uint32_t seed = LLAMA_DEFAULT_SEED;
+    uint32_t seed = 0xFFFFFFFF;
 };

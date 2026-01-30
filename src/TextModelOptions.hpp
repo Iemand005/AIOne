@@ -3,7 +3,7 @@
 #include <cstdint>
 
 #include "PreferredDevice.hpp"
-#include "MessageContextOptions.hpp"
+#include "MessageContextOptions.h"
 
 struct TextModelOptions : MessageContextOptions
 {
