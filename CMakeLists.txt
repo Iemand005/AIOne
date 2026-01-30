@@ -75,6 +75,15 @@ if(AIONE_VULKAN AND WIN32)
     endif()
 endif()
 
+if(AIONE_VULKAN)
+    find_package(Vulkan REQUIRED)
+    if(Vulkan_FOUND)
+        message(STATUS "Vulkan library found: ${Vulkan_LIBRARY}")
+    else()
+        message(FATAL_ERROR "Vulkan not found! Install Vulkan SDK")
+    endif()
+endif()
+
 if(AIONE_OPENCL)
     set(LLAMA_CLBLAST ON CACHE BOOL "Enable CLBlast for OpenCL" FORCE)
     set(SD_OPENCL ON CACHE BOOL "Enable Stable Diffusion OpenCL" FORCE)
@@ -115,17 +124,39 @@ file(GLOB_RECURSE CORE_HEADERS
 message(STATUS "Found ${CORE_SOURCES} source files in AIOneCore/src")
 message(STATUS "Found ${CORE_HEADERS} header files in AIOneCore/src")
 
-# Your executable
-add_library(AIOneCore STATIC ${AIOneCore_SOURCES})
+add_library(AIOneCore STATIC
+    ${CORE_SOURCES}
+)
 
 add_library(AIOne::Core ALIAS AIOneCore)
+
+# Add header files to the library (for IDE support)
+# target_sources(AIOneCore PUBLIC
+#     FILE_SET HEADERS
+#     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src
+#     FILES ${CORE_HEADERS}
+# )
+
+target_link_libraries(AIOneCore PRIVATE
+    llama
+    stable-diffusion
+)
+
+target_include_directories(AIOneCore PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    $<BUILD_INTERFACE:${LLAMA_CPP_DIR}>
+    $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/src>
+    $<BUILD_INTERFACE:${STABLE_DIFFUSION_CPP_DIR}>
+    $<INSTALL_INTERFACE:include/AIOneCore>
+)
 
 install(TARGETS AIOneCore
     EXPORT AIOneCoreTargets
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin
-    INCLUDES DESTINATION include
+    INCLUDES DESTINATION include/AIOneCore
+    FILE_SET HEADERS DESTINATION include/AIOneCore
 )
 
 install(EXPORT AIOneCoreTargets
