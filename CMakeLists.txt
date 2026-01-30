@@ -4,6 +4,9 @@ project(AIOneCore VERSION 0.1 LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(AIONE_OPENCL "Enable OpenCL support via CLBlast" OFF)
+option(AIONE_VULKAN "Enable Vulkan support" OFF)
+
 if(MSVC)
     set(CMAKE_C_FLAGS_INIT "/FS")
     set(CMAKE_CXX_FLAGS_INIT "/FS")
