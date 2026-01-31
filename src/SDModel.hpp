@@ -85,7 +85,7 @@ public:
         params.tensor_type_rules = "";
         params.vae_decode_only = true;
         params.free_params_immediately = true;
-        params.n_threads = 10;
+        params.n_threads = 4;
         params.wtype = SD_TYPE_COUNT;
         params.rng_type = CUDA_RNG;
         params.sampler_rng_type = RNG_TYPE_COUNT;
@@ -153,20 +153,17 @@ public:
 
     bool saveImageAsPNG(const sd_image_t& image, const std::string& filename) ;
 
-    sd_image_t generateImage(const std::string &prompt, int width = 512, int height = 512, int steps = 10) {
+    sd_image_t generateImage(const std::string prompt, int width = 512, int height = 512, int steps = 10) {
         if (!ctx) {
             std::cerr << "Error: Model not loaded. Call loadModel() first!" << std::endl;
             return {};
         }
 
-        // Store the prompt to keep it alive
-        lastPrompt = prompt;
-
         sd_img_gen_params_t img_gen_params;
         sd_img_gen_params_init(&img_gen_params);
         img_gen_params.loras = 0;
         img_gen_params.lora_count = 0;
-        img_gen_params.prompt = "fox";
+        img_gen_params.prompt = prompt.c_str();
         img_gen_params.negative_prompt = "";
         img_gen_params.clip_skip = -1;
         img_gen_params.init_image.width = 0;
