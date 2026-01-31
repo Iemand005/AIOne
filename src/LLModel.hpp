@@ -16,6 +16,7 @@
 #include "TextModelOptions.hpp"
 #include "PreferredDevice.h"
 #include "TextGenerationOptions.hpp"
+#include "TextGenerationStats.hpp"
 #include "MessageContext.hpp"
 #include "MessageContextOptions.h"
 
@@ -199,7 +200,7 @@ public:
     /**
      * Complete using any registered context.
      */
-    void completeAny(
+    TextGenerationStats completeAny(
         std::string prompt,
         TokenCallback onToken = nullptr,
         InputEvalCallback onInputEval = nullptr,
@@ -216,34 +217,32 @@ public:
         size_t bestCached = 0;
         size_t bestIndex = 0;
 
-        if (registeredContexts.size() > 1) {
-            for (size_t i = 0; i < registeredContexts.size(); i++) {
-                size_t cacheMissIndex = registeredContexts[i]->findCache(promptTokens);
+        for (size_t i = 0; i < registeredContexts.size(); i++) {
+            size_t cacheMissIndex = registeredContexts[i]->findCache(promptTokens);
 
-                if (cacheMissIndex > bestCached) {
-                    bestCached = cacheMissIndex;
-                    bestIndex = i;
-                }
+            if (cacheMissIndex > bestCached) {
+                bestCached = cacheMissIndex;
+                bestIndex = i;
             }
         }
 
         // complete with the best matching registered context
-        complete(registeredContexts[bestIndex], promptTokens, bestCached, onToken, onInputEval, options);
+        return complete(registeredContexts[bestIndex], promptTokens, bestCached, onToken, onInputEval, options);
     }
 
-    void complete(
-        std::shared_ptr<MessageContext> MessageContext,
+    TextGenerationStats complete(
+        std::shared_ptr<MessageContext> messageContext,
         std::string prompt,
         TokenCallback onToken = nullptr,
         InputEvalCallback onInputEval = nullptr,
         TextGenerationOptions options = TextGenerationOptions()
     ) {
         std::vector promptTokens = tokenize(prompt, true);
-        complete(MessageContext, promptTokens, MessageContext->findCache(promptTokens), onToken, onInputEval, options);
+        return complete(messageContext, promptTokens, messageContext->findCache(promptTokens), onToken, onInputEval, options);
     }
 
-    void complete(
-        std::shared_ptr<MessageContext> MessageContext,
+    TextGenerationStats complete(
+        std::shared_ptr<MessageContext> messageContext,
         std::vector<llama_token> &promptTokens,
         size_t cacheMissIndex,
         TokenCallback onToken = nullptr,
