@@ -251,6 +251,9 @@ llama_model *LLModel::getLlamaModel() {
         size_t pos = 0;
         size_t maxPos = promptTokens.size() + maxTokens;
         size_t tokensGenerated = 0;
+        std::string output;
+        output.reserve(156); // why 156? I dunno, it's yummi :3
+
         while (pos + batch.n_tokens < maxPos)
         {
             // decode last batch (either input or the newly generated token)
@@ -280,8 +283,10 @@ llama_model *LLModel::getLlamaModel() {
 
             // write text
             std::string text(buf, n);
+            
             // std::cout << text.c_str();
-            if(onToken)onToken(text);
+            output.append(text);
+            if (onToken) onToken(text);
 
             // wrap token in batch for decoding
             setBatch(batch, &newTokenId, 1);
@@ -297,6 +302,7 @@ llama_model *LLModel::getLlamaModel() {
         return {
             /*tokensEvaluated = */ promptTokens.size(),
             /*tokensGenerated = */ tokensGenerated,
-            /*tokensCached    = */ cacheMissIndex
+            /*tokensCached    = */ cacheMissIndex,
+            /*output          = */ output
         };
     }
