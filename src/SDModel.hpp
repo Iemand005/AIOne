@@ -4,6 +4,9 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <functional>
+#include <thread>
+
 
 #include <ggml-backend.h>
 #include <stable-diffusion.h>
@@ -85,8 +88,8 @@ public:
         params.photo_maker_path = "";
         params.tensor_type_rules = "";
         params.vae_decode_only = true;
-        params.free_params_immediately = true;
-        params.n_threads = 4;
+        params.free_params_immediately = false;
+        params.n_threads = 1;
         params.wtype = SD_TYPE_COUNT;
         params.rng_type = CUDA_RNG;
         params.sampler_rng_type = RNG_TYPE_COUNT;
@@ -121,6 +124,34 @@ public:
     }
 
     bool saveImageAsPNG(const sd_image_t& image, const std::string& filename) ;
+
+    static void step_callback(int step, int frame_count, sd_image_t* image, bool is_noisy, void* data) {
+        auto model = (SDModel *)data;
+        
+        if (model->previewCallback) model->previewCallback(step, frame_count, image, is_noisy);
+    }
+
+    using PreviewCallback = std::function<void(int step, int frameCount, sd_image_t* image, bool isNoisy)>;
+
+    PreviewCallback previewCallback;
+
+
+    void setPreviewCallback(PreviewCallback previewCallback) {
+        this->previewCallback = previewCallback;
+        sd_set_preview_callback(step_callback, preview_t::PREVIEW_PROJ, 1, true, true, (void*)this);
+    }
+
+    std::thread generationWorker;
+
+    using ImageCompleteHandler = std::function<void(sd_image_t image)>;
+
+    void generateAsync(const std::string positive, const std::string negative = "", SDImageOptions options = SDImageOptions{}, ImageCompleteHandler callback = nullptr) {
+        generationWorker = std::thread([this, positive, negative, options, callback]() {
+            auto image = generateImage(positive, negative, options);
+            if (callback) callback(image);
+            // generationWorkers.
+        });
+    }
 
     sd_image_t generateImage(const std::string positive, const std::string negative = "", SDImageOptions options = SDImageOptions{}) {
         if (!ctx) {
@@ -204,6 +235,8 @@ public:
         safeCopy.height = lastResult.height;
         safeCopy.channel = lastResult.channel;
         safeCopy.data = lastResult.data.data();  // Point to our safe buffer
+
+        this->saveImageAsPNG(safeCopy, positive + "rawr.png");
         
         return safeCopy;
     }
