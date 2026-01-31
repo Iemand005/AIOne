@@ -7,10 +7,12 @@
 #include <deque>
 #include <mutex>
 #include <thread>
+#include <vector>
 
 #include <llama-cpp.h>
 #include <ggml-backend.h>
 #include <llama-context.h>
+#include <common/chat.h>
 
 #include "Model.hpp"
 #include "TextModelOptions.hpp"
@@ -19,6 +21,8 @@
 #include "TextGenerationStats.hpp"
 #include "MessageContext.hpp"
 #include "MessageContextOptions.h"
+#include "Message.hpp"
+#include "LlamaUtil.hpp"
 
 template<typename T>
 using UniquePtr = std::unique_ptr<T>;
@@ -249,6 +253,34 @@ public:
         InputEvalCallback onInputEval = nullptr,
         TextGenerationOptions options = TextGenerationOptions()
     );
+
+    std::string chatToPrompt(std::vector<std::string> userAssMessages) {
+        std::vector<common_chat_msg> commonMsgs(userAssMessages.size());
+        
+        for (size_t i = 0; i < userAssMessages.size(); i++) {
+            commonMsgs[i] = {
+                /* role    = */ i % 2 == 0 ? "user" : "assistant",
+                /* content = */ userAssMessages[i]
+            };
+        }
+
+        return applyJinjaTemplate(llama_model_chat_template(model.get(), nullptr), commonMsgs);
+    }
+
+    std::string chatToPrompt(std::vector<Message> messages) {
+        std::vector<common_chat_msg> commonMsgs(messages.size());
+        
+        for (size_t i = 0; i < messages.size(); i++) {
+            const Message& message = messages[i];
+
+            commonMsgs[i] = {
+                /* role    = */ message.role,
+                /* content = */ message.content
+            };
+        }
+
+        return applyJinjaTemplate(llama_model_chat_template(model.get(), nullptr), commonMsgs);
+    }
 
     void destroy()
     {

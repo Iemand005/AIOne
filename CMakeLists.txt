@@ -115,6 +115,7 @@ endif()
 
 set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(LLAMA_BUILD_COMMON ON CACHE INTERNAL "") 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(LLAMA_METAL OFF CACHE BOOL "" FORCE)
 set(LLAMA_CUDA OFF CACHE BOOL "" FORCE)
@@ -164,6 +165,7 @@ endif()
 target_link_libraries(AIOneCore PRIVATE
     llama
     stable-diffusion
+    common
 )
 
 target_include_directories(AIOneCore PUBLIC
