@@ -5,15 +5,19 @@
 
 class ChatManager {
 
-  std::unique_ptr<ModelFactory> factory = std::make_unique<ModelFactory>();
-    std::vector<std::shared_ptr<Chat>> chats();
-  std::shared_ptr<Chat> currentChat();
+  std::unique_ptr<ModelFactory> factory;
+    std::vector<std::shared_ptr<Chat>> chats;
+  std::shared_ptr<Chat> currentChat;
   LLModel *model;
   Role userRole = Role::User; // if user wants to switch role I guess
 
 public:
 
-  ChatManager(LLModel *model) : model(model) {};
+  ChatManager(LLModel *model) : model(model) {
+      factory = std::make_unique<ModelFactory>();
+      chats = std::vector<std::shared_ptr<Chat>>();
+      currentChat = std::make_shared<Chat>();
+  };
 
   void sendAsync(std::string message, FinishCallback onDone, TokenCallback onToken, InputEvalCallback onInputEval) {
     sendAsAsync(message, userRole, onDone, onToken, onInputEval);
