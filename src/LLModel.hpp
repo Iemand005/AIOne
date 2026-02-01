@@ -22,10 +22,11 @@
 #include "MessageContext.hpp"
 #include "MessageContextOptions.h"
 #include "Message.hpp"
+#include "Chat.hpp"
 #include "LlamaUtil.hpp"
 
-template<typename T>
-using UniquePtr = std::unique_ptr<T>;
+typedef std::function<void(const float progress)> InputEvalCallback;
+typedef std::function<void(const std::string &token)> TokenCallback;
 
 class LLModel : public Model
 {
@@ -83,8 +84,7 @@ class LLModel : public Model
     void freeBatch(llama_batch &batch) ;
     
 public:
-    typedef std::function<void(const float progress)> InputEvalCallback;
-    typedef std::function<void(const std::string &token)> TokenCallback;
+    
 
     const int maxTokens = 400;
 
@@ -194,11 +194,14 @@ public:
 
     std::vector<llama_token> tokenize(std::string prompt, bool addSpecialTokens) ;
 
+    void generateAsync(Chat *chat, TokenCallback onToken = nullptr, InputEvalCallback onInputEval = nullptr, const TextGenerationOptions& options = TextGenerationOptions()) {
+        generateAsync(chatToPrompt(chat), onToken, onInputEval, options);
+    }
+
     void generateAsync(const std::string& prompt, TokenCallback onToken = nullptr, InputEvalCallback onInputEval = nullptr, const TextGenerationOptions& options = TextGenerationOptions()) {
-        generationWorker = std::thread([this, prompt, onToken, onInputEval, options]() {
+        std::thread([this, prompt, onToken, onInputEval, options]() {
             completeAny(prompt, onToken, onInputEval, options);
-            // generationWorkers.
-        });
+        }).detach(); //Detach for now but we should keep track of the workers and clean them up properly
     }
 
     /**
@@ -253,6 +256,10 @@ public:
         InputEvalCallback onInputEval = nullptr,
         TextGenerationOptions options = TextGenerationOptions()
     );
+
+    std::string chatToPrompt(Chat *chat) {
+        return chatToPrompt(chat->getMessages());
+    }
 
     std::string chatToPrompt(std::vector<std::string> userAssMessages) {
         std::vector<common_chat_msg> commonMsgs(userAssMessages.size());
