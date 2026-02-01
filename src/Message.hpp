@@ -1,9 +1,10 @@
 #pragma once
 
 #include <string>
-#include "Saveables.h"
 
-class Message {
+#include "Timeable.hpp"
+
+class Message : public Timeable {
   long long id, parentId;
   std::string role;
   std::string content;

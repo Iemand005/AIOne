@@ -2,16 +2,22 @@
 
 #include <vector>
 #include <functional>
+#include <fstream>
+#include <chrono>
+
+#include <nlohmann/json.hpp>
 
 #include "Message.hpp"
 #include "Role.h"
-#include "Saveables.h"
+#include "Timeable.hpp"
 
-class Chat {
+class Chat : public Timeable {
     std::vector<Message> messages;
     TextGenerationOptions options;
 
 public:
+
+    
 
     Chat() : Chat("") {}
 
@@ -47,5 +53,11 @@ public:
 
   TextGenerationOptions getOptions() {
     return options;
+  }
+
+  void createSaveFile() {
+    std::string fileName = "chat.jsonl";
+    currentTi
+    std::ofstream(fileName, std::ios::app) << nlohmann::json{{"text", msg}}.dump() << '\n'; 
   }
 };
