@@ -5,12 +5,20 @@
 
 #include "Message.hpp"
 #include "Role.h"
+#include "Saveables.h"
 
 class Chat {
-    std::vector<Message> messages = std::vector<Message>();
-    TextGenerationOptions options{};
+    std::vector<Message> messages;
+    TextGenerationOptions options;
 
 public:
+
+    Chat() : Chat("") {}
+
+    Chat(std::string systemPrompt) {
+        messages = std::vector<Message>();
+        messages.push_back({roleToString(Role::System), systemPrompt});
+    }
 
   std::string roleToString(Role role) {
     switch (role) {
@@ -26,6 +34,11 @@ public:
 
   void addMessage(std::string message, std::string role) {
     messages.push_back({role, message});
+  }
+
+  void setSystemPrompt(std::string prompt) {
+    messages[0] = {roleToString(Role::System), prompt};
+      // messages.push_back({roleToString(Role::System), prompt});
   }
 
   std::vector<Message> getMessages() {
