@@ -7,8 +7,8 @@
 #include "Role.h"
 
 class Chat {
-  std::vector<Message> messages;
-  TextGenerationOptions options;
+    std::vector<Message> messages = std::vector<Message>();
+    TextGenerationOptions options{};
 
 public:
 
