@@ -2,9 +2,55 @@
 
 #include "LLModel.hpp"
 
-// struct LLModel::Llama {
+LLModel::LLModel(const std::string path, const TextModelOptions &options)
+{
+    // modelPath = path;
+    
+    // choose devices based on preferred in options
+    // (leaks into next case if preferred device isn't available)
+    switch (options.device) {
+        case PreferredDevice::ANY:
+        case PreferredDevice::DGPU:
+            devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_GPU);
+            if (devices[0]) break;
+        case PreferredDevice::IGPU:
+            devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_IGPU);
+            if (devices[0]) break;
+        case PreferredDevice::ACCELERATOR:
+            devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_ACCEL);
+            if (devices[0]) break;
+        case PreferredDevice::CPU:
+            devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_CPU);
+            if (devices[0]) break;
+        default:
+            throw std::runtime_error("No compatible device found");
+    }
 
-// }
+    std::cout << "==============" << std::endl;
+    std::cout << "Using device for inference: " << ggml_backend_dev_name(devices[0]) << std::endl;
+    std::cout << "==============" << std::endl;
+
+    // init model
+    llama_model_params modelParams = llama_model_default_params();
+    modelParams.devices = devices.data();
+    modelParams.n_gpu_layers = options.offloadLayers;
+
+    char *cpath = _strdup(path.c_str());
+
+    llama_model_ptr model(llama_model_load_from_file(cpath, modelParams));
+    if (!model)
+    {
+        throw std::runtime_error("Failed to load model");
+    }
+
+    this->model = std::move(model);
+    vocab = llama_model_get_vocab(this->model.get());
+
+    // create llama context
+    if (!resetWithOptions(options)) {
+        throw std::runtime_error("Failed to create context");
+    }
+}
 
 void LLModel::initBatch(llama_batch &batch, size_t maxBatchSize, llama_seq_id seqId){
     // note: `llama_batch_get_one` doesn't allow changing the sequence id (it's always 0)
@@ -78,55 +124,7 @@ void LLModel::freeBatch(llama_batch &batch) {
 }
 
 
-LLModel::LLModel(const std::string path, const TextModelOptions &options)
-{
-    // modelPath = path;
-    
-    // choose devices based on preferred in options
-    // (leaks into next case if preferred device isn't available)
-    switch (options.device) {
-        case PreferredDevice::ANY:
-        case PreferredDevice::DGPU:
-            devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_GPU);
-            if (devices[0]) break;
-        case PreferredDevice::IGPU:
-            devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_IGPU);
-            if (devices[0]) break;
-        case PreferredDevice::ACCELERATOR:
-            devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_ACCEL);
-            if (devices[0]) break;
-        case PreferredDevice::CPU:
-            devices[0] = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_CPU);
-            if (devices[0]) break;
-        default:
-            throw std::runtime_error("No compatible device found");
-    }
 
-    std::cout << "==============" << std::endl;
-    std::cout << "Using device for inference: " << ggml_backend_dev_name(devices[0]) << std::endl;
-    std::cout << "==============" << std::endl;
-
-    // init model
-    llama_model_params modelParams = llama_model_default_params();
-    modelParams.devices = devices.data();
-    modelParams.n_gpu_layers = options.offloadLayers;
-
-    char *cpath = _strdup(path.c_str());
-
-    llama_model_ptr model(llama_model_load_from_file(cpath, modelParams));
-    if (!model)
-    {
-        throw std::runtime_error("Failed to load model");
-    }
-
-    this->model = std::move(model);
-    vocab = llama_model_get_vocab(this->model.get());
-
-    // create llama context
-    if (!resetWithOptions(options)) {
-        throw std::runtime_error("Failed to create context");
-    }
-}
 
 bool LLModel::resetWithOptions(const MessageContextOptions &options) {
     if (generating) {
