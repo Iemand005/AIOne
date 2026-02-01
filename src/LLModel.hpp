@@ -195,6 +195,10 @@ public:
 
     std::vector<llama_token> tokenize(std::string prompt, bool addSpecialTokens) ;
 
+    void generateAsync(Chat *chat, TokenCallback onToken = nullptr) {
+        generateAsync(chat, nullptr, onToken, nullptr);
+    }
+
     void generateAsync(Chat *chat, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, InputEvalCallback onInputEval = nullptr) {
         generateAsync(chatToPrompt(chat), chat->getOptions(), onDone, onToken, onInputEval);
     }

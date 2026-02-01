@@ -11,6 +11,8 @@ class ChatManager {
   LLModel *model;
   Role userRole = Role::User; // if user wants to switch role I guess
 
+public:
+
   void sendAsync(std::string message, FinishCallback onDone, TokenCallback onToken, InputEvalCallback onInputEval) {
     sendAsAsync(message, userRole, onDone, onToken, onInputEval);
   }
