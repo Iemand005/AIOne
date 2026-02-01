@@ -15,7 +15,7 @@
 #include <common/chat.h>
 
 #include "Model.hpp"
-#include "TextModelOptions.hpp"
+#include "LLModelOptions.hpp"
 #include "PreferredDevice.h"
 #include "TextGenerationOptions.hpp"
 #include "TextGenerationStats.hpp"
@@ -89,9 +89,9 @@ public:
 
     const int maxTokens = 400;
 
-    // LLModel(const std::string &path) : LLModel(path, TextModelOptions{}) {}
+    // LLModel(const std::string &path) : LLModel(path, LLModelOptions{}) {}
 
-    LLModel(const std::string path, const TextModelOptions &options = {}, ProgressCallback onProgress = nullptr);
+    LLModel(const std::string path, const LLModelOptions &options = {}, ProgressCallback onProgress = nullptr);
 
     /*std::string getModelPath() {
         return modelPath;

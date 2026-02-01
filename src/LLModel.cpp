@@ -2,7 +2,7 @@
 
 #include "LLModel.hpp"
 
-LLModel::LLModel(const std::string path, const TextModelOptions &options, ProgressCallback onProgress)
+LLModel::LLModel(const std::string path, const LLModelOptions &options, ProgressCallback onProgress)
 {
     // modelPath = path;
     
