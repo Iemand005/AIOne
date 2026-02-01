@@ -11,24 +11,17 @@ class ChatManager {
   LLModel *model;
   Role userRole = Role::User; // if user wants to switch role I guess
 
-  
-
-  using OnToken = std::function<void(std::string token)>;
-
-  void sendAsync(std::string message, TokenCallback onToken, InputEvalCallback onInputEval) {
-    sendAsAsync(message, userRole, onToken, onInputEval);
-    // currentChat->addMessage(message, userRole);
+  void sendAsync(std::string message, FinishCallback onDone, TokenCallback onToken, InputEvalCallback onInputEval) {
+    sendAsAsync(message, userRole, onDone, onToken, onInputEval);
   }
 
-  void sendAsAsync(std::string message, Role role, TokenCallback onToken, InputEvalCallback onInputEval) {
-    sendAsAsync(message, currentChat->roleToString(role), onToken, onInputEval);
+  void sendAsAsync(std::string message, Role role, FinishCallback onDone, TokenCallback onToken, InputEvalCallback onInputEval) {
+    sendAsAsync(message, currentChat->roleToString(role), onDone, onToken, onInputEval);
   }
 
-  void sendAsAsync(std::string message, std::string role, TokenCallback onToken, InputEvalCallback onInputEval) {
-    // Message chatMessage = {role, message};
-    // chatMessages->push_back(chatMessage);//dd
+  void sendAsAsync(std::string message, std::string role, FinishCallback onDone, TokenCallback onToken, InputEvalCallback onInputEval) {
     currentChat->addMessage(message, role);
-    model->generateAsync(currentChat.get(), onToken, onInputEval, currentChat->getOptions());
+    model->generateAsync(currentChat.get(), onDone, onToken, onInputEval);
   }
 
   void setModel(LLModel *model) {

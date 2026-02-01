@@ -27,6 +27,7 @@
 
 typedef std::function<void(const float progress)> InputEvalCallback;
 typedef std::function<void(const std::string &token)> TokenCallback;
+typedef std::function<void(const TextGenerationStats &output)> FinishCallback;
 
 class LLModel : public Model
 {
@@ -194,13 +195,14 @@ public:
 
     std::vector<llama_token> tokenize(std::string prompt, bool addSpecialTokens) ;
 
-    void generateAsync(Chat *chat, TokenCallback onToken = nullptr, InputEvalCallback onInputEval = nullptr, const TextGenerationOptions& options = TextGenerationOptions()) {
-        generateAsync(chatToPrompt(chat), onToken, onInputEval, options);
+    void generateAsync(Chat *chat, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, InputEvalCallback onInputEval = nullptr) {
+        generateAsync(chatToPrompt(chat), chat->getOptions(), onDone, onToken, onInputEval);
     }
 
-    void generateAsync(const std::string& prompt, TokenCallback onToken = nullptr, InputEvalCallback onInputEval = nullptr, const TextGenerationOptions& options = TextGenerationOptions()) {
-        std::thread([this, prompt, onToken, onInputEval, options]() {
-            completeAny(prompt, onToken, onInputEval, options);
+    void generateAsync(const std::string& prompt, const TextGenerationOptions& options = TextGenerationOptions(), FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, InputEvalCallback onInputEval = nullptr) {
+        std::thread([this, prompt, options, onDone, onToken, onInputEval]() {
+            auto output = completeAny(prompt, options, onToken, onInputEval);
+            if (onDone) onDone(output);
         }).detach(); //Detach for now but we should keep track of the workers and clean them up properly
     }
 
@@ -209,9 +211,9 @@ public:
      */
     TextGenerationStats completeAny(
         std::string prompt,
+        TextGenerationOptions options = TextGenerationOptions(),
         TokenCallback onToken = nullptr,
-        InputEvalCallback onInputEval = nullptr,
-        TextGenerationOptions options = TextGenerationOptions()
+        InputEvalCallback onInputEval = nullptr
     ) {
         if (registeredContexts.empty()) {
             throw std::runtime_error("No registered contexts; cannot complete request");
