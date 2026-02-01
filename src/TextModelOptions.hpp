@@ -3,9 +3,9 @@
 #include <cstdint>
 
 #include "PreferredDevice.h"
-#include "MessageContextOptions.h"
+#include "TextContextOptions.h"
 
-struct TextModelOptions : MessageContextOptions
+struct TextModelOptions : TextContextOptions
 {
     PreferredDevice device = PreferredDevice::ANY;
     int32_t offloadLayers = -1; // -1 for all layers

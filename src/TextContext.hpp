@@ -11,7 +11,7 @@
 #include <ggml-backend.h>
 #include <llama-context.h>
 
-#include "MessageContextOptions.h"
+#include "TextContextOptions.h"
 #include "ContextInvalidError.hpp"
 
 class LLModel;
@@ -20,7 +20,7 @@ struct llama_context;
 struct llama_chat_message;
 typedef int32_t llama_seq_id;
 
-class MessageContext
+class TextContext
 {
     LLModel *modelWrapper;
     llama_context *context; // Kept alive by LLModel
@@ -40,13 +40,13 @@ class MessageContext
     }
 
 public:
-    MessageContext(LLModel *modelWrapper, llama_context *context);
+    TextContext(LLModel *modelWrapper, llama_context *context);
 
-    bool operator==(const MessageContext& other) const {
+    bool operator==(const TextContext& other) const {
         return this->seqId == other.seqId;
     }
 
-    bool operator!=(const MessageContext& other) const {
+    bool operator!=(const TextContext& other) const {
         return !(*this == other);
     }
 
@@ -96,7 +96,7 @@ public:
 
     void destroy();
 
-    ~MessageContext() {
+    ~TextContext() {
         destroy();
     }
 };

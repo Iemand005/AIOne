@@ -19,8 +19,8 @@
 #include "PreferredDevice.h"
 #include "TextGenerationOptions.hpp"
 #include "TextGenerationStats.hpp"
-#include "MessageContext.hpp"
-#include "MessageContextOptions.h"
+#include "TextContext.hpp"
+#include "TextContextOptions.h"
 #include "Message.hpp"
 #include "Chat.hpp"
 #include "LlamaUtil.hpp"
@@ -50,12 +50,12 @@ class LLModel : public Model
     std::thread generationWorker;
 
     std::vector<ggml_backend_dev_t> devices = {nullptr, nullptr};
-    // std::shared_ptr<MessageContext> context = nullptr;
+    // std::shared_ptr<TextContext> context = nullptr;
     const llama_vocab *vocab = nullptr;
 
 
 
-    std::vector<std::shared_ptr<MessageContext>> registeredContexts;
+    std::vector<std::shared_ptr<TextContext>> registeredContexts;
     std::deque<llama_seq_id> freeSeqIds;
     llama_seq_id biggestSeqId = 0;
     bool generating = false;
@@ -153,20 +153,20 @@ public:
         freeSeqIds.push_back(seqId);
     }
 
-    MessageContext newContext() {
-        return MessageContext(this, context.get());
+    TextContext newContext() {
+        return TextContext(this, context.get());
     }
 
-    std::shared_ptr<MessageContext> createContext() {
-        auto context = std::make_shared<MessageContext>(newContext());
+    std::shared_ptr<TextContext> createContext() {
+        auto context = std::make_shared<TextContext>(newContext());
         registerContext(context);
 
         return context;
     }
 
-    bool resetWithOptions(const MessageContextOptions &options) ;
+    bool resetWithOptions(const TextContextOptions &options) ;
 
-    bool registerContext(std::shared_ptr<MessageContext> context) {
+    bool registerContext(std::shared_ptr<TextContext> context) {
         if (!context->isConnectedTo(this)) {
             return false;
         }
@@ -181,7 +181,7 @@ public:
         return false;
     }
 
-    bool unregisterContext(std::shared_ptr<MessageContext> context) {
+    bool unregisterContext(std::shared_ptr<TextContext> context) {
         auto index = std::find(registeredContexts.begin(), registeredContexts.end(), context);
 
         if (index != registeredContexts.end()) {
@@ -238,7 +238,7 @@ public:
     }
 
     TextGenerationStats complete(
-        std::shared_ptr<MessageContext> messageContext,
+        std::shared_ptr<TextContext> messageContext,
         std::string prompt,
         TokenCallback onToken = nullptr,
         InputEvalCallback onInputEval = nullptr,
@@ -249,7 +249,7 @@ public:
     }
 
     TextGenerationStats complete(
-        std::shared_ptr<MessageContext> messageContext,
+        std::shared_ptr<TextContext> messageContext,
         std::vector<llama_token> &promptTokens,
         size_t cacheMissIndex,
         TokenCallback onToken = nullptr,

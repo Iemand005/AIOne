@@ -126,13 +126,13 @@ void LLModel::freeBatch(llama_batch &batch) {
 
 
 
-bool LLModel::resetWithOptions(const MessageContextOptions &options) {
+bool LLModel::resetWithOptions(const TextContextOptions &options) {
     if (generating) {
         return false;
     }
 
     // recreate context with new options
-    // the `MessageContext` class automatically throws when their
+    // the `TextContext` class automatically throws when their
     // llama context does not match the new llama context
     llama_context_params contextParams = llama_context_default_params();
     contextParams.n_ctx = options.contextLength;
@@ -165,7 +165,7 @@ std::vector<llama_token> LLModel::tokenize(std::string prompt, bool addSpecialTo
 }
 
 TextGenerationStats LLModel::complete(
-    std::shared_ptr<MessageContext> messageContext,
+    std::shared_ptr<TextContext> messageContext,
     std::vector<llama_token> &promptTokens,
     size_t cacheMissIndex,
     TokenCallback onToken,

@@ -1,44 +1,44 @@
 
 
-#include "MessageContext.hpp"
+#include "TextContext.hpp"
 #include "LLModel.hpp"
 
-MessageContext::MessageContext(LLModel *modelWrapper, llama_context *context) : modelWrapper(modelWrapper), context(context) {
+TextContext::TextContext(LLModel *modelWrapper, llama_context *context) : modelWrapper(modelWrapper), context(context) {
     seqId = modelWrapper->claimSeqId();
 }
 
-bool MessageContext::isValid() {
+bool TextContext::isValid() {
     return modelWrapper->isValid(context);
 }
 
-bool MessageContext::isConnectedTo(LLModel *model) {
+bool TextContext::isConnectedTo(LLModel *model) {
     return modelWrapper == model;
 }
 
-void MessageContext::destroy() {
+void TextContext::destroy() {
 }
 
 
-uint32_t MessageContext::getContextLength() {
+uint32_t TextContext::getContextLength() {
     throwIfFreed();
     return llama_n_ctx(context);
 }
 
-uint32_t MessageContext::getUsedContextLength() {
+uint32_t TextContext::getUsedContextLength() {
     throwIfFreed();
     
     // gets the last index in the kv cache, and adds 1 to get the length
     return llama_memory_seq_pos_max(llama_get_memory(context), seqId) + 1;
 }
 
-uint32_t MessageContext::getLastIndex() {
+uint32_t TextContext::getLastIndex() {
     throwIfFreed();
     
     // gets the last index in the kv cache
     return llama_memory_seq_pos_max(llama_get_memory(context), seqId);
 }
 
-uint32_t MessageContext::getBatchSize() {
+uint32_t TextContext::getBatchSize() {
     return llama_n_batch(context);
 }
 
@@ -50,7 +50,7 @@ uint32_t MessageContext::getBatchSize() {
  * For llama_encode and llama_decode, this means you should start
  * encoding/decoding from that index forward.
  */
-size_t MessageContext::addCache(const std::vector<llama_token> &tokens) {
+size_t TextContext::addCache(const std::vector<llama_token> &tokens) {
     size_t cacheMissIndex = findCache(tokens);
     addCache(tokens, cacheMissIndex);
 
@@ -65,7 +65,7 @@ size_t MessageContext::addCache(const std::vector<llama_token> &tokens) {
  * For llama_encode and llama_decode, this means you should start
  * encoding/decoding from that index forward.
  */
-void MessageContext::addCache(const std::vector<llama_token> &tokens, size_t cacheMissIndex) {
+void TextContext::addCache(const std::vector<llama_token> &tokens, size_t cacheMissIndex) {
     // truncate cached context starting from `cacheMissIndex`
     // (if it's after the cached context size, skip truncation because whole cached prompt matched)
     if (cacheMissIndex < cache.size()) {
@@ -77,7 +77,7 @@ void MessageContext::addCache(const std::vector<llama_token> &tokens, size_t cac
     std::copy(tokens.begin() + cacheMissIndex, tokens.end(), cache.begin() + cacheMissIndex);
 }
 
-size_t MessageContext::findCache(const std::vector<llama_token> &tokens) {
+size_t TextContext::findCache(const std::vector<llama_token> &tokens) {
     size_t searchLength = std::min(tokens.size(), cache.size());
 
     // loop through the cache until `tokens[i]` does not match `cache[i]` anymore
