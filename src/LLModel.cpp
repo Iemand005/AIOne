@@ -127,9 +127,7 @@ void LLModel::freeBatch(llama_batch &batch) {
 
 
 bool LLModel::resetWithOptions(const TextContextOptions &options) {
-    if (generating) {
-        return false;
-    }
+    if (generating) return false;
 
     // recreate context with new options
     // the `TextContext` class automatically throws when their
