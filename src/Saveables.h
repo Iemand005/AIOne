@@ -3,19 +3,16 @@ struct Timestamps {
   long long finishTime;
 };
 
-struct SaveableMessage {
+struct SaveableMessageHeader {
   long long id, parentId;
   Timestamps timestamps;
   size_t roleSize = 0;
-  char role[0];
-  size_t messageS9zeh = 0;
-  char message[0];
+  size_t messageSize = 0;
 };
 
-struct SaveableChat {
+struct SaveableChatHeader {
   Timestamps timestamps;
   size_t messageCount = 0;
-  SaveableMessage messages[0];
 };
 
 #include <chrono>
@@ -25,3 +22,8 @@ long long currentTimeMillis() {
         std::chrono::system_clock::now().time_since_epoch()
     ).count();
 }
+
+template<typename T>
+T *allocateStruct() {
+  return (T *)malloc(sizeof(T));
+};

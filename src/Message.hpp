@@ -19,17 +19,16 @@ public:
   }
 
   SaveableMessage toSaveable() {
+    size_t roleSize = role.size();
     size_t messageSize = content.size();
-    size_t messageSize = role.size();
-    size_t size = sizeof(SaveableMessage) + messageSize + messageSize
-    SaveableMessage message;
-    message.id = this->id;
-    message.parentId = this->parentId;
-    message.messageLength = content.length();
-    message.message = ;
+    auto message = (SaveableMessageHeader *)malloc(sizeof(SaveableMessageHeader));
+    message->id = this->id;
+    message->parentId = this->parentId;
+    message->roleSize = roleSize;
+    message->messageSize = messageSize;
+    message->role
+    message->message = content.c_str();
 
-    return {
-
-    }
+    return message;
   }
 };
