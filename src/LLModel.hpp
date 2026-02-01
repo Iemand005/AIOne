@@ -25,7 +25,7 @@
 #include "Chat.hpp"
 #include "LlamaUtil.hpp"
 
-typedef std::function<void(const float progress)> InputEvalCallback;
+typedef std::function<void(const float progress)> ProgressCallback;
 typedef std::function<void(const std::string &token)> TokenCallback;
 typedef std::function<void(const TextGenerationStats &output)> FinishCallback;
 
@@ -91,7 +91,7 @@ public:
 
     // LLModel(const std::string &path) : LLModel(path, TextModelOptions{}) {}
 
-    LLModel(const std::string path, const TextModelOptions &options = TextModelOptions{});
+    LLModel(const std::string path, const TextModelOptions &options = {}, ProgressCallback onProgress = nullptr);
 
     /*std::string getModelPath() {
         return modelPath;
@@ -199,11 +199,11 @@ public:
         generateAsync(chat, nullptr, onToken, nullptr);
     }
 
-    void generateAsync(Chat *chat, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, InputEvalCallback onInputEval = nullptr) {
+    void generateAsync(Chat *chat, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
         generateAsync(chatToPrompt(chat), chat->getOptions(), onDone, onToken, onInputEval);
     }
 
-    void generateAsync(const std::string& prompt, const TextGenerationOptions& options = TextGenerationOptions(), FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, InputEvalCallback onInputEval = nullptr) {
+    void generateAsync(const std::string& prompt, const TextGenerationOptions& options = TextGenerationOptions(), FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
         std::thread([this, prompt, options, onDone, onToken, onInputEval]() {
             auto output = completeAny(prompt, options, onToken, onInputEval);
             if (onDone) onDone(output);
@@ -217,7 +217,7 @@ public:
         std::string prompt,
         TextGenerationOptions options = TextGenerationOptions(),
         TokenCallback onToken = nullptr,
-        InputEvalCallback onInputEval = nullptr
+        ProgressCallback onInputEval = nullptr
     ) {
         if (registeredContexts.empty()) {
             throw std::runtime_error("No registered contexts; cannot complete request");
@@ -247,7 +247,7 @@ public:
         std::shared_ptr<TextContext> messageContext,
         std::string prompt,
         TokenCallback onToken = nullptr,
-        InputEvalCallback onInputEval = nullptr,
+        ProgressCallback onInputEval = nullptr,
         TextGenerationOptions options = TextGenerationOptions()
     ) {
         std::vector promptTokens = tokenize(prompt, true);
@@ -259,7 +259,7 @@ public:
         std::vector<llama_token> &promptTokens,
         size_t cacheMissIndex,
         TokenCallback onToken = nullptr,
-        InputEvalCallback onInputEval = nullptr,
+        ProgressCallback onInputEval = nullptr,
         TextGenerationOptions options = TextGenerationOptions()
     );
 

@@ -2,7 +2,7 @@
 
 #include "LLModel.hpp"
 
-LLModel::LLModel(const std::string path, const TextModelOptions &options)
+LLModel::LLModel(const std::string path, const TextModelOptions &options, ProgressCallback onProgress)
 {
     // modelPath = path;
     
@@ -34,6 +34,14 @@ LLModel::LLModel(const std::string path, const TextModelOptions &options)
     llama_model_params modelParams = llama_model_default_params();
     modelParams.devices = devices.data();
     modelParams.n_gpu_layers = options.offloadLayers;
+    if (onProgress) {
+        modelParams.progress_callback_user_data = &onProgress;
+        modelParams.progress_callback = [](float progress, void *progressCallback){
+            ProgressCallback onProgress = *(ProgressCallback *)progressCallback;
+            onProgress(progress);oh wait gotta add the QT bindings
+            return true;
+        };
+    }
 
     char *cpath = _strdup(path.c_str());
 
@@ -167,7 +175,7 @@ TextGenerationStats LLModel::complete(
     std::vector<llama_token> &promptTokens,
     size_t cacheMissIndex,
     TokenCallback onToken,
-    InputEvalCallback onInputEval,
+    ProgressCallback onInputEval,
     TextGenerationOptions options
 ) {
     generating = true;
