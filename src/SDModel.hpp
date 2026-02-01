@@ -6,6 +6,8 @@
 #include <vector>
 #include <functional>
 #include <thread>
+#include <mutex >
+#include <queue>
 
 
 #include <ggml-backend.h>
@@ -143,14 +145,21 @@ public:
 
     std::thread generationWorker;
 
+    std::vector<std::thread> generationThreads;
+    std::queue<std::function<void()>> tasks;
+    std::mutex queueMutex;
+    std::thread generationThread;
+
     using ImageCompleteHandler = std::function<void(sd_image_t image)>;
 
     void generateAsync(const std::string positive, const std::string negative = "", SDImageOptions options = SDImageOptions{}, ImageCompleteHandler callback = nullptr) {
-        generationWorker = std::thread([this, positive, negative, options, callback]() {
+        // std::lock_guard<std::mutex> lock(queueMutex);
+        // if (generationThread) generationThread.
+        std::thread([this, positive, negative, options, callback]() {
             auto image = generateImage(positive, negative, options);
             if (callback) callback(image);
             // generationWorkers.
-        });
+        }).detach();
     }
 
     sd_image_t generateImage(const std::string positive, const std::string negative = "", SDImageOptions options = SDImageOptions{}) {
