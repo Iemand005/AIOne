@@ -18,17 +18,15 @@ public:
     this->timestamps.finishTime = currentTimeMillis();
   }
 
-  SaveableMessage toSaveable() {
+  char *toBytes() {
     size_t roleSize = role.size();
     size_t messageSize = content.size();
-    auto message = (SaveableMessageHeader *)malloc(sizeof(SaveableMessageHeader));
+    auto message = allocateStruct<SaveableMessageHeader>(roleSize + messageSize);
     message->id = this->id;
     message->parentId = this->parentId;
     message->roleSize = roleSize;
     message->messageSize = messageSize;
-    message->role
-    message->message = content.c_str();
 
-    return message;
+    return (char *)message;
   }
 };

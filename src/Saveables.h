@@ -24,6 +24,6 @@ long long currentTimeMillis() {
 }
 
 template<typename T>
-T *allocateStruct() {
-  return (T *)malloc(sizeof(T));
+T *allocateStruct(size_t extraSize) {
+  return (T *)malloc(sizeof(T) + extraSize);
 };
