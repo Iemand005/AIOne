@@ -38,7 +38,7 @@ LLModel::LLModel(const std::string path, const TextModelOptions &options, Progre
         modelParams.progress_callback_user_data = &onProgress;
         modelParams.progress_callback = [](float progress, void *progressCallback){
             ProgressCallback onProgress = *(ProgressCallback *)progressCallback;
-            onProgress(progress);oh wait gotta add the QT bindings
+            onProgress(progress);
             return true;
         };
     }
