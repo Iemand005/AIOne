@@ -18,7 +18,7 @@
 class Chat {
     unsigned long id = 0;
     std::vector<Message> messages = std::vector<Message>();
-    TextGenerationOptions options = {};
+    TextGenOptions options = {};
     Timestamps timestamps;
     std::mutex messagesMutex;
 
@@ -64,27 +64,31 @@ public:
       
     }
 
+    void lock() {
+        std::lock_guard<std::mutex> lock(messagesMutex);
+    }
+
   
 
   size_t addMessage(Role role, std::string message, bool save = true) {
-      std::lock_guard<std::mutex> lock(messagesMutex);
+      lock();
     return addMessageNoLock(Message(role, message), save);
   }
 
   size_t addMessage(std::string role, std::string message, bool save = true) {
-      std::lock_guard<std::mutex> lock(messagesMutex);
+      lock();
     return addMessageNoLock(Message(role, message), save);
   }
 
   Message getLastMessage() {
-    std::lock_guard<std::mutex> lock(messagesMutex);
+    lock();
     if (messages.size() < 1) return {};
     return messages[messages.size() -1];
   }
 
   size_t addMessage(Message message, bool save = true) {
-    std::lock_guard<std::mutex> lock(messagesMutex);
-      addMessageNoLock(message, save);
+    lock();
+      return addMessageNoLock(message, save);
   }
 
   Message createAndAddEmptyMessage(Role role) {
@@ -94,7 +98,7 @@ public:
   }
 
   void updateAt(size_t index, std::string newContent, bool save = true) {
-    std::lock_guard<std::mutex> lock(messagesMutex);
+    lock();
     messages[index].content = newContent;
     messages[index].timestamps.update();
 
@@ -102,7 +106,7 @@ public:
   }
 
   void setSystemPrompt(std::string prompt) {
-      std::lock_guard<std::mutex> lock(messagesMutex);
+      lock();
     std::cout << "[DEBUG] addMessage called. 1 Current size: " << messages.size() << " Thread ID: " << std::this_thread::get_id() << std::endl;
     if (!messages.empty())
         messages[0].content = prompt;
@@ -111,11 +115,11 @@ public:
   }
 
   std::vector<Message> &getMessages() {
-    std::lock_guard<std::mutex> lock(messagesMutex);
+    lock();
     return messages;
   }
 
-  TextGenerationOptions getOptions() {
+  TextGenOptions getOptions() {
     return options;
   }
 

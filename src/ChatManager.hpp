@@ -21,7 +21,10 @@ public:
   };
 
   void sendAsync(std::string message, FinishCallback onDone, TokenCallback onToken, ProgressCallback onInputEval) {
-    sendAsAsync(message, userRole, onDone, onToken, onInputEval);
+      sendAsAsync(message, userRole, [this, onDone](const TextGenerationResult &output) {
+          currentChat->addMessage(output.output);
+            if (onDone) onDone(output);
+      }, onToken, onInputEval);
   }
 
   void sendAsAsync(std::string message, Role role, FinishCallback onDone, TokenCallback onToken, ProgressCallback onInputEval) {
@@ -34,8 +37,16 @@ public:
     model->generateAsync(currentChat, onDone, onToken, onInputEval);
   }
 
+  void completeAsync(std::string message, TextGenOptions &options, TokenCallback onToken) {
+    model->generateAsync(currentChat, Message(userRole, message), nullptr, onToken, nullptr);
+  }
+
+  void completeAsync(std::string message, AsyncGenerationCallbacks callbacks) {
+      model->generateAsync(currentChat, Message(userRole, message), callbacks.onDone, callbacks.onToken, callbacks.onInputEval);
+  }
+
   void completeAsync(std::string message, FinishCallback onDone, TokenCallback onToken, ProgressCallback onInputEval) {
-    model->generateAsync(currentChat, Message(userRole, message), onDone, onToken, onInputEval);
+      model->generateAsync(currentChat, Message(userRole, message), onDone, onToken, onInputEval);
   }
 
   void completeAsAsync(std::string message, std::string role, FinishCallback onDone, TokenCallback onToken, ProgressCallback onInputEval) {

@@ -4,7 +4,7 @@
 
 // #include <llama-cpp.h>
 
-struct TextGenerationOptions
+struct TextGenOptions
 {
     float minP = 0.05f;
     float temperature = 0.8f;

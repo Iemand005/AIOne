@@ -172,7 +172,7 @@ TextGenerationResult LLModel::complete(
     size_t cacheMissIndex,
     TokenCallback onToken,
     ProgressCallback onInputEval,
-    TextGenerationOptions options
+    TextGenOptions options
 ) {
     generating = true;
 
