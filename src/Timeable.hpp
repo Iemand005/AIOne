@@ -3,18 +3,18 @@
 #include <chrono>
 #include <random>
 
-long long randomId() {
-    thread_local std::mt19937_64 gen(std::random_device{}() ^ std::chrono::steady_clock::now().time_since_epoch().count());
-    return gen();
-}
-
 struct Timestamps {
-  long long creationTime, modificationTime;
+  long long creationTime = 0, modificationTime = 0;
 
   long long currentTimeMillis() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()
     ).count();
+  }
+
+  long long randomId() {
+    thread_local std::mt19937_64 gen(std::random_device{}() ^ std::chrono::steady_clock::now().time_since_epoch().count());
+    return gen();
   }
 
   void start() {
@@ -25,17 +25,3 @@ struct Timestamps {
     modificationTime = currentTimeMillis();
   }
 };
-
-// class Timeable {
-
-// public:
-//   long long currentTimeMillis() {
-//     return std::chrono::duration_cast<std::chrono::milliseconds>(
-//         std::chrono::system_clock::now().time_since_epoch()
-//     ).count();
-//   }
-
-//   Timestamps newTimeStamps() {
-
-//   }
-// };

@@ -12,11 +12,16 @@ public:
   std::string content;
   Timestamps timestamps;
 
-  Message(Role role, std::string &content) : Message(roleToString(role), content) {}
-
-  Message(std::string role, std::string content) : role(role), content(content) {
-    this->timestamps.start();
+  Message() {
+      this->timestamps.start();
+      this->id = timestamps.randomId();
   }
+
+  Message(Role role, std::string &content, uint64_t parentId = 0) : content(content), parentId(parentId) {
+      this->role = roleToString(role);
+  }
+
+  Message(std::string role, std::string content, uint64_t parentId = 0) : role(role), content(content), parentId(parentId) {}
 
   std::string roleToString(Role role) {
     switch (role) {

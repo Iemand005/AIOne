@@ -30,24 +30,31 @@ public:
 
   
 
-  size_t addMessage(Role role, std::string message) {
-    return addMessage(Message(role, message));
+  size_t addMessage(Role role, std::string message, bool save = true) {
+    return addMessage(Message(role, message), save);
   }
 
-  size_t addMessage(std::string role, std::string message) {
-    return addMessage(Message(role, message));
+  size_t addMessage(std::string role, std::string message, bool save = true) {
+    return addMessage(Message(role, message), save);
   }
 
-  size_t addMessage(Message &message) {
+  size_t addMessage(Message message, bool save = true) {
+    uint64_t parentId = messages[messages.size() - 1].id;
+    message.parentId = parentId;
     messages.push_back(message);
     
     timestamps.update();
+
+    if (save) saveMessage(message);
+
     return messages.size() - 1;
   }
 
-  void updateAt(size_t index, std::string newContent) {
+  void updateAt(size_t index, std::string newContent, bool save = true) {
     messages[index].content = newContent;
     messages[index].timestamps.update();
+
+    if (save) saveMessage(messages[index]);
   }
 
   void setSystemPrompt(std::string prompt) {
@@ -73,7 +80,7 @@ public:
       {"id", message.id},
       {"parentId", message.parentId},
       {"creationTime", message.timestamps.creationTime},
-      {"finishTime", message.timestamps.modificationTime}
+      {"finishTime", message.timestamps.modificationTime},
       {"role", message.role},
       {"content", message.content}
     }}.dump() << '\n'; 

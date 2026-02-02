@@ -202,7 +202,7 @@ public:
 
     void generateAsync(Chat *chat, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
         // Message message(Role::Assistant, "");
-        auto messageIndex = chat->addMessage(Role::Assistant, "");
+        auto messageIndex = chat->addMessage(Role::Assistant, "", false);
         generateAsync(chatToPrompt(chat), chat->getOptions(), [chat, messageIndex, onDone](TextGenerationStats result) {
             chat->updateAt(messageIndex, result.output);
             if (onDone) onDone(result);
