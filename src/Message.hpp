@@ -17,7 +17,7 @@ public:
       this->id = timestamps.randomId();
   }
 
-  Message(Role role, std::string &content, uint64_t parentId = 0) : content(content), parentId(parentId) {
+  Message(Role role, std::string content, uint64_t parentId = 0) : content(content), parentId(parentId) {
       this->role = roleToString(role);
   }
 

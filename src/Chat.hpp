@@ -23,11 +23,11 @@ public:
     Chat() : Chat("") {}
 
     Chat(std::string systemPrompt) {
-        messages = std::vector<Message>(1);
+        messages = std::vector<Message>();
         // messages.push_back({Role::System, systemPrompt});
         timestamps.start();
 
-        this->addMessage(Role::System, systemPrompt);
+        this->setSystemPrompt(systemPrompt);
     }
 
   
@@ -60,7 +60,8 @@ public:
   }
 
   void setSystemPrompt(std::string prompt) {
-    messages[0].content = prompt;
+    if (!messages.empty()) messages[0].content = prompt;
+    else this->addMessage(Role::System, prompt);
   }
 
   std::vector<Message> getMessages() {
