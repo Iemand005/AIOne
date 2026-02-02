@@ -24,8 +24,10 @@ public:
 
     Chat(std::string systemPrompt) {
         messages = std::vector<Message>();
-        messages.push_back({Role::System, systemPrompt});
+        // messages.push_back({Role::System, systemPrompt});
         timestamps.start();
+
+        addMessage(Role::System, systemPrompt);
     }
 
   
