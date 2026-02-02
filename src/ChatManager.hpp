@@ -20,40 +20,34 @@ public:
       currentChat = std::make_shared<Chat>(systemPrompt);
   };
 
-  void sendAsync(std::string message, FinishCallback onDone, TokenCallback onToken, ProgressCallback onInputEval) {
-      sendAsAsync(message, userRole, [this, onDone](const TextGenerationResult &output) {
+  void sendAsync(std::string message, const AsyncTextGenOptions& options = {}) {
+      AsyncTextGenOptions newOptions = options;
+      newOptions.onDone = [this, options](const TextGenResult &output) {
           currentChat->addMessage(output.output);
-            if (onDone) onDone(output);
-      }, onToken, onInputEval);
+          if (options.onDone) options.onDone(output);
+      };
+      sendAsAsync(message, userRole, newOptions);
   }
 
-  void sendAsAsync(std::string message, Role role, FinishCallback onDone, TokenCallback onToken, ProgressCallback onInputEval) {
+  void sendAsAsync(std::string message, Role role, const AsyncTextGenOptions& options = {}) {
       currentChat->addMessage(role, message);
-      model->generateAsync(currentChat, onDone, onToken, onInputEval);
+      model->generateAsync(currentChat, options);
   }
 
-  void sendAsAsync(std::string message, std::string role, FinishCallback onDone, TokenCallback onToken, ProgressCallback onInputEval) {
+  void sendAsAsync(std::string message, std::string role, const AsyncTextGenOptions& options = {}) {
     currentChat->addMessage(role, message);
-    model->generateAsync(currentChat, onDone, onToken, onInputEval);
+    model->generateAsync(currentChat, options);
   }
 
-  void completeAsync(std::string message, TextGenOptions &options, TokenCallback onToken) {
-    model->generateAsync(currentChat, Message(userRole, message), nullptr, onToken, nullptr);
+  void completeAsync(std::string message, const AsyncTextGenOptions& options = {}) {
+    model->generateAsync(currentChat, Message(userRole, message), options);
   }
 
-  void completeAsync(std::string message, TextGenOptions &options, AsyncGenerationCallbacks callbacks) {
-      model->generateAsync(currentChat, Message(userRole, message), options, callbacks);
-  }
-
-  void completeAsync(std::string message, FinishCallback onDone, TokenCallback onToken, ProgressCallback onInputEval) {
-      model->generateAsync(currentChat, Message(userRole, message), onDone, onToken, onInputEval);
-  }
-
-  void completeAsAsync(std::string message, std::string role, FinishCallback onDone, TokenCallback onToken, ProgressCallback onInputEval) {
+  void completeAsAsync(std::string message, std::string role, const AsyncTextGenOptions& options = {}) {
     // auto last = currentChat->getLastMessage();
     // if (last.role != role) last = currentChat->createAndAddEmptyMessage(role);
     // currentChat->addMessage(role, message);
-    model->generateAsync(currentChat, Message(role, message), onDone, onToken, onInputEval);
+    model->generateAsync(currentChat, Message(role, message), options);
   }
 
   void setModel(LLModel *model) {

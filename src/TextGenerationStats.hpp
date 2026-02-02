@@ -5,7 +5,7 @@
 
 // #include <llama-cpp.h>
 
-struct TextGenerationResult
+struct TextGenResult
 {
     size_t tokensEvaluated;
     size_t tokensGenerated;

@@ -166,12 +166,10 @@ std::vector<llama_token> LLModel::tokenize(std::string prompt, bool addSpecialTo
     return promptTokens;
 }
 
-TextGenerationResult LLModel::complete(
+TextGenResult LLModel::complete(
     std::shared_ptr<TextContext> textContext,
     std::vector<llama_token> &promptTokens,
     size_t cacheMissIndex,
-    TokenCallback onToken,
-    ProgressCallback onInputEval,
     TextGenOptions options
 ) {
     generating = true;
@@ -236,7 +234,7 @@ TextGenerationResult LLModel::complete(
             }
         }
 
-        if(onInputEval)onInputEval((float)i / promptTokens.size());
+        if(options.onInputEval) options.onInputEval((float)i / promptTokens.size());
     }
 
     if (llama_model_has_encoder(model.get()))
@@ -290,7 +288,7 @@ TextGenerationResult LLModel::complete(
 
         // std::cout << text.c_str();
         output.append(text);
-        if (onToken) onToken(text);
+        if (options.onToken) options.onToken(text);
 
         // wrap token in batch for decoding
         setBatch(batch, &newTokenId, 1);

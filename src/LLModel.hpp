@@ -26,19 +26,11 @@
 #include "Chat.hpp"
 #include "LlamaUtil.hpp"
 
-typedef std::function<void(const float progress)> ProgressCallback;
-typedef std::function<void(const std::string &token)> TokenCallback;
-typedef std::function<void(const TextGenerationResult &output)> FinishCallback;
+// typedef std::function<void(const float progress)> ProgressCallback;
+// typedef std::function<void(const std::string &token)> TokenCallback;
+// typedef std::function<void(const TextGenResult &output)> FinishCallback;
 
-struct GenerationCallbacks {
-    TokenCallback onToken;
-    ProgressCallback onInputEval;
-};
 
-struct AsyncGenerationCallbacks {
-    GenerationCallbacks callbacks;
-    FinishCallback onDone;
-};
 
 class LLModel : public Model
 {
@@ -209,31 +201,26 @@ public:
 
     std::vector<llama_token> tokenize(std::string prompt, bool addSpecialTokens) ;
 
-
-    // void generateAsync(std::shared_ptr<Chat> chat, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
-    //     generateAsync(chatToPrompt(chat.get()), chat->getOptions(), {onToken, onDone, onInputEval});
-    // }
-
-    // void generateAsync(std::shared_ptr<Chat> chat, Message draft, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
-    //     generateAsync(chatToPrompt(chat.get(), draft), chat->getOptions(), {onToken, onDone, onInputEval});
-    // }
-
-    void generateAsync(std::shared_ptr<Chat> chat, Message draft, const TextGenOptions& options = {}, AsyncGenerationCallbacks callbacks = {}) {
-        generateAsync(chatToPrompt(chat.get(), draft), options, callbacks);
+    void generateAsync(std::shared_ptr<Chat> chat, const AsyncTextGenOptions& options = {}) {
+        generateAsync(chatToPrompt(chat.get()), options);
     }
 
-    void generateAsync(const std::string& prompt, const TextGenOptions& options = {}, AsyncGenerationCallbacks callbacks = {}) {
+    void generateAsync(std::shared_ptr<Chat> chat, Message draft, const AsyncTextGenOptions& options = {}) {
+        generateAsync(chatToPrompt(chat.get(), draft), options);
+    }
+
+    void generateAsync(const std::string& prompt, const AsyncTextGenOptions& options = {}) {
         std::lock_guard<std::mutex> lock(threadsMutex);
-        activeThreads.emplace_back([this, prompt, options, callbacks]() {
-            auto result = completeAny(prompt, options, callbacks.callbacks);
-            if (callbacks.onDone) callbacks.onDone(result);
+        activeThreads.emplace_back([this, prompt, options]() {
+            auto result = completeAny(prompt, options);
+            if (options.onDone) options.onDone(result);
         });
     }
 
     /**
      * Complete using any registered context.
      */
-    TextGenerationResult completeAny(std::string prompt, const TextGenOptions options = {}, GenerationCallbacks callbacks = {}) {
+    TextGenResult completeAny(std::string prompt, const TextGenOptions options = {}) {
         if (registeredContexts.empty()) {
             throw std::runtime_error("No registered contexts; cannot complete request");
         }
@@ -255,24 +242,23 @@ public:
         }
 
         // complete with the best matching registered context
-        return complete(registeredContexts[bestIndex], promptTokens, bestCached, options, callbacks);
+        return complete(registeredContexts[bestIndex], promptTokens, bestCached, options);
     }
 
-    TextGenerationResult complete(
+    TextGenResult complete(
         std::shared_ptr<TextContext> messageContext,
         std::string prompt,
-        TextGenOptions options = {}, GenerationCallbacks callbacks = {}
+        TextGenOptions options = {}
     ) {
         std::vector promptTokens = tokenize(prompt, true);
-        return complete(messageContext, promptTokens, messageContext->findCache(promptTokens), options, callbacks);
+        return complete(messageContext, promptTokens, messageContext->findCache(promptTokens), options);
     }
 
-    TextGenerationResult complete(
+    TextGenResult complete(
         std::shared_ptr<TextContext> messageContext,
         std::vector<llama_token> &promptTokens,
         size_t cacheMissIndex,
-        TextGenOptions options = {},
-        GenerationCallbacks callbacks = {}
+        TextGenOptions options = {}
     );
 
     std::string chatToPrompt(Chat *chat) {
