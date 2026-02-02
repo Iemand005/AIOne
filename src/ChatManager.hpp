@@ -38,10 +38,11 @@ public:
   }
 
   void completeAsAsync(std::string message, std::string role, FinishCallback onDone, TokenCallback onToken, ProgressCallback onInputEval) {
-    auto last = currentChat->getLastMessage();
-    if (last.role != role) last = currentChat->createAndAddEmptyMessage(role);
-    currentChat->addMessage(role, message);
-    model->generateAsync(currentChat, onDone, onToken, onInputEval);
+    // auto last = currentChat->getLastMessage();
+    // if (last.role != role) last = currentChat->createAndAddEmptyMessage(role);
+    // currentChat->addMessage(role, message);
+    std::shared_ptr<Message> draft = std::make_shared<Message>(role, message);
+    model->generateAsync(currentChat, draft, onDone, onToken, onInputEval);
   }
 
   void setModel(LLModel *model) {

@@ -204,17 +204,11 @@ public:
     }
 
     void generateAsync(std::shared_ptr<Chat> chat, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
-        std::shared_ptr<Message> draft = std::make_shared<Message>(Role::Assistant, "");
-        generateAsync(chat, draft, onDone, onToken, onInputEval);
+        generateAsync(chat, std::make_shared<Message>(Role::Assistant, ""), onDone, onToken, onInputEval);
     }
 
     void generateAsync(std::shared_ptr<Chat> chat, std::shared_ptr<Message> draft = nullptr, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
-        
-        generateAsync(chatToPrompt(chat.get()), chat->getOptions(), [chat, draft, onDone](TextGenerationResult result) {
-            // draft->content = result.output.content;
-            // chat->addMessage(*message);
-            if (onDone) onDone(result);
-        }, onToken, onInputEval);
+        generateAsync(chatToPrompt(chat.get()), chat->getOptions(), onDone, onToken, onInputEval);
     }
 
     void generateAsync(const std::string& prompt, const TextGenerationOptions& options = TextGenerationOptions(), FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
