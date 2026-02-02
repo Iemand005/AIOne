@@ -1,16 +1,9 @@
 #pragma once
 
 #include <cstdint>
-#include <string>
-#include <functional>
 
 #include "PreferredDevice.h"
 #include "TextContextOptions.h"
-#include "TextGenResult.hpp"
-
-typedef std::function<void(const float progress)> ProgressCallback;
-typedef std::function<void(const std::string &token)> TokenCallback;
-typedef std::function<void(const TextGenResult &output)> FinishCallback;
 
 struct LLModelOptions : TextContextOptions
 {
