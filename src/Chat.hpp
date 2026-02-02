@@ -20,6 +20,7 @@ class Chat {
     std::vector<Message> messages = std::vector<Message>();
     TextGenerationOptions options = {};
     Timestamps timestamps;
+    std::mutex messagesMutex;
 
 public:
     Chat() : Chat("") {}
@@ -43,21 +44,26 @@ public:
   }
 
   size_t addMessage(Message message, bool save = true) {
+    std::lock_guard<std::mutex> lock(messagesMutex);
       if (messages.size() > 0) {
           uint64_t parentId = messages[messages.size() - 1].id;
           message.parentId = parentId;
       }
       std::cerr << "I'm adding";
+      std::cout << "[DEBUG] addMessage called. 3 Current size: " << messages.size() << " Thread ID: " << std::this_thread::get_id() << std::endl;
     messages.push_back(message);
     
     timestamps.update();
 
     if (save) saveMessage(message);
 
+    std::cout << "[DEBUG] addMessage called. 4 Current size: " << messages.size() << " Thread ID: " << std::this_thread::get_id() << std::endl;
+
     return messages.size() - 1;
   }
 
   void updateAt(size_t index, std::string newContent, bool save = true) {
+    std::lock_guard<std::mutex> lock(messagesMutex);
     messages[index].content = newContent;
     messages[index].timestamps.update();
 
@@ -65,12 +71,15 @@ public:
   }
 
   void setSystemPrompt(std::string prompt) {
+    std::cout << "[DEBUG] addMessage called. 1 Current size: " << messages.size() << " Thread ID: " << std::this_thread::get_id() << std::endl;
     if (!messages.empty())
         messages[0].content = prompt;
     else this->addMessage(Role::System, prompt);
+    std::cout << "[DEBUG] addMessage called. 2 Current size: " << messages.size() << " Thread ID: " << std::this_thread::get_id() << std::endl;
   }
 
   std::vector<Message> &getMessages() {
+    std::lock_guard<std::mutex> lock(messagesMutex);
     return messages;
   }
 

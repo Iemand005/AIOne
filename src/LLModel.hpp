@@ -36,6 +36,29 @@ class LLModel : public Model
 
     // struct Llama;
     // std::unique_ptr<Llama> llama;
+    
+    // llama.cpp stuff yup
+    llama_model_ptr model;
+    llama_context_ptr context = nullptr;
+    llama_sampler_ptr sampler;
+    
+    std::thread generationWorker;
+    
+    std::vector<ggml_backend_dev_t> devices = {nullptr, nullptr};
+    // std::shared_ptr<TextContext> context = nullptr;
+    const llama_vocab *vocab = nullptr;
+    
+    
+    
+    std::vector<std::shared_ptr<TextContext>> registeredContexts;
+    std::deque<llama_seq_id> freeSeqIds;
+    llama_seq_id biggestSeqId = 0;
+    bool generating = false;
+    
+    std::vector<std::thread> activeThreads;
+    std::mutex threadsMutex; // thread-safety
+
+
     static void* llamaMalloc(size_t size) {
         return malloc(size);  // Or use your static runtime allocator
     }
@@ -43,26 +66,6 @@ class LLModel : public Model
     static void llamaFree(void* ptr) {
         free(ptr);
     }
-
-    // llama.cpp stuff yup
-    llama_model_ptr model;
-    llama_context_ptr context = nullptr;
-    llama_sampler_ptr sampler;
-
-    std::thread generationWorker;
-
-    std::vector<ggml_backend_dev_t> devices = {nullptr, nullptr};
-    // std::shared_ptr<TextContext> context = nullptr;
-    const llama_vocab *vocab = nullptr;
-
-
-
-    std::vector<std::shared_ptr<TextContext>> registeredContexts;
-    std::deque<llama_seq_id> freeSeqIds;
-    llama_seq_id biggestSeqId = 0;
-    bool generating = false;
-
-    std::mutex mtx; // thread-safety
 
     void initBatch(llama_batch &batch, size_t maxBatchSize, llama_seq_id seqId) ;
 
@@ -115,7 +118,7 @@ public:
     // }
 
     llama_seq_id claimSeqId() {
-        std::lock_guard<std::mutex> lock(mtx);
+        std::lock_guard<std::mutex> lock(threadsMutex);
 
         // get the first explicitly released seq id, or a new seq id
         if (freeSeqIds.empty()) {
@@ -142,7 +145,7 @@ public:
     // result: all seqIds released, but `freeSeqIds` is not empty and `biggestSeqId` is 1
     // I don't really care about this much personally but feel free to fix it
     void releaseSeqId(llama_seq_id seqId) {
-        std::lock_guard<std::mutex> lock(mtx);
+        std::lock_guard<std::mutex> lock(threadsMutex);
 
         // if the seq id to be released was the last one that was claimed,
         // just decrement the last claimed seq id
@@ -201,11 +204,8 @@ public:
     }
 
     void generateAsync(std::shared_ptr<Chat> chat, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
-        // Message message(Role::Assistant, "");
-        // auto messageIndex = chat->addMessage(Role::Assistant, "", false);
-        Message *message = new Message(Role::Assistant, "");
+        std::shared_ptr<Message> message = std::make_shared<Message>(Role::Assistant, "");
         generateAsync(chatToPrompt(chat.get()), chat->getOptions(), [chat, message, onDone](TextGenerationStats result) {
-            // chat->updateAt(messageInde/x, result.output);
             message->content = result.output;
             chat->addMessage(*message);
             if (onDone) onDone(result);
@@ -213,10 +213,11 @@ public:
     }
 
     void generateAsync(const std::string& prompt, const TextGenerationOptions& options = TextGenerationOptions(), FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
-        std::thread([this, prompt, options, onDone, onToken, onInputEval]() {
+        std::lock_guard<std::mutex> lock(threadsMutex);
+        activeThreads.emplace_back([this, prompt, options, onDone, onToken, onInputEval]() {
             auto output = completeAny(prompt, options, onToken, onInputEval);
             if (onDone) onDone(output);
-        }).detach(); //Detach for now but we should keep track of the workers and clean them up properly
+        });
     }
 
     /**
@@ -319,6 +320,8 @@ public:
 
     ~LLModel()
     {
+        for (auto& thread : activeThreads)
+            if (thread.joinable()) thread.join();
         destroy();
         // Smart pointers handle cleanup automatically
     }
