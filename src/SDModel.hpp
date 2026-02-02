@@ -46,7 +46,6 @@ public:
     SDModel(){}
     SDModel(std::string path, std::string vaePath = "") {
         loadModel(path, vaePath);
-        setAllowSharedMemory();
     }
 
     void selectDevice(int device = 1) {
