@@ -22,9 +22,6 @@ static std::string applyJinjaTemplate(
   inputs.messages = messages;
   inputs.tools = tools;
   inputs.add_generation_prompt = addAss;
-  // inputs.add_bos = false;
-  // inputs.add_eos = true;
-  // inputs.add_generation_prompt = false;
 
   return common_chat_templates_apply(tmpls.get(), inputs).prompt;
 }
