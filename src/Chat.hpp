@@ -41,8 +41,11 @@ public:
   }
 
   size_t addMessage(Message message, bool save = true) {
-    uint64_t parentId = messages[messages.size() - 1].id;
-    message.parentId = parentId;
+      if (!messages.empty()) {
+          uint64_t parentId = messages[messages.size() - 1].id;
+          message.parentId = parentId;
+      }
+
     messages.push_back(message);
     
     timestamps.update();
