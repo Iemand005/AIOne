@@ -46,6 +46,7 @@ public:
     SDModel(){}
     SDModel(std::string path, std::string vaePath = "") {
         loadModel(path, vaePath);
+        setAllowSharedMemory();
     }
 
     void selectDevice(int device = 1) {
@@ -69,14 +70,11 @@ public:
 
         selectDevice();
 
-        setAllowSharedMemory();
-
         if (ctx) free_sd_ctx(ctx);
 
         sd_ctx_params_t params;
         sd_ctx_params_init(&params);
 
-        // SDXL
         params.model_path = path.c_str();
         params.clip_l_path = "";
         params.clip_g_path = "";
@@ -175,10 +173,10 @@ public:
 
         sd_img_gen_params_t img_gen_params;
         sd_img_gen_params_init(&img_gen_params);
-        img_gen_params.loras = 0;
-        img_gen_params.lora_count = 0;
-        img_gen_params.prompt = "furry, fox, canid, 2D, digital art, white background, white nose, orange fur, brown ears, green inner ear, white chin, solo, front, bright colours, saturated colours, spaghetti, pasta, eating, bowl";
-        img_gen_params.negative_prompt = "";
+        // img_gen_params.loras = 0;
+        // img_gen_params.lora_count = 0;
+        img_gen_params.prompt = positive.c_str();
+        img_gen_params.negative_prompt = negative.c_str();
         img_gen_params.clip_skip = options.clipSkip;
         img_gen_params.init_image.width = 0;
         img_gen_params.init_image.height = 0;
@@ -231,7 +229,7 @@ public:
         img_gen_params.sample_params.guidance.slg.scale = 0;
         img_gen_params.sample_params.scheduler = SGM_UNIFORM_SCHEDULER;
         img_gen_params.sample_params.sample_method = EULER_A_SAMPLE_METHOD;
-        img_gen_params.sample_params.sample_steps = 25;
+        img_gen_params.sample_params.sample_steps = options.stepCount;
 
         img_gen_params.control_image.channel = 3;
 

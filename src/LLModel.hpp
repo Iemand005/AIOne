@@ -91,45 +91,22 @@ class LLModel : public Model
     void freeBatch(llama_batch &batch) ;
     
 public:
-    
-
-    // const int maxTokens = 400;
-
-    // LLModel(const std::string &path) : LLModel(path, LLModelOptions{}) {}
 
     LLModel(const std::string path, const LLModelOptions &options = {}, ProgressCallback onProgress = nullptr);
 
-    /*std::string getModelPath() {
-        return modelPath;
-    }*/
-
-    bool isGenerating() {
-        return generating;
-    }
-
-
-
+    bool isGenerating() { return generating; }
     // used by `TextContent`
     // checks if the llama context has been recreated
-    bool isValid(llama_context *context) {
-        return context == this->context.get();
-    }
-
-    // bool isGenerating() {
-    //     return generating;
-    // }
+    bool isValid(llama_context *context) { return context == this->context.get(); }
 
     llama_seq_id claimSeqId() {
         std::lock_guard<std::mutex> lock(threadsMutex);
 
         // get the first explicitly released seq id, or a new seq id
         if (freeSeqIds.empty()) {
-            if (biggestSeqId == 0xFFFF) {
-                throw std::runtime_error("Maximum number of sequences reached (" + std::to_string(biggestSeqId) + ")");
-            }
+            if (biggestSeqId == 0xFFFF) throw std::runtime_error("Maximum number of sequences reached (" + std::to_string(biggestSeqId) + ")");
             
-            // no explicitly released seq ids, get a new one
-            return biggestSeqId++;
+            return biggestSeqId++; // no explicitly released seq ids, get a new one
         }
 
         // a seq id somewhere in the middle was released, use that one
@@ -174,9 +151,8 @@ public:
     bool resetWithOptions(const TextContextOptions &options) ;
 
     bool registerContext(std::shared_ptr<TextContext> context) {
-        if (!context->isConnectedTo(this)) {
+        if (!context->isConnectedTo(this))
             return false;
-        }
 
         auto index = std::find(registeredContexts.begin(), registeredContexts.end(), context);
 
@@ -270,7 +246,7 @@ public:
     }
 
     std::vector<common_chat_msg> toCommonMessages(std::vector<Message> messages) {
-        std::vector<common_chat_msg> commonMsgs(messages.size());//YEA
+        std::vector<common_chat_msg> commonMsgs(messages.size());
         
         size_t i = 0;
         for (auto &message : messages) commonMsgs[i++] = {message.role, message.content};
@@ -284,28 +260,15 @@ public:
     }
 
     std::string chatToPrompt(std::vector<Message> messages, Message draft) {
-        // auto commonMsgs = toCommonMessages(messages);
         messages.push_back(draft);
         auto prompt = chatToPrompt(messages, false);
-        // std::string prompt = applyJinjaTemplate(model.get(), commonMsgs, false);
-        // std::string prompt = chatToPrompt(messages, false);
-
         auto vocab = llama_model_get_vocab(this->model.get());
 
-        // std::string bosToken = common_token_to_piece(vocab, llama_vocab_bos(vocab), true);
         std::string eosToken = common_token_to_piece(vocab, llama_vocab_eos(vocab), true);
 
-
-
-        // std::string bosToken = "<|im_start|>";
-
-        // return prompt + bosToken + draft.role + "\n" + draft.content;
-        // if (string_ends_with(prompt, "\n"))
-            string_remove_suffix(prompt, "\n");
-        // if (string_ends_with(prompt, eosToken))
-            string_remove_suffix(prompt, eosToken);
-            return prompt;
-
+        string_remove_suffix(prompt, "\n");
+        string_remove_suffix(prompt, eosToken);
+        return prompt;
     }
 
     void destroy()
