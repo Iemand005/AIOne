@@ -6,6 +6,8 @@
 #include <chrono>
 #include <sstream>
 #include <ctime>
+#include <iostream>
+#include <mutex>
 
 #include <nlohmann/json.hpp>
 
@@ -18,6 +20,7 @@ class Chat {
     std::vector<Message> messages;
     TextGenerationOptions options;
     Timestamps timestamps;
+    std::mutex itemsMutex;
 
 public:
     Chat() : Chat("") {}
@@ -41,11 +44,12 @@ public:
   }
 
   size_t addMessage(Message message, bool save = true) {
+      std::lock_guard<std::mutex> lock(itemsMutex);
       if (!messages.empty()) {
           uint64_t parentId = messages[messages.size() - 1].id;
           message.parentId = parentId;
       }
-
+      std::cerr << "I'm adding";
     messages.push_back(message);
     
     timestamps.update();
@@ -67,7 +71,7 @@ public:
     else this->addMessage(Role::System, prompt);
   }
 
-  std::vector<Message> getMessages() {
+  std::vector<Message> &getMessages() {
     return messages;
   }
 
