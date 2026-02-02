@@ -4,30 +4,18 @@
 
 #include "Timeable.hpp"
 
-class Message : public Timeable {
-  long long id, parentId;
+class Message {
+public:
+  unsigned long long id, parentId;
   std::string role;
   std::string content;
   Timestamps timestamps;
 
-public:
-  Message() {
-    this->timestamps.creationTime = currentTimeMillis();
+  Message(std::string role, std::string content) : role(role), content(content) {
+    this->timestamps.start();
   }
 
   void finished() {
-    this->timestamps.finishTime = currentTimeMillis();
-  }
-
-  char *toBytes() {
-    size_t roleSize = role.size();
-    size_t messageSize = content.size();
-    auto message = allocateStruct<SaveableMessageHeader>(roleSize + messageSize);
-    message->id = this->id;
-    message->parentId = this->parentId;
-    message->roleSize = roleSize;
-    message->messageSize = messageSize;
-
-    return (char *)message;
+    this->timestamps.finish();
   }
 };

@@ -4,6 +4,8 @@
 #include <functional>
 #include <fstream>
 #include <chrono>
+#include <sstream>
+#include <ctime>
 
 #include <nlohmann/json.hpp>
 
@@ -11,14 +13,13 @@
 #include "Role.h"
 #include "Timeable.hpp"
 
-class Chat : public Timeable {
+class Chat {
+    unsigned long id;
     std::vector<Message> messages;
     TextGenerationOptions options;
+    Timestamps timestamps;
 
 public:
-
-    
-
     Chat() : Chat("") {}
 
     Chat(std::string systemPrompt) {
@@ -55,9 +56,19 @@ public:
     return options;
   }
 
-  void createSaveFile() {
-    std::string fileName = "chat.jsonl";
-    currentTi
-    std::ofstream(fileName, std::ios::app) << nlohmann::json{{"text", msg}}.dump() << '\n'; 
+  void saveMessage(Message message) {
+    std::time_t time_sec = timestamps.creationTime / 1000;
+    std::stringstream ss;
+    ss << "Chat_at_" << std::put_time(time_sec, "%Y%m%d_%H%M%S") << "_" << std::setfill('0') << std::setw(3) << (timestamps.creationTime % 1000) << ".jsonl";; ;;;;;;;;;;;
+    std::string fileName = ss.str();
+    // std::string fileName = std::format()"chat.jsonl";
+    std::ofstream(fileName, std::ios::app) << nlohmann::json{{
+      {"id", message.id},
+      {"parentId", message.parentId},
+      {"creationTime", message.timestamps.creationTime},
+      {"finishTime", message.timestamps.modificationTime}
+      {"role", message.role},
+      {"content", message.content}
+    }}.dump() << '\n'; 
   }
 };
