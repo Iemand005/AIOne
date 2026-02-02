@@ -119,8 +119,8 @@ public:
     return messages;
   }
 
-  TextGenOptions getOptions() {
-    return options;
+  TextGenOptions *getOptions() {
+    return &options;
   }
 
   void saveMessage(Message &message) {

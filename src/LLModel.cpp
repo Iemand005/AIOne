@@ -253,7 +253,7 @@ TextGenerationResult LLModel::complete(
 
     // generation loop
     size_t pos = 0;
-    size_t maxPos = promptTokens.size() + maxTokens;
+    size_t maxPos = promptTokens.size() + options.maxTokens;
     size_t tokensGenerated = 0;
     std::string output;
     output.reserve(156); // why 156? I dunno, it's yummi :3

@@ -36,9 +36,8 @@ struct GenerationCallbacks {
 };
 
 struct AsyncGenerationCallbacks {
-    TokenCallback onToken;
+    GenerationCallbacks callbacks;
     FinishCallback onDone;
-    ProgressCallback onInputEval;
 };
 
 class LLModel : public Model
@@ -102,7 +101,7 @@ class LLModel : public Model
 public:
     
 
-    const int maxTokens = 400;
+    // const int maxTokens = 400;
 
     // LLModel(const std::string &path) : LLModel(path, LLModelOptions{}) {}
 
@@ -210,39 +209,31 @@ public:
 
     std::vector<llama_token> tokenize(std::string prompt, bool addSpecialTokens) ;
 
-    void generateAsync(std::shared_ptr<Chat> chat, TokenCallback onToken = nullptr) {
-        generateAsync(chat, nullptr, onToken, nullptr);
-    }
 
-    void generateAsync(std::shared_ptr<Chat> chat, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
-        generateAsync(chatToPrompt(chat.get()), chat->getOptions(), onDone, onToken, onInputEval);
-    }
+    // void generateAsync(std::shared_ptr<Chat> chat, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
+    //     generateAsync(chatToPrompt(chat.get()), chat->getOptions(), {onToken, onDone, onInputEval});
+    // }
 
-    void generateAsync(std::shared_ptr<Chat> chat, Message draft, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
-        generateAsync(chatToPrompt(chat.get(), draft), chat->getOptions(), onDone, onToken, onInputEval);
-    }
+    // void generateAsync(std::shared_ptr<Chat> chat, Message draft, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
+    //     generateAsync(chatToPrompt(chat.get(), draft), chat->getOptions(), {onToken, onDone, onInputEval});
+    // }
 
     void generateAsync(std::shared_ptr<Chat> chat, Message draft, const TextGenOptions& options = {}, AsyncGenerationCallbacks callbacks = {}) {
-        generateAsync(chatToPrompt(chat.get(), draft), options, callbacks.onDone, callbacks.onToken, callbacks.onInputEval);
+        generateAsync(chatToPrompt(chat.get(), draft), options, callbacks);
     }
 
-    void generateAsync(const std::string& prompt, const TextGenOptions& options = {}, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
+    void generateAsync(const std::string& prompt, const TextGenOptions& options = {}, AsyncGenerationCallbacks callbacks = {}) {
         std::lock_guard<std::mutex> lock(threadsMutex);
-        activeThreads.emplace_back([this, prompt, options, onDone, onToken, onInputEval]() {
-            auto result = completeAny(prompt, options, onToken, onInputEval);
-            if (onDone) onDone(result);
+        activeThreads.emplace_back([this, prompt, options, callbacks]() {
+            auto result = completeAny(prompt, options, callbacks.callbacks);
+            if (callbacks.onDone) callbacks.onDone(result);
         });
     }
 
     /**
      * Complete using any registered context.
      */
-    TextGenerationResult completeAny(
-        std::string prompt,
-        TextGenOptions options = TextGenOptions(),
-        TokenCallback onToken = nullptr,
-        ProgressCallback onInputEval = nullptr
-    ) {
+    TextGenerationResult completeAny(std::string prompt, const TextGenOptions options = {}, GenerationCallbacks callbacks = {}) {
         if (registeredContexts.empty()) {
             throw std::runtime_error("No registered contexts; cannot complete request");
         }
@@ -264,27 +255,24 @@ public:
         }
 
         // complete with the best matching registered context
-        return complete(registeredContexts[bestIndex], promptTokens, bestCached, onToken, onInputEval, options);
+        return complete(registeredContexts[bestIndex], promptTokens, bestCached, options, callbacks);
     }
 
     TextGenerationResult complete(
         std::shared_ptr<TextContext> messageContext,
         std::string prompt,
-        TokenCallback onToken = nullptr,
-        ProgressCallback onInputEval = nullptr,
-        TextGenOptions options = TextGenOptions()
+        TextGenOptions options = {}, GenerationCallbacks callbacks = {}
     ) {
         std::vector promptTokens = tokenize(prompt, true);
-        return complete(messageContext, promptTokens, messageContext->findCache(promptTokens), onToken, onInputEval, options);
+        return complete(messageContext, promptTokens, messageContext->findCache(promptTokens), options, callbacks);
     }
 
     TextGenerationResult complete(
         std::shared_ptr<TextContext> messageContext,
         std::vector<llama_token> &promptTokens,
         size_t cacheMissIndex,
-        TokenCallback onToken = nullptr,
-        ProgressCallback onInputEval = nullptr,
-        TextGenOptions options = TextGenOptions()
+        TextGenOptions options = {},
+        GenerationCallbacks callbacks = {}
     );
 
     std::string chatToPrompt(Chat *chat) {

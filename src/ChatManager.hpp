@@ -41,8 +41,8 @@ public:
     model->generateAsync(currentChat, Message(userRole, message), nullptr, onToken, nullptr);
   }
 
-  void completeAsync(std::string message, AsyncGenerationCallbacks callbacks) {
-      model->generateAsync(currentChat, Message(userRole, message), callbacks.onDone, callbacks.onToken, callbacks.onInputEval);
+  void completeAsync(std::string message, TextGenOptions &options, AsyncGenerationCallbacks callbacks) {
+      model->generateAsync(currentChat, Message(userRole, message), options, callbacks);
   }
 
   void completeAsync(std::string message, FinishCallback onDone, TokenCallback onToken, ProgressCallback onInputEval) {
@@ -66,6 +66,10 @@ public:
 
   void setSystemPrompt(std::string prompt) {
       currentChat->setSystemPrompt(prompt);
+  }
+
+  TextGenOptions *currentChatOptions() {
+      return currentChat->getOptions();
   }
 
 };
