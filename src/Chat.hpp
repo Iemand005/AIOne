@@ -22,8 +22,8 @@ class Chat {
 public:
     Chat() : Chat("") {}
 
-    Chat(std::string systemPrompt) : Chat() {
-        messages = std::vector<Message>();
+    Chat(std::string systemPrompt) {
+        messages = std::vector<Message>(1);
         // messages.push_back({Role::System, systemPrompt});
         timestamps.start();
 
