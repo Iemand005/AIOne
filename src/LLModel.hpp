@@ -289,15 +289,20 @@ public:
         return commonMsgs;
     }
 
-    std::string chatToPrompt(std::vector<Message> messages) {
+    std::string chatToPrompt(std::vector<Message> messages, bool addAss = true) {
         auto commonMsgs = toCommonMessages(messages);
-        return applyJinjaTemplate(llama_model_chat_template(model.get(), nullptr), commonMsgs);
+        return applyJinjaTemplate(llama_model_chat_template(model.get(), nullptr), commonMsgs, addAss);
     }
 
     std::string chatToPrompt(std::vector<Message> messages, Message draft) {
         auto commonMsgs = toCommonMessages(messages);
-        commonMsgs.push_back({draft.role, draft.content});
-        return applyJinjaTemplate(llama_model_chat_template(model.get(), nullptr), commonMsgs, false);
+        // commonMsgs.push_back({draft.role, draft.content});
+        // std::string prompt = applyJinjaTemplate(llama_model_chat_template(model.get(), nullptr), commonMsgs, false);
+        std::string prompt = chatToPrompt(messages, false);
+
+        std::string bosToken = "<|im_start|>";
+
+        return prompt + bosToken + draft.role + "\n" + draft.content;
     }
 
     void destroy()
