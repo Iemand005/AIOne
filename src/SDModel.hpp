@@ -125,6 +125,10 @@ public:
         return true;
     }
 
+    void loadVAE(const std::strng &path) {
+
+    }
+
     bool saveImageAsPNG(const sd_image_t& image, const std::string& filename) ;
 
     static void step_callback(int step, int frame_count, sd_image_t* image, bool is_noisy, void* data) {
