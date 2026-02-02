@@ -204,11 +204,11 @@ public:
     }
 
     void generateAsync(std::shared_ptr<Chat> chat, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
-        generateAsync(chat, std::make_shared<Message>(Role::Assistant, ""), onDone, onToken, onInputEval);
+        generateAsync(chat, Message(Role::Assistant, ""), onDone, onToken, onInputEval);
     }
 
-    void generateAsync(std::shared_ptr<Chat> chat, std::shared_ptr<Message> draft = nullptr, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
-        generateAsync(chatToPrompt(chat.get()), chat->getOptions(), onDone, onToken, onInputEval);
+    void generateAsync(std::shared_ptr<Chat> chat, Message draft, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
+        generateAsync(chatToPrompt(chat.get(), draft), chat->getOptions(), onDone, onToken, onInputEval);
     }
 
     void generateAsync(const std::string& prompt, const TextGenerationOptions& options = TextGenerationOptions(), FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
@@ -272,33 +272,37 @@ public:
         TextGenerationOptions options = TextGenerationOptions()
     );
 
-    std::string chatToPrompt(Chat *chat, std::shared_ptr<Message> draft = nullptr) {
+    std::string chatToPrompt(Chat *chat) {
+        return chatToPrompt(chat->getMessages());
+    }
+
+    std::string chatToPrompt(Chat *chat, Message draft) {
         return chatToPrompt(chat->getMessages(), draft);
     }
 
-    std::string chatToPrompt(std::vector<Message> messages, std::shared_ptr<Message> draft = nullptr) {
-        std::vector<common_chat_msg> commonMsgs(messages.size() + (draft ? 1 : 0));
+    std::vector<common_chat_msg> toCommonMessages(std::vector<Message> messages) {
+        std::vector<common_chat_msg> commonMsgs(messages.size());//YEA
         
         size_t i = 0;
-        for (auto &message : messages)
-            commonMsgs[i++] = {message.role, message.content};
+        for (auto &message : messages) commonMsgs[i++] = {message.role, message.content};
 
-        if (draft) commonMsgs[i] = {draft->role, draft->content};
+        return commonMsgs;
+    }
 
+    std::string chatToPrompt(std::vector<Message> messages) {
+        auto commonMsgs = toCommonMessages(messages);
         return applyJinjaTemplate(llama_model_chat_template(model.get(), nullptr), commonMsgs);
+    }
+
+    std::string chatToPrompt(std::vector<Message> messages, Message draft) {
+        auto commonMsgs = toCommonMessages(messages);
+        commonMsgs.push_back({draft.role, draft.content});
+        return applyJinjaTemplate(llama_model_chat_template(model.get(), nullptr), commonMsgs, false);
     }
 
     void destroy()
     {
-        // if (model != nullptr) { these are smart pointers
-        //     llama_model_free(model.get());
-        //     model = nullptr;
-        // }
-
-        // if (context != nullptr) {
-        //     llama_free(context.get());
-        //     context = nullptr;
-        // }
+        
     }
 
     ~LLModel()

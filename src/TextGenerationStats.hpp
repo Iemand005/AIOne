@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include "Message.hpp"
 
 // #include <llama-cpp.h>
 

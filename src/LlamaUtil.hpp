@@ -9,9 +9,12 @@
 static std::string applyJinjaTemplate(
   const std::string &jinjaTemplate,
   std::vector<common_chat_msg> &messages,
+    bool addEos = true,
+    bool addBos = true,
   std::vector<common_chat_tool> tools = {},
   const std::string &bosToken = "",
   const std::string &eosToken = ""
+
 ) {
   common_chat_templates_ptr tmpls = common_chat_templates_init(nullptr, jinjaTemplate, bosToken, eosToken);
   common_chat_templates_inputs inputs;
@@ -19,5 +22,7 @@ static std::string applyJinjaTemplate(
   inputs.messages = messages;
   inputs.tools = tools;
   inputs.add_generation_prompt = true;
+  inputs.add_bos = addBos;
+  inputs.add_eos = addEos;
   return common_chat_templates_apply(tmpls.get(), inputs).prompt;
 }

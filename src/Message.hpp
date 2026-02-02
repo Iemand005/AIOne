@@ -5,8 +5,7 @@
 #include "Role.h"
 #include "Timeable.hpp"
 
-class Message {
-public:
+struct Message {
   unsigned long long id, parentId;
   std::string role;
   std::string content;
@@ -17,11 +16,11 @@ public:
       this->id = timestamps.randomId();
   }
 
-  Message(Role role, std::string content = "", uint64_t parentId = 0) : content(content), parentId(parentId) {
+  Message(Role role, std::string content = "", uint64_t parentId = 0) : parentId(parentId), content(content) {
       this->role = roleToString(role);
   }
 
-  Message(std::string role, std::string content, uint64_t parentId = 0) : role(role), content(content), parentId(parentId) {}
+  Message(std::string role, std::string content, uint64_t parentId = 0) : parentId(parentId), role(role), content(content) {}
 
   std::string roleToString(Role role) {
     switch (role) {

@@ -1,3 +1,4 @@
+#pragma once
 
 #include "ModelFactory.hpp"
 #include "Chat.hpp"
@@ -34,15 +35,14 @@ public:
   }
 
   void completeAsync(std::string message, FinishCallback onDone, TokenCallback onToken, ProgressCallback onInputEval) {
-    completeAsAsync(message, userRole, onDone, onToken, onInputEval);
+    model->generateAsync(currentChat, Message(userRole, message), onDone, onToken, onInputEval);
   }
 
   void completeAsAsync(std::string message, std::string role, FinishCallback onDone, TokenCallback onToken, ProgressCallback onInputEval) {
     // auto last = currentChat->getLastMessage();
     // if (last.role != role) last = currentChat->createAndAddEmptyMessage(role);
     // currentChat->addMessage(role, message);
-    std::shared_ptr<Message> draft = std::make_shared<Message>(role, message);
-    model->generateAsync(currentChat, draft, onDone, onToken, onInputEval);
+    model->generateAsync(currentChat, Message(role, message), onDone, onToken, onInputEval);
   }
 
   void setModel(LLModel *model) {
