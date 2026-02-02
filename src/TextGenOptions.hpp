@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <functional>
 
-#include "TextGenerationStats.hpp"
+#include "TextGenResult.hpp"
 
 typedef std::function<void(const float progress)> ProgressCallback;
 typedef std::function<void(const std::string &token)> TokenCallback;

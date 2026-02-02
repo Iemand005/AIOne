@@ -3,8 +3,6 @@
 #include <cstdint>
 #include "Message.hpp"
 
-// #include <llama-cpp.h>
-
 struct TextGenResult
 {
     size_t tokensEvaluated;
