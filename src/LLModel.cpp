@@ -170,7 +170,7 @@ std::vector<llama_token> LLModel::tokenize(std::string prompt, bool addSpecialTo
     return promptTokens;
 }
 
-TextGenerationStats LLModel::complete(
+TextGenerationResult LLModel::complete(
     std::shared_ptr<TextContext> textContext,
     std::vector<llama_token> &promptTokens,
     size_t cacheMissIndex,
@@ -312,6 +312,6 @@ TextGenerationStats LLModel::complete(
         /*tokensEvaluated = */ promptTokens.size(),
         /*tokensGenerated = */ tokensGenerated,
         /*tokensCached    = */ cacheMissIndex,
-        /*output          = */ output
+        /*output          = */ Message{Role::Assistant, output}
     };
 }

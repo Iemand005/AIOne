@@ -4,10 +4,10 @@
 
 // #include <llama-cpp.h>
 
-struct TextGenerationStats
+struct TextGenerationResult
 {
     size_t tokensEvaluated;
     size_t tokensGenerated;
     size_t tokensCached;
-    std::string output;
+    Message output;
 };
