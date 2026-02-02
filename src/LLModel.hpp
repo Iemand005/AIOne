@@ -278,20 +278,34 @@ public:
         return commonMsgs;
     }
 
-    std::string chatToPrompt(std::vector<Message> messages, bool addAss = true) {
+    std::string chatToPrompt(std::vector<Message> &messages, bool addAss = true) {
         auto commonMsgs = toCommonMessages(messages);
-        return applyJinjaTemplate(llama_model_chat_template(model.get(), nullptr), commonMsgs, addAss);
+        return applyJinjaTemplate(model.get(), commonMsgs, addAss);
     }
 
     std::string chatToPrompt(std::vector<Message> messages, Message draft) {
-        auto commonMsgs = toCommonMessages(messages);
-        // commonMsgs.push_back({draft.role, draft.content});
-        // std::string prompt = applyJinjaTemplate(llama_model_chat_template(model.get(), nullptr), commonMsgs, false);
-        std::string prompt = chatToPrompt(messages, false);
+        // auto commonMsgs = toCommonMessages(messages);
+        messages.push_back(draft);
+        auto prompt = chatToPrompt(messages, false);
+        // std::string prompt = applyJinjaTemplate(model.get(), commonMsgs, false);
+        // std::string prompt = chatToPrompt(messages, false);
 
-        std::string bosToken = "<|im_start|>";
+        auto vocab = llama_model_get_vocab(this->model.get());
 
-        return prompt + bosToken + draft.role + "\n" + draft.content;
+        // std::string bosToken = common_token_to_piece(vocab, llama_vocab_bos(vocab), true);
+        std::string eosToken = common_token_to_piece(vocab, llama_vocab_eos(vocab), true);
+
+
+
+        // std::string bosToken = "<|im_start|>";
+
+        // return prompt + bosToken + draft.role + "\n" + draft.content;
+        // if (string_ends_with(prompt, "\n"))
+            string_remove_suffix(prompt, "\n");
+        // if (string_ends_with(prompt, eosToken))
+            string_remove_suffix(prompt, eosToken);
+            return prompt;
+
     }
 
     void destroy()
