@@ -33,6 +33,17 @@ public:
     model->generateAsync(currentChat, onDone, onToken, onInputEval);
   }
 
+  void completeAsync(std::string message, FinishCallback onDone, TokenCallback onToken, ProgressCallback onInputEval) {
+    completeAsAsync(message, userRole, onDone, onToken, onInputEval);
+  }
+
+  void completeAsAsync(std::string message, std::string role, FinishCallback onDone, TokenCallback onToken, ProgressCallback onInputEval) {
+    auto last = currentChat->getLastMessage();
+    if (last.role != role) last = currentChat->createAndAddEmptyMessage(role);
+    currentChat->addMessage(role, message);
+    model->generateAsync(currentChat, onDone, onToken, onInputEval);
+  }
+
   void setModel(LLModel *model) {
     this->model = model;
   }

@@ -277,7 +277,8 @@ public:
         return chatToPrompt(chat->getMessages());
     }
 
-    std::string chatToPrompt(std::vector<Message> messages) {
+    std::string chatToPrompt(yup
+    ) {
         std::vector<common_chat_msg> commonMsgs(messages.size());
         
         size_t i = 0;

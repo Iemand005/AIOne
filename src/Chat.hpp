@@ -43,6 +43,11 @@ public:
     return addMessage(Message(role, message), save);
   }
 
+  Message getLastMessage() {
+    if (messages.size() < 1) return {};
+    return messages[messages.size() -1];
+  }
+
   size_t addMessage(Message message, bool save = true) {
     std::lock_guard<std::mutex> lock(messagesMutex);
       if (messages.size() > 0) {
@@ -60,6 +65,12 @@ public:
     std::cout << "[DEBUG] addMessage called. 4 Current size: " << messages.size() << " Thread ID: " << std::this_thread::get_id() << std::endl;
 
     return messages.size() - 1;
+  }
+
+  Message createAndAddEmptyMessage(Role role) {
+    auto message = Message(role);
+    addMessage(message, false);
+    return message;
   }
 
   void updateAt(size_t index, std::string newContent, bool save = true) {
