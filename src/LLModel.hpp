@@ -46,7 +46,7 @@ class LLModel : public Model
     
     std::thread generationWorker;
     
-    std::vector<ggml_backend_dev_t> devices = {nullptr, nullptr};
+    
     // std::shared_ptr<TextContext> context = nullptr;
     const llama_vocab *vocab = nullptr;
     

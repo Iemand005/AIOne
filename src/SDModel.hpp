@@ -58,15 +58,6 @@ public:
 
     bool loadModel(const std::string path, std::string vaePath = "") {
 
-        auto device = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_GPU);
-        if (!device) 
-        {
-            device = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_IGPU);
-            if (!device) {
-                device = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_CPU);
-            }
-        }
-
         selectDevice();
         setAllowSharedMemory();
 
@@ -76,14 +67,14 @@ public:
         sd_ctx_params_init(&params);
 
         params.model_path = path.c_str();
-        params.clip_l_path = "";
-        params.clip_g_path = "";
-        params.clip_vision_path = "";
-        params.t5xxl_path = "";
-        params.llm_path = "";
-        params.llm_vision_path = "";
-        params.diffusion_model_path = "";
-        params.high_noise_diffusion_model_path = "";
+        // params.clip_l_path = "";
+        // params.clip_g_path = "";
+        // params.clip_vision_path = "";
+        // params.t5xxl_path = "";
+        // params.llm_path = "";
+        // params.llm_vision_path = "";
+        // params.diffusion_model_path = "";
+        // params.high_noise_diffusion_model_path = "";
         params.vae_path = vaePath.c_str();
         params.taesd_path = "";
         params.control_net_path = "";
@@ -116,7 +107,7 @@ public:
         params.chroma_use_t5_mask = false;
         params.chroma_t5_mask_pad = 1;
         params.qwen_image_zero_cond_t = false;
-        params.flow_shift = INFINITY;
+        // params.flow_shift = INFINITY;
 
         ctx = new_sd_ctx(&params);
 
@@ -130,20 +121,13 @@ public:
 
     bool saveImageAsPNG(const sd_image_t& image, const std::string& filename) ;
 
-    static void step_callback(int step, int frame_count, sd_image_t* image, bool is_noisy, void* data) {
-        auto model = (SDModel *)data;
-        
-        if (model->previewCallback) model->previewCallback(step, frame_count, image, is_noisy);
-    }
-
     using PreviewCallback = std::function<void(int step, int frameCount, sd_image_t* image, bool isNoisy)>;
 
-    PreviewCallback previewCallback;
-
-
     void setPreviewCallback(PreviewCallback previewCallback) {
-        this->previewCallback = previewCallback;
-        sd_set_preview_callback(step_callback, preview_t::PREVIEW_PROJ, 1, true, true, (void*)this);
+        sd_set_preview_callback([](int step, int frameCount, sd_image_t* image, bool isNoisy, void* data) {
+            auto callback = *(PreviewCallback *)data;
+            if (callback) callback(step, frameCount, image, isNoisy);
+        }, preview_t::PREVIEW_TAE, 1, true, true, (void*)&previewCallback);
     }
 
     std::thread generationWorker;
