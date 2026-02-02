@@ -119,13 +119,10 @@ void LLModel::setBatch(llama_batch &batch, llama_token *tokensStart, size_t batc
 }
 
 void LLModel::freeBatch(llama_batch &batch) {
-    // free(batch.n_seq_id);
-    // free(batch.seq_id[0]); // free the one array that's reused for all other seq_id items
-    // free(batch.seq_id); // free the array that was holding the pointers to that one array
     if (batch.seq_id && batch.seq_id[0])
-        llamaFree(batch.seq_id[0]);
+        llamaFree(batch.seq_id[0]); // free the one array that's reused for all other seq_id items
     if (batch.seq_id)
-        llamaFree(batch.seq_id);
+        llamaFree(batch.seq_id); // free the array that was holding the pointers to that one array
     if (batch.n_seq_id)
         llamaFree(batch.n_seq_id);
     batch.token = nullptr; // stop referencing the vector
@@ -147,9 +144,8 @@ bool LLModel::resetWithOptions(const TextContextOptions &options) {
 
     llama_context *context = llama_init_from_model(model.get(), contextParams);
 
-    if (context == nullptr) {
+    if (context == nullptr)
         return false;
-    }
 
     this->context.reset(context);
 
@@ -183,9 +179,8 @@ TextGenerationResult LLModel::complete(
     // cache prompt and keep only the ones that were not already in the cache
     textContext->addCache(promptTokens, cacheMissIndex);
     
-    if (cacheMissIndex > 0) {
+    if (cacheMissIndex > 0)
         promptTokens.erase(promptTokens.begin(), promptTokens.begin() + cacheMissIndex);
-    }
 
     std::cout << std::to_string(cacheMissIndex) + " cached tokens, " + std::to_string(promptTokens.size()) + " tokens to be evaluated" << std::endl;
 
