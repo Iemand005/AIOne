@@ -273,17 +273,18 @@ public:
         TextGenerationOptions options = TextGenerationOptions()
     );
 
-    std::string chatToPrompt(Chat *chat) {
-        return chatToPrompt(chat->getMessages());
+    std::string chatToPrompt(Chat *chat, std::shared_ptr<Message> draft = nullptr) {
+        return chatToPrompt(chat->getMessages(), draft);
     }
 
-    std::string chatToPrompt(yup
-    ) {
-        std::vector<common_chat_msg> commonMsgs(messages.size());
+    std::string chatToPrompt(std::vector<Message> messages, std::shared_ptr<Message> draft = nullptr) {
+        std::vector<common_chat_msg> commonMsgs(messages.size() + (draft ? 1 : 0));
         
         size_t i = 0;
         for (auto &message : messages)
             commonMsgs[i++] = {message.role, message.content};
+
+        if (draft) commonMsgs[i] = {draft->role, draft->content};
 
         return applyJinjaTemplate(llama_model_chat_template(model.get(), nullptr), commonMsgs);
     }
