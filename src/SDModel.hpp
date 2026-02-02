@@ -69,6 +69,7 @@ public:
         }
 
         selectDevice();
+        setAllowSharedMemory();
 
         if (ctx) free_sd_ctx(ctx);
 
