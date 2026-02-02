@@ -32,8 +32,6 @@ inline void setEnvironmentVariable(const std::string& name, const std::string& v
 
 class SDModel : public Model {
     sd_ctx_t* ctx = nullptr;
-    std::string modelPath;
-    std::string vaePath = "";
     std::string lastPrompt; 
     
     struct SafeImage {
@@ -54,8 +52,7 @@ public:
         setEnvironmentVariable("SD_VK_DEVICE", std::to_string(device));
     }
 
-    bool loadModel(const std::string& path, std::string vaePath = "") {
-        modelPath = path; 
+    bool loadModel(const std::string path, std::string vaePath = "") {
 
         auto device = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_GPU);
         if (!device) 
@@ -74,7 +71,7 @@ public:
         sd_ctx_params_init(&params);
 
         // SDXL
-        params.model_path = modelPath.c_str();
+        params.model_path = path.c_str();
         params.clip_l_path = "";
         params.clip_g_path = "";
         params.clip_vision_path = "";
@@ -124,10 +121,6 @@ public:
         }
 
         return true;
-    }
-
-    void loadVAE(const std::string path) {
-        vaePath = path;
     }
 
     bool saveImageAsPNG(const sd_image_t& image, const std::string& filename) ;
