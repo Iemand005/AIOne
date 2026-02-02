@@ -25,12 +25,12 @@ public:
 
   void sendAsAsync(std::string message, Role role, FinishCallback onDone, TokenCallback onToken, ProgressCallback onInputEval) {
       currentChat->addMessage(role, message);
-      model->generateAsync(currentChat.get(), onDone, onToken, onInputEval);
+      model->generateAsync(currentChat, onDone, onToken, onInputEval);
   }
 
   void sendAsAsync(std::string message, std::string role, FinishCallback onDone, TokenCallback onToken, ProgressCallback onInputEval) {
     currentChat->addMessage(role, message);
-    model->generateAsync(currentChat.get(), onDone, onToken, onInputEval);
+    model->generateAsync(currentChat, onDone, onToken, onInputEval);
   }
 
   void setModel(LLModel *model) {

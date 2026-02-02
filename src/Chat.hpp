@@ -16,17 +16,16 @@
 #include "Timeable.hpp"
 
 class Chat {
-    unsigned long id;
-    std::vector<Message> messages;
-    TextGenerationOptions options;
+    unsigned long id = 0;
+    std::vector<Message> messages = std::vector<Message>();
+    TextGenerationOptions options = {};
     Timestamps timestamps;
-    std::mutex itemsMutex;
 
 public:
     Chat() : Chat("") {}
 
     Chat(std::string systemPrompt) {
-        messages = std::vector<Message>();
+        // messages;
         // messages.push_back({Role::System, systemPrompt});
         timestamps.start();
 
@@ -44,8 +43,7 @@ public:
   }
 
   size_t addMessage(Message message, bool save = true) {
-      std::lock_guard<std::mutex> lock(itemsMutex);
-      if (!messages.empty()) {
+      if (messages.size() > 0) {
           uint64_t parentId = messages[messages.size() - 1].id;
           message.parentId = parentId;
       }
@@ -67,7 +65,8 @@ public:
   }
 
   void setSystemPrompt(std::string prompt) {
-    if (!messages.empty()) messages[0].content = prompt;
+    if (!messages.empty())
+        messages[0].content = prompt;
     else this->addMessage(Role::System, prompt);
   }
 
@@ -79,7 +78,7 @@ public:
     return options;
   }
 
-  void saveMessage(Message message) {
+  void saveMessage(Message &message) {
     std::time_t time = timestamps.creationTime / 1000;
     std::stringstream ss;
     std::tm* tm = std::localtime(&time);

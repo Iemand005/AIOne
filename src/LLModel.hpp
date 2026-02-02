@@ -196,15 +196,15 @@ public:
 
     std::vector<llama_token> tokenize(std::string prompt, bool addSpecialTokens) ;
 
-    void generateAsync(Chat *chat, TokenCallback onToken = nullptr) {
+    void generateAsync(std::shared_ptr<Chat> chat, TokenCallback onToken = nullptr) {
         generateAsync(chat, nullptr, onToken, nullptr);
     }
 
-    void generateAsync(Chat *chat, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
+    void generateAsync(std::shared_ptr<Chat> chat, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
         // Message message(Role::Assistant, "");
         // auto messageIndex = chat->addMessage(Role::Assistant, "", false);
         Message *message = new Message(Role::Assistant, "");
-        generateAsync(chatToPrompt(chat), chat->getOptions(), [chat, message, onDone](TextGenerationStats result) {
+        generateAsync(chatToPrompt(chat.get()), chat->getOptions(), [chat, message, onDone](TextGenerationStats result) {
             // chat->updateAt(messageInde/x, result.output);
             message->content = result.output;
             chat->addMessage(*message);
