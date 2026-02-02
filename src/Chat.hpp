@@ -10,7 +10,7 @@
 #include <nlohmann/json.hpp>
 
 #include "Message.hpp"
-#include "Role.h"
+// #include "Role.h"
 #include "Timeable.hpp"
 
 class Chat {
@@ -24,28 +24,34 @@ public:
 
     Chat(std::string systemPrompt) {
         messages = std::vector<Message>();
-        messages.push_back({roleToString(Role::System), systemPrompt});
+        messages.push_back({Role::System, systemPrompt});
+        timestamps.start();
     }
 
-  std::string roleToString(Role role) {
-    switch (role) {
-      case Role::System: return "system";
-      case Role::Assistant: return "assistant";
-      case Role::User: return "user";
-    }
+  
+
+  size_t addMessage(Role role, std::string message) {
+    return addMessage(Message(role, message));
   }
 
-  void addMessage(std::string message, Role role) {
-    addMessage(message, roleToString(role));
+  size_t addMessage(std::string role, std::string message) {
+    return addMessage(Message(role, message));
   }
 
-  void addMessage(std::string message, std::string role) {
-    messages.push_back({role, message});
+  size_t addMessage(Message &message) {
+    messages.push_back(message);
+    
+    timestamps.update();
+    return messages.size() - 1;
+  }
+
+  void updateAt(size_t index, std::string newContent) {
+    messages[index].content = newContent;
+    messages[index].timestamps.update();
   }
 
   void setSystemPrompt(std::string prompt) {
-    messages[0] = {roleToString(Role::System), prompt};
-      // messages.push_back({roleToString(Role::System), prompt});
+    messages[0].content = prompt;
   }
 
   std::vector<Message> getMessages() {
@@ -57,11 +63,12 @@ public:
   }
 
   void saveMessage(Message message) {
-    std::time_t time_sec = timestamps.creationTime / 1000;
+    std::time_t time = timestamps.creationTime / 1000;
     std::stringstream ss;
-    ss << "Chat_at_" << std::put_time(time_sec, "%Y%m%d_%H%M%S") << "_" << std::setfill('0') << std::setw(3) << (timestamps.creationTime % 1000) << ".jsonl";; ;;;;;;;;;;;
+    std::tm* tm = std::localtime(&time);
+    ss << "Chat_at_" << std::put_time(tm, "%Y%m%d_%H%M%S") << "_" << std::setfill('0') << std::setw(3) << (timestamps.creationTime % 1000) << ".jsonl";; ;;;;;;;;;;;
     std::string fileName = ss.str();
-    // std::string fileName = std::format()"chat.jsonl";
+
     std::ofstream(fileName, std::ios::app) << nlohmann::json{{
       {"id", message.id},
       {"parentId", message.parentId},

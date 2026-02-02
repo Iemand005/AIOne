@@ -14,6 +14,7 @@
 #include <llama-context.h>
 #include <common/chat.h>
 
+#include "Role.h"
 #include "Model.hpp"
 #include "LLModelOptions.hpp"
 #include "PreferredDevice.h"
@@ -200,7 +201,12 @@ public:
     }
 
     void generateAsync(Chat *chat, FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {
-        generateAsync(chatToPrompt(chat), chat->getOptions(), onDone, onToken, onInputEval);
+        // Message message(Role::Assistant, "");
+        auto messageIndex = chat->addMessage(Role::Assistant, "");
+        generateAsync(chatToPrompt(chat), chat->getOptions(), [chat, messageIndex, onDone](TextGenerationStats result) {
+            chat->updateAt(messageIndex, result.output);
+            if (onDone) onDone(result);
+        }, onToken, onInputEval);
     }
 
     void generateAsync(const std::string& prompt, const TextGenerationOptions& options = TextGenerationOptions(), FinishCallback onDone = nullptr, TokenCallback onToken = nullptr, ProgressCallback onInputEval = nullptr) {

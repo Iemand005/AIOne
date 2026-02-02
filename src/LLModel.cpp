@@ -171,7 +171,7 @@ std::vector<llama_token> LLModel::tokenize(std::string prompt, bool addSpecialTo
 }
 
 TextGenerationStats LLModel::complete(
-    std::shared_ptr<TextContext> messageContext,
+    std::shared_ptr<TextContext> textContext,
     std::vector<llama_token> &promptTokens,
     size_t cacheMissIndex,
     TokenCallback onToken,
@@ -181,7 +181,7 @@ TextGenerationStats LLModel::complete(
     generating = true;
 
     // cache prompt and keep only the ones that were not already in the cache
-    messageContext->addCache(promptTokens, cacheMissIndex);
+    textContext->addCache(promptTokens, cacheMissIndex);
     
     if (cacheMissIndex > 0) {
         promptTokens.erase(promptTokens.begin(), promptTokens.begin() + cacheMissIndex);
@@ -198,11 +198,11 @@ TextGenerationStats LLModel::complete(
     llama_sampler_chain_add(sampler.get(), llama_sampler_init_temp(options.temperature));
     llama_sampler_chain_add(sampler.get(), llama_sampler_init_dist(options.seed));
 
-    uint32_t maxBatchSize = messageContext->getBatchSize();
+    uint32_t maxBatchSize = textContext->getBatchSize();
     
     // create a batch once and reuse it
     llama_batch batch = {}; // init pointers with nullptr (see llama_batch_get_one), the `{}` is required
-    initBatch(batch, maxBatchSize, messageContext->getSeqId());
+    initBatch(batch, maxBatchSize, textContext->getSeqId());
 
     for (size_t i = 0; i < promptTokens.size(); i += maxBatchSize)
     {

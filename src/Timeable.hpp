@@ -4,10 +4,8 @@
 #include <random>
 
 long long randomId() {
-    std::random_device rd;
-    std::mt19937_64 gen(rd());
-    std::uniform_int_distribution<long long> dist(0, LLONG_MAX);
-    return dist(gen);
+    thread_local std::mt19937_64 gen(std::random_device{}() ^ std::chrono::steady_clock::now().time_since_epoch().count());
+    return gen();
 }
 
 struct Timestamps {
@@ -23,7 +21,7 @@ struct Timestamps {
     creationTime = currentTimeMillis();
   } 
 
-  void finish() {
+  void update() {
     modificationTime = currentTimeMillis();
   }
 };
