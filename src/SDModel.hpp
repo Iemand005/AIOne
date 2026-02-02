@@ -33,6 +33,7 @@ inline void setEnvironmentVariable(const std::string& name, const std::string& v
 class SDModel : public Model {
     sd_ctx_t* ctx = nullptr;
     std::string modelPath;
+    std::string vaePath = "";
     std::string lastPrompt; 
     
     struct SafeImage {
@@ -82,7 +83,7 @@ public:
         params.llm_vision_path = "";
         params.diffusion_model_path = "";
         params.high_noise_diffusion_model_path = "";
-        params.vae_path = "";
+        params.vae_path = vaePath.c_str();
         params.taesd_path = "";
         params.control_net_path = "";
         params.embeddings = nullptr;
@@ -125,8 +126,8 @@ public:
         return true;
     }
 
-    void loadVAE(const std::strng &path) {
-
+    void loadVAE(const std::string &path) {
+        vaePath = path;
     }
 
     bool saveImageAsPNG(const sd_image_t& image, const std::string& filename) ;
