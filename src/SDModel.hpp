@@ -52,6 +52,10 @@ public:
         setEnvironmentVariable("SD_VK_DEVICE", std::to_string(device));
     }
 
+    void setAllowSharedMemory(bool allow = true) {
+        setEnvironmentVariable("GGML_VK_ALLOW_SYSMEM_FALLBACK", std::to_string(allow));
+    }
+
     bool loadModel(const std::string path, std::string vaePath = "") {
 
         auto device = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_GPU);
@@ -64,6 +68,8 @@ public:
         }
 
         selectDevice();
+
+        setAllowSharedMemory();
 
         if (ctx) free_sd_ctx(ctx);
 
@@ -87,9 +93,10 @@ public:
         params.embedding_count = 0;
         params.photo_maker_path = "";
         params.tensor_type_rules = "";
-        params.vae_decode_only = true;
+        params.vae_decode_only = false;
         params.free_params_immediately = false;
-        params.n_threads = 1;
+        params.n_threads = 10;
+        // params.wtype = SD_TYPE_COUNT;
         params.wtype = SD_TYPE_COUNT;
         params.rng_type = CUDA_RNG;
         params.sampler_rng_type = RNG_TYPE_COUNT;
@@ -98,9 +105,9 @@ public:
         params.offload_params_to_cpu = false;
         params.enable_mmap = false;
         params.keep_clip_on_cpu = false;
-        params.keep_control_net_on_cpu = false;
+        params.keep_control_net_on_cpu = true;
         params.keep_vae_on_cpu = false;
-        params.diffusion_flash_attn = false;
+        params.diffusion_flash_attn = true;
         params.tae_preview_only = false;
         params.diffusion_conv_direct = false;
         params.vae_conv_direct = false;
@@ -170,8 +177,8 @@ public:
         sd_img_gen_params_init(&img_gen_params);
         img_gen_params.loras = 0;
         img_gen_params.lora_count = 0;
-        img_gen_params.prompt = positive.c_str();
-        img_gen_params.negative_prompt = negative.c_str();
+        img_gen_params.prompt = "furry, fox, canid, 2D, digital art, white background, white nose, orange fur, brown ears, green inner ear, white chin, solo, front, bright colours, saturated colours, spaghetti, pasta, eating, bowl";
+        img_gen_params.negative_prompt = "";
         img_gen_params.clip_skip = options.clipSkip;
         img_gen_params.init_image.width = 0;
         img_gen_params.init_image.height = 0;
@@ -193,6 +200,7 @@ public:
         img_gen_params.mask_image.width  = img_gen_params.width;
         img_gen_params.mask_image.height = img_gen_params.height;
         memset(img_gen_params.mask_image.data, 255, img_gen_params.width * img_gen_params.height);
+        img_gen_params.mask_image.channel = 1;
 
         img_gen_params.strength = 0.750000000;
         img_gen_params.seed = 42;
@@ -212,11 +220,20 @@ public:
         sd_sample_params_init(&img_gen_params.sample_params);
         sd_cache_params_init(&img_gen_params.cache);
 
-        img_gen_params.sample_params.guidance.txt_cfg = options.cfgScale;
+        std::vector<int> high_noise_skip_layers = {7, 8, 9};
+
+        img_gen_params.sample_params.guidance.txt_cfg = 2;
         img_gen_params.sample_params.guidance.distilled_guidance = 3.5;
+        img_gen_params.sample_params.guidance.slg.layer_count = high_noise_skip_layers.size();
+        img_gen_params.sample_params.guidance.slg.layers = high_noise_skip_layers.data();
+        img_gen_params.sample_params.guidance.slg.layer_start = 0.01;
+        img_gen_params.sample_params.guidance.slg.layer_end = 0.2;
+        img_gen_params.sample_params.guidance.slg.scale = 0;
         img_gen_params.sample_params.scheduler = SGM_UNIFORM_SCHEDULER;
         img_gen_params.sample_params.sample_method = EULER_A_SAMPLE_METHOD;
-        img_gen_params.sample_params.sample_steps = 10;
+        img_gen_params.sample_params.sample_steps = 25;
+
+        img_gen_params.control_image.channel = 3;
 
 
         sd_image_t* results = generate_image(ctx, &img_gen_params);
