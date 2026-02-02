@@ -46,15 +46,15 @@ class SDModel : public Model {
 
 public:
     SDModel(){}
-    SDModel(std::string path) {
-        loadModel(path);
+    SDModel(std::string path, std::string vaePath = "") {
+        loadModel(path, vaePath);
     }
 
     void selectDevice(int device = 1) {
         setEnvironmentVariable("SD_VK_DEVICE", std::to_string(device));
     }
 
-    bool loadModel(const std::string& path) {
+    bool loadModel(const std::string& path, std::string vaePath = "") {
         modelPath = path; 
 
         auto device = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_GPU);
@@ -126,7 +126,7 @@ public:
         return true;
     }
 
-    void loadVAE(const std::string &path) {
+    void loadVAE(const std::string path) {
         vaePath = path;
     }
 
