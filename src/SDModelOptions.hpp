@@ -5,12 +5,6 @@
 #include "ModelOptions.h"
 #include "Callbacks.h"
 
-enum SDPreviewMode {
-    VAE,
-    TAE,
-    PROJ
-};
-
 struct SDModelOptions : ModelOptions {
   bool vaeDecodeOnly = true;
   bool freeParamsImmediately = false;
@@ -23,6 +17,9 @@ struct SDModelOptions : ModelOptions {
 
   std::string vaePath = "";
   std::string taePath = "";
+
+  std::string clipGPath = "";
+  std::string clipLPath = "";
 
   ProgressCallback onProgress = nullptr;
 };

@@ -6,12 +6,21 @@ struct VAETilingOptions {
   float overlap = 0.5f;
 };
 
+enum SDPreviewMode {
+    None,
+    VAE,
+    TAE,
+    Proj
+};
+
 struct SDImageOptions {
   int width = 512, height = 512;
   int batchSize = 1;
   int stepCount = 25, clipSkip = -1;
-  int64_t seed = 42;
+  long long seed = 42;
   // bool randomSeed = true;
   float cfgScale = 6.0f;
+
+  SDPreviewMode previewMode = SDPreviewMode::Proj;
   VAETilingOptions tiling;
 };

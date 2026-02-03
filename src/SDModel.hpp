@@ -29,6 +29,14 @@ inline void setEnvironmentVariable(const std::string& name, const std::string& v
 
 typedef std::function<void(int step, sd_image_t* image, bool isNoisy)> PreviewCallback;
 
+sd_type_t getSDType(QuantizationLevels level) {
+    switch (level) {
+    case QuantizationLevels::Q4: return SD_TYPE_Q4_K;
+        case QuantizationLevels::Q8: return SD_TYPE_Q8_K;
+            case QuantizationLevels::Q3: return SD_TYPE_Q3_K;
+    }
+}
+
 class SDModel : public Model {
     sd_ctx_t* ctx = nullptr;
     std::string lastPrompt; 
@@ -82,10 +90,14 @@ public:
         sd_ctx_params_t params;
         sd_ctx_params_init(&params);
 
-        params.model_path = path.c_str();
+        // params.model_path = path.c_str();
         params.vae_path = options.vaePath.c_str();
         params.taesd_path = options.taePath.c_str();
         params.n_threads = options.threadCount;
+
+        params.diffusion_model_path = path.c_str();
+        params.clip_l_path = options.clipLPath.c_str();
+        params.clip_g_path = options.clipGPath.c_str();
 
         params.keep_clip_on_cpu = options.keepClipOnCpu;
         params.keep_control_net_on_cpu = options.keepControlNetOnCpu;
@@ -110,7 +122,7 @@ public:
         params.tensor_type_rules = "";
         params.free_params_immediately = false;
         // params.wtype = SD_TYPE_COUNT;
-        params.wtype = SD_TYPE_COUNT;
+        params.wtype = SD_TYPE_Q4_K;
         params.rng_type = CUDA_RNG;
         params.sampler_rng_type = RNG_TYPE_COUNT;
         params.prediction = PREDICTION_COUNT;
@@ -127,6 +139,8 @@ public:
         params.chroma_t5_mask_pad = 1;
         params.qwen_image_zero_cond_t = false;
         // params.flow_shift = INFINITY;
+
+        // if (options)
 
         ctx = new_sd_ctx(&params);
 
@@ -151,13 +165,13 @@ public:
         }, this);
     }
 
-    void setPreviewCallback(PreviewCallback callback) {
+    void setPreviewCallback(PreviewCallback callback, SDPreviewMode mode = Proj) {
         previewCallback = callback;
         sd_set_preview_callback([](int step, int batchSize, sd_image_t* image, bool isNoisy, void* data) {
             auto model = (SDModel *)data;
             if (model->previewCallback) model->previewCallback(step, image, isNoisy);
             else model->clearPreviewCallback();
-        }, preview_t::PREVIEW_PROJ, 1, true, true, this);
+        }, toPreviewT(mode), 1, true, true, this);
     }
 
     void clearProgressCallback() {
@@ -167,6 +181,15 @@ public:
     void clearPreviewCallback() {
         sd_set_preview_callback(nullptr, PREVIEW_NONE, 0, false, false, nullptr);
         previewCallback = nullptr;
+    }
+
+    preview_t toPreviewT(SDPreviewMode mode) {
+        switch (mode) {
+            case SDPreviewMode::None: return PREVIEW_NONE;
+            case SDPreviewMode::Proj: return PREVIEW_PROJ;
+            case SDPreviewMode::VAE: return PREVIEW_VAE;
+            case SDPreviewMode::TAE: return PREVIEW_TAE;
+        }
     }
 
     std::thread generationWorker;
@@ -269,6 +292,8 @@ public:
 
         img_gen_params.control_image.channel = 3;
 
+        if (options.previewMode != SDPreviewMode::None)
+            setPreviewCallback(previewCallback, options.previewMode);
 
         sd_image_t* results = generate_image(ctx, &img_gen_params);
         auto num_results = img_gen_params.batch_count;

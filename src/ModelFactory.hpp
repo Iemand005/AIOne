@@ -25,6 +25,17 @@ public:
         return model;
     }
 
+    void convertSDModel(std::string source, QuantizationLevels level, std::string destination, bool convertName = false) {
+        std::string vaePath = "";
+
+        std::string tensor_type_rules = "";
+
+        bool success = convert(source.c_str(), vaePath,destination.c_str(),
+                               getSDType(level),
+                               tensor_type_rules.c_str(),
+                               convertName.c_str());
+    }
+
     const char *systemInfoStr() ;
 
 };
