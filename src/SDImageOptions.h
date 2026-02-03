@@ -1,3 +1,4 @@
+#pragma once
 
 struct SDImageOptions {
   int width = 512, height = 512;

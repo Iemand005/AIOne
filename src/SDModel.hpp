@@ -152,6 +152,7 @@ public:
         sd_set_progress_callback([](int step, int steps, float time, void *data){
             auto model = (SDModel *)data;
             if (model->progressCallback) model->progressCallback((float)step / (float)steps);
+            else model->clearProgressCallback();
         }, this);
     }
 
@@ -160,11 +161,18 @@ public:
         sd_set_preview_callback([](int step, int frameCount, sd_image_t* image, bool isNoisy, void* data) {
             auto model = (SDModel *)data;
             if (model->previewCallback) model->previewCallback(step, frameCount, image, isNoisy);
-        }, preview_t::PREVIEW_TAE, 1, true, true, this);
+            else model->clearPreviewCallback();
+        }, preview_t::PREVIEW_PROJ, 1, true, true, this);
     }
 
-    void clearProgressCallback() { sd_set_progress_callback(nullptr, nullptr); progressCallback = nullptr; }
-    void clearPreviewCallback() { sd_set_preview_callback(nullptr, PREVIEW_NONE, 0, false, false, nullptr); previewCallback = nullptr; }
+    void clearProgressCallback() {
+        sd_set_progress_callback(nullptr, nullptr);
+        progressCallback = nullptr;
+    }
+    void clearPreviewCallback() {
+        sd_set_preview_callback(nullptr, PREVIEW_NONE, 0, false, false, nullptr);
+        previewCallback = nullptr;
+    }
 
     std::thread generationWorker;
 
@@ -176,12 +184,13 @@ public:
     using ImageCompleteHandler = std::function<void(sd_image_t image)>;
 
     void generateAsync(const std::string positive, const std::string negative = "", SDImageOptions options = SDImageOptions{}, ImageCompleteHandler callback = nullptr) {
-        // std::lock_guard<std::mutex> lock(queueMutex);
-        // if (generationThread) generationThread.
         std::thread([this, positive, negative, options, callback]() {
+            try {
             auto image = generateImage(positive, negative, options);
             if (callback) callback(image);
-            // generationWorkers.
+            } catch (std::exception ex) {
+                std::cerr << "Image generation failed because: " << ex.what() << std::endl;
+            }
         }).detach();
     }
 
