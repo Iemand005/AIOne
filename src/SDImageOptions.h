@@ -8,8 +8,10 @@ struct VAETilingOptions {
 
 struct SDImageOptions {
   int width = 512, height = 512;
-  int stepCount = 25;
+  int batchSize = 1;
+  int stepCount = 25, clipSkip = -1;
+  int64_t seed = 42;
+  // bool randomSeed = true;
   float cfgScale = 6.0f;
-  int clipSkip = -1;
   VAETilingOptions tiling;
 };

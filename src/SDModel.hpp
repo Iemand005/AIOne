@@ -15,13 +15,7 @@
 #include "SDImageOptions.h"
 #include "SDModelOptions.hpp"
 #include "Callbacks.h"
-
-// #ifndef STB_IMAGE_WRITE_IMPLEMENTATION
-// #undef STB_IMAGE_WRITE_IMPLEMENTATION
-// // #endif
-// #include <stb_image_write.h>
-
-
+#include "Random.h"
 
 #include "Model.hpp"
 
@@ -194,6 +188,10 @@ public:
         }).detach();
     }
 
+    uint64_t newSeed() {
+        return Random::int64();
+    }
+
     sd_image_t generateImage(const std::string positive, const std::string negative = "", SDImageOptions options = SDImageOptions{}) {
         if (!ctx) {
             std::cerr << "Error: Model not loaded. Call loadModel() first!" << std::endl;
@@ -219,6 +217,13 @@ public:
         img_gen_params.width = options.width;
         img_gen_params.height = options.height;
 
+
+
+        // if ()
+        // img_gen_params.seed = !options.randomSeed ? options.seed : ;
+        img_gen_params.seed = options.seed;
+
+
         img_gen_params.mask_image.data = (uint8_t*)malloc(img_gen_params.width * img_gen_params.height);
         if (img_gen_params.mask_image.data == nullptr) {
 
@@ -230,8 +235,9 @@ public:
         img_gen_params.mask_image.channel = 1;
 
         img_gen_params.strength = 0.750000000;
-        img_gen_params.seed = 42;
-        img_gen_params.batch_count = 1;
+
+        
+        img_gen_params.batch_count = options.batchSize;
         img_gen_params.pm_params.id_images = 0;
         img_gen_params.pm_params.id_images_count = 0;
         img_gen_params.pm_params.id_embed_path = "";

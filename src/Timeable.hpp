@@ -1,7 +1,6 @@
 #pragma once
 
-#include <chrono>
-#include <random>
+#include "Random.h"
 
 struct Timestamps {
   long long creationTime = 0, modificationTime = 0;
@@ -23,9 +22,7 @@ struct Timestamps {
   }
 
   long long randomId() {
-    thread_local std::mt19937_64 gen(std::random_device{}() ^ 
-        std::chrono::steady_clock::now().time_since_epoch().count());
-    return gen();
+    return Random::int64();
   }
 
   void start() {
