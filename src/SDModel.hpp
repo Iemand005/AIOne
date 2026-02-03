@@ -29,13 +29,7 @@ inline void setEnvironmentVariable(const std::string& name, const std::string& v
 
 typedef std::function<void(int step, sd_image_t* image, bool isNoisy)> PreviewCallback;
 
-sd_type_t getSDType(QuantizationLevels level) {
-    switch (level) {
-    case QuantizationLevels::Q4: return SD_TYPE_Q4_K;
-        case QuantizationLevels::Q8: return SD_TYPE_Q8_K;
-            case QuantizationLevels::Q3: return SD_TYPE_Q3_K;
-    }
-}
+
 
 class SDModel : public Model {
     sd_ctx_t* ctx = nullptr;
