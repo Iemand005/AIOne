@@ -178,10 +178,13 @@ public:
     std::vector<llama_token> tokenize(std::string prompt, bool addSpecialTokens) ;
 
     void generateAsync(std::shared_ptr<Chat> chat, const AsyncTextGenOptions& options = {}) {
+        // auto chatCopy = std::make_shared<Chat>(*chat);
         generateAsync(chatToPrompt(chat.get()), options);
     }
 
+    // Continue writing a draft message
     void generateAsync(std::shared_ptr<Chat> chat, Message draft, const AsyncTextGenOptions& options = {}) {
+        // auto chatCopy = std::make_shared<Chat>(*chat);
         generateAsync(chatToPrompt(chat.get(), draft), options);
     }
 
@@ -197,9 +200,8 @@ public:
      * Complete using any registered context.
      */
     TextGenResult completeAny(std::string prompt, const TextGenOptions options = {}) {
-        if (registeredContexts.empty()) {
+        if (registeredContexts.empty())
             throw std::runtime_error("No registered contexts; cannot complete request");
-        }
 
         // tokenize prompt
         std::vector<llama_token> promptTokens = tokenize(prompt, true);

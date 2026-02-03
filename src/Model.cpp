@@ -5,12 +5,17 @@
 
 #include "Model.hpp"
 
+// Model::Model() {
+//   devices = std::vector<ggml_backend_dev_t>(1);
+// }
+
 ggml_backend_device *Model::getBackend(){
-  return *(devices[0]);
+  return devices[0];
 }
 
 void Model::selectDevice(PreferredDevice preferred) {
-  // choose devices based on preferred in options
+  devices[1] = nullptr;
+    // choose devices based on preferred in options
     // (leaks into next case if preferred device isn't available)
     switch (preferred) {
         case PreferredDevice::ANY:

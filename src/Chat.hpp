@@ -49,45 +49,31 @@ class Chat {
     }
 
 public:
-    Chat() : Chat("") {}
-
-    Chat(std::string systemPrompt) {
-        // messages;
-        // messages.push_back({Role::System, systemPrompt});
+    Chat(std::string systemPrompt = "") {
         messages = std::vector<Message>();
         timestamps.start();
 
         this->setSystemPrompt(systemPrompt);
     }
 
-    ~Chat() {
-      
-    }
-
-    void lock() {
-        std::lock_guard<std::mutex> lock(messagesMutex);
-    }
-
-  
-
   size_t addMessage(Role role, std::string message, bool save = true) {
-      lock();
+      std::lock_guard<std::mutex> lock(messagesMutex);
     return addMessageNoLock(Message(role, message), save);
   }
 
   size_t addMessage(std::string role, std::string message, bool save = true) {
-      lock();
+      std::lock_guard<std::mutex> lock(messagesMutex);
     return addMessageNoLock(Message(role, message), save);
   }
 
   Message getLastMessage() {
-    lock();
+    std::lock_guard<std::mutex> lock(messagesMutex);
     if (messages.size() < 1) return {};
     return messages[messages.size() -1];
   }
 
   size_t addMessage(Message message, bool save = true) {
-    lock();
+    std::lock_guard<std::mutex> lock(messagesMutex);
       return addMessageNoLock(message, save);
   }
 
@@ -98,7 +84,7 @@ public:
   }
 
   void updateAt(size_t index, std::string newContent, bool save = true) {
-    lock();
+    std::lock_guard<std::mutex> lock(messagesMutex);
     messages[index].content = newContent;
     messages[index].timestamps.update();
 
@@ -106,7 +92,7 @@ public:
   }
 
   void setSystemPrompt(std::string prompt) {
-      lock();
+      std::lock_guard<std::mutex> lock(messagesMutex);
     std::cout << "[DEBUG] addMessage called. 1 Current size: " << messages.size() << " Thread ID: " << std::this_thread::get_id() << std::endl;
     if (!messages.empty())
         messages[0].content = prompt;
@@ -115,7 +101,7 @@ public:
   }
 
   std::vector<Message> &getMessages() {
-    lock();
+    std::lock_guard<std::mutex> lock(messagesMutex);
     return messages;
   }
 
