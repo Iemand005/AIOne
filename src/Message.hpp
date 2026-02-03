@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <iostream>
 
 #include "Role.h"
 #include "Timeable.hpp"
@@ -21,7 +22,13 @@ struct Message {
   }
 
   Message(std::string role, std::string content, uint64_t parentId = 0) : parentId(parentId), role(role), content(content) {}
-
+  
+  ~Message() {
+        std::cout << "[DEBUG] Message destructor called for id: " << id 
+                  << ", role: " << role 
+                  << ", content size: " << content.size() 
+                  << std::endl;
+    }
   std::string roleToString(Role role) {
     switch (role) {
       case Role::System: return "system";

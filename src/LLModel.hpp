@@ -261,7 +261,7 @@ public:
         return applyJinjaTemplate(model.get(), commonMsgs, addAss);
     }
 
-    std::string chatToPrompt(std::vector<Message> messages, Message draft) {
+    std::string chatToPrompt(std::vector<Message> &messages, Message &draft) {
         messages.push_back(draft);
         auto prompt = chatToPrompt(messages, false);
         auto vocab = llama_model_get_vocab(this->model.get());
