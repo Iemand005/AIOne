@@ -3,6 +3,7 @@
 #include <string>
 
 #include "ModelOptions.h"
+#include "Callbacks.h"
 
 struct SDModelOptions : ModelOptions {
   bool vaeDecodeOnly = true;
@@ -15,4 +16,6 @@ struct SDModelOptions : ModelOptions {
   bool useMmap = false;
 
   std::string vaePath = "";
+
+  ProgressCallback onProgress = nullptr;
 };

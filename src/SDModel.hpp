@@ -47,10 +47,26 @@ class SDModel : public Model {
     };
     SafeImage lastResult;
 
+    ProgressCallback progressCallback = nullptr;
+    PreviewCallback previewCallback = nullptr;
+
 public:
     SDModel(){}
     SDModel(std::string path, SDModelOptions options = {}) {
         loadModel(path, options);
+    }
+
+    ~SDModel() {
+        freeContext();
+        clearPreviewCallback();
+        clearProgressCallback();
+    }
+
+    void freeContext() {
+        if (ctx) {
+            free_sd_ctx(ctx);
+            ctx = nullptr;
+        }
     }
 
     void selectDevice(int device = 1) {
@@ -61,23 +77,13 @@ public:
         setEnvironmentVariable("GGML_VK_ALLOW_SYSMEM_FALLBACK", std::to_string(allow));
     }
 
-    void setProgressCallback(ProgressCallback callback) {
-
-        sd_set_progress_callback([](int step, int steps, float time, void *data){
-            auto callback = (*(ProgressCallback *)data);
-            callback((float)step / (float)steps);
-        }, &callback);
-
-    }
-
-    void deleteProgressCallback() { sd_set_progress_callback(nullptr, nullptr); }
-
     bool loadModel(const std::string path, SDModelOptions options = {}) {
 
         selectDevice();
         setAllowSharedMemory();
+        freeContext();
 
-        if (ctx) free_sd_ctx(ctx);
+        if (options.onProgress) setProgressCallback(options.onProgress);
 
         sd_ctx_params_t params;
         sd_ctx_params_init(&params);
@@ -139,12 +145,26 @@ public:
 
     bool saveImageAsPNG(const sd_image_t& image, const std::string& filename) ;
 
-    void setPreviewCallback(PreviewCallback previewCallback) {
-        sd_set_preview_callback([](int step, int frameCount, sd_image_t* image, bool isNoisy, void* data) {
-            auto callback = *(PreviewCallback *)data;
-            if (callback) callback(step, frameCount, image, isNoisy);
-        }, preview_t::PREVIEW_TAE, 1, true, true, (void*)&previewCallback);
+
+
+    void setProgressCallback(ProgressCallback callback) {
+        progressCallback = callback;
+        sd_set_progress_callback([](int step, int steps, float time, void *data){
+            auto model = (SDModel *)data;
+            if (model->progressCallback) model->progressCallback((float)step / (float)steps);
+        }, this);
     }
+
+    void setPreviewCallback(PreviewCallback callback) {
+        previewCallback = callback;
+        sd_set_preview_callback([](int step, int frameCount, sd_image_t* image, bool isNoisy, void* data) {
+            auto model = (SDModel *)data;
+            if (model->previewCallback) model->previewCallback(step, frameCount, image, isNoisy);
+        }, preview_t::PREVIEW_TAE, 1, true, true, this);
+    }
+
+    void clearProgressCallback() { sd_set_progress_callback(nullptr, nullptr); progressCallback = nullptr; }
+    void clearPreviewCallback() { sd_set_preview_callback(nullptr, PREVIEW_NONE, 0, false, false, nullptr); previewCallback = nullptr; }
 
     std::thread generationWorker;
 
@@ -261,12 +281,5 @@ public:
         this->saveImageAsPNG(safeCopy, positive + "rawr.png");
         
         return safeCopy;
-    }
-
-    ~SDModel() {
-        if (ctx) {
-            free_sd_ctx(ctx);
-            ctx = nullptr;
-        }
     }
 };
