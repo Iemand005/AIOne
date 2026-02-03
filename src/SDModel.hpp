@@ -180,8 +180,8 @@ public:
     void generateAsync(const std::string positive, const std::string negative = "", SDImageOptions options = SDImageOptions{}, ImageCompleteHandler callback = nullptr) {
         std::thread([this, positive, negative, options, callback]() {
             try {
-            auto image = generateImage(positive, negative, options);
-            if (callback) callback(image);
+                auto image = generateImage(positive, negative, options);
+                if (callback) callback(image);
             } catch (std::exception ex) {
                 std::cerr << "Image generation failed because: " << ex.what() << std::endl;
             }
