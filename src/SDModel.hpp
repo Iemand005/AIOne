@@ -33,7 +33,7 @@ inline void setEnvironmentVariable(const std::string& name, const std::string& v
 #endif
 }
 
-typedef std::function<void(int step, int frameCount, sd_image_t* image, bool isNoisy)> PreviewCallback;
+typedef std::function<void(int step, sd_image_t* image, bool isNoisy)> PreviewCallback;
 
 class SDModel : public Model {
     sd_ctx_t* ctx = nullptr;
@@ -158,9 +158,9 @@ public:
 
     void setPreviewCallback(PreviewCallback callback) {
         previewCallback = callback;
-        sd_set_preview_callback([](int step, int frameCount, sd_image_t* image, bool isNoisy, void* data) {
+        sd_set_preview_callback([](int step, int batchSize, sd_image_t* image, bool isNoisy, void* data) {
             auto model = (SDModel *)data;
-            if (model->previewCallback) model->previewCallback(step, frameCount, image, isNoisy);
+            if (model->previewCallback) model->previewCallback(step, image, isNoisy);
             else model->clearPreviewCallback();
         }, preview_t::PREVIEW_PROJ, 1, true, true, this);
     }
@@ -237,10 +237,10 @@ public:
         img_gen_params.pm_params.id_embed_path = "";
         img_gen_params.pm_params.style_strength = 20.0;
 
-        img_gen_params.vae_tiling_params.enabled = false;
-        img_gen_params.vae_tiling_params.tile_size_x = 0;
-        img_gen_params.vae_tiling_params.tile_size_y = 0;
-        img_gen_params.vae_tiling_params.target_overlap = 0.5;
+        img_gen_params.vae_tiling_params.enabled = options.tiling.enabled;
+        img_gen_params.vae_tiling_params.tile_size_x = options.tiling.tileWidth;
+        img_gen_params.vae_tiling_params.tile_size_y = options.tiling.tileHeight;
+        img_gen_params.vae_tiling_params.target_overlap = options.tiling.overlap;
         img_gen_params.vae_tiling_params.rel_size_x = 0.0;
         img_gen_params.vae_tiling_params.rel_size_y = 0.0;
 
