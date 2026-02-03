@@ -167,12 +167,14 @@ public:
     std::vector<llama_token> tokenize(std::string prompt, bool addSpecialTokens) ;
 
     void generateAsync(std::shared_ptr<Chat> chat, const AsyncTextGenOptions& options = {}) {
-        generateAsync(chatToPrompt(chat.get()), options);
+        auto messages = chat->getMessages();
+        generateAsync(chatToPrompt(messages), options);
     }
 
     // Continue writing a draft message
     void generateAsync(std::shared_ptr<Chat> chat, Message draft, const AsyncTextGenOptions& options = {}) {
-        generateAsync(chatToPrompt(chat.get(), draft), options);
+        auto messages = chat->getMessages();
+        generateAsync(chatToPrompt(messages, draft), options);
     }
 
     void generateAsync(const std::string& prompt, const AsyncTextGenOptions& options = {}) {
