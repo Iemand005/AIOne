@@ -50,10 +50,19 @@ class Chat {
 
 public:
     Chat(std::string systemPrompt = "") {
+        std::cout << "[CONSTRUCTOR] Chat constructor called" << std::endl;
+        std::cout << "[CONSTRUCTOR] this: " << this << std::endl;
+        std::cout << "[CONSTRUCTOR] messages address: " << &messages << std::endl;
+        std::cout << "[CONSTRUCTOR] messages initial capacity: " << messages.capacity() << std::endl;
+        
         messages = std::vector<Message>();
+        std::cout << "[CONSTRUCTOR] After vector init, capacity: " << messages.capacity() << std::endl;
+        
         timestamps.start();
+        std::cout << "[CONSTRUCTOR] Timestamps started" << std::endl;
 
         this->setSystemPrompt(systemPrompt);
+        std::cout << "[CONSTRUCTOR] After setSystemPrompt, size: " << messages.size() << std::endl;
     }
 
     ~Chat() {
