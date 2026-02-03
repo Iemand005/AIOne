@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 struct SDModelOptions {
   bool vaeDecodeOnly = true;
   bool freeParamsImmediately = false;
@@ -10,4 +12,6 @@ struct SDModelOptions {
   bool keepVaeOnCpu = false;
 
   bool flashAttention = true;
+
+  std::string vaePath = "";
 };
