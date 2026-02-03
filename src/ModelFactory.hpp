@@ -17,13 +17,11 @@ public:
     std::unique_ptr<LLModel> loadLLM(const std::string path) {
         initLlama();
         auto model = std::make_unique<LLModel>(path);
-        // model->loadModel(path);
         return model;
     }
 
     std::unique_ptr<SDModel> loadSDM(const std::string path) {
-        auto model = std::make_unique<SDModel>();
-        model->loadModel(path);
+        auto model = std::make_unique<SDModel>(path);
         return model;
     }
 
