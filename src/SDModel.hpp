@@ -62,11 +62,15 @@ public:
     }
 
     void setProgressCallback(ProgressCallback callback) {
+
         sd_set_progress_callback([](int step, int steps, float time, void *data){
             auto callback = (*(ProgressCallback *)data);
             callback((float)step / (float)steps);
         }, &callback);
+
     }
+
+    void deleteProgressCallback() { sd_set_progress_callback(nullptr, nullptr); }
 
     bool loadModel(const std::string path, SDModelOptions options = {}) {
 
