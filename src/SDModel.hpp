@@ -45,8 +45,8 @@ class SDModel : public Model {
 
 public:
     SDModel(){}
-    SDModel(std::string path, std::string vaePath = "") {
-        loadModel(path, vaePath);
+    SDModel(std::string path, SDModelOptions options = {}) {
+        loadModel(path, options);
     }
 
     void selectDevice(int device = 1) {
@@ -57,7 +57,7 @@ public:
         setEnvironmentVariable("GGML_VK_ALLOW_SYSMEM_FALLBACK", std::to_string(allow));
     }
 
-    bool loadModel(const std::string path, SDModelOptions options) {
+    bool loadModel(const std::string path, SDModelOptions options = {}) {
 
         selectDevice();
         setAllowSharedMemory();
@@ -68,6 +68,15 @@ public:
         sd_ctx_params_init(&params);
 
         params.model_path = path.c_str();
+        params.vae_path = options.vaePath.c_str();
+        params.n_threads = options.threadCount;
+
+        params.keep_clip_on_cpu = options.keepClipOnCpu;
+        params.keep_control_net_on_cpu = options.keepControlNetOnCpu;
+        params.keep_vae_on_cpu = options.keepVaeOnCpu;
+        params.enable_mmap = options.useMmap;
+        params.diffusion_flash_attn = options.flashAttention;
+
         // params.clip_l_path = "";
         // params.clip_g_path = "";
         // params.clip_vision_path = "";
@@ -76,7 +85,6 @@ public:
         // params.llm_vision_path = "";
         // params.diffusion_model_path = "";
         // params.high_noise_diffusion_model_path = "";
-        params.vae_path = vaePath.c_str();
         params.taesd_path = "";
         params.control_net_path = "";
         params.embeddings = nullptr;
@@ -85,7 +93,6 @@ public:
         params.tensor_type_rules = "";
         params.vae_decode_only = false;
         params.free_params_immediately = false;
-        params.n_threads = 10;
         // params.wtype = SD_TYPE_COUNT;
         params.wtype = SD_TYPE_COUNT;
         params.rng_type = CUDA_RNG;
@@ -93,11 +100,6 @@ public:
         params.prediction = PREDICTION_COUNT;
         params.lora_apply_mode = LORA_APPLY_AUTO;
         params.offload_params_to_cpu = false;
-        params.enable_mmap = false;
-        params.keep_clip_on_cpu = false;
-        params.keep_control_net_on_cpu = true;
-        params.keep_vae_on_cpu = false;
-        params.diffusion_flash_attn = true;
         params.tae_preview_only = false;
         params.diffusion_conv_direct = false;
         params.vae_conv_direct = false;
