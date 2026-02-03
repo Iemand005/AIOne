@@ -14,6 +14,8 @@
 #include <stable-diffusion.h>
 #include "SDImageOptions.h"
 #include "SDModelOptions.hpp"
+#include "Callbacks.h"
+
 // #ifndef STB_IMAGE_WRITE_IMPLEMENTATION
 // #undef STB_IMAGE_WRITE_IMPLEMENTATION
 // // #endif
@@ -30,6 +32,8 @@ inline void setEnvironmentVariable(const std::string& name, const std::string& v
     setenv(name.c_str(), value.c_str(), 1);
 #endif
 }
+
+typedef std::function<void(int step, int frameCount, sd_image_t* image, bool isNoisy)> PreviewCallback;
 
 class SDModel : public Model {
     sd_ctx_t* ctx = nullptr;
@@ -57,6 +61,13 @@ public:
         setEnvironmentVariable("GGML_VK_ALLOW_SYSMEM_FALLBACK", std::to_string(allow));
     }
 
+    void setProgressCallback(ProgressCallback callback) {
+        sd_set_progress_callback([](int step, int steps, float time, void *data){
+            auto callback = (*(ProgressCallback *)data);
+            callback((float)step / (float)steps);
+        }, &callback);
+    }
+
     bool loadModel(const std::string path, SDModelOptions options = {}) {
 
         selectDevice();
@@ -76,6 +87,7 @@ public:
         params.keep_vae_on_cpu = options.keepVaeOnCpu;
         params.enable_mmap = options.useMmap;
         params.diffusion_flash_attn = options.flashAttention;
+        params.vae_decode_only = options.vaeDecodeOnly;
 
         // params.clip_l_path = "";
         // params.clip_g_path = "";
@@ -91,7 +103,6 @@ public:
         params.embedding_count = 0;
         params.photo_maker_path = "";
         params.tensor_type_rules = "";
-        params.vae_decode_only = false;
         params.free_params_immediately = false;
         // params.wtype = SD_TYPE_COUNT;
         params.wtype = SD_TYPE_COUNT;
@@ -123,8 +134,6 @@ public:
     }
 
     bool saveImageAsPNG(const sd_image_t& image, const std::string& filename) ;
-
-    using PreviewCallback = std::function<void(int step, int frameCount, sd_image_t* image, bool isNoisy)>;
 
     void setPreviewCallback(PreviewCallback previewCallback) {
         sd_set_preview_callback([](int step, int frameCount, sd_image_t* image, bool isNoisy, void* data) {

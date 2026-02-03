@@ -4,8 +4,8 @@
 #include <functional>
 
 #include "TextGenResult.hpp"
+#include "Callbacks.h"
 
-typedef std::function<void(const float progress)> ProgressCallback;
 typedef std::function<void(const std::string &token)> TokenCallback;
 typedef std::function<void(const TextGenResult &output)> FinishCallback;
 
