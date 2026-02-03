@@ -13,6 +13,7 @@
 #include <ggml-backend.h>
 #include <stable-diffusion.h>
 #include "SDImageOptions.h"
+#include "SDModelOptions.hpp"
 // #ifndef STB_IMAGE_WRITE_IMPLEMENTATION
 // #undef STB_IMAGE_WRITE_IMPLEMENTATION
 // // #endif
@@ -56,7 +57,7 @@ public:
         setEnvironmentVariable("GGML_VK_ALLOW_SYSMEM_FALLBACK", std::to_string(allow));
     }
 
-    bool loadModel(const std::string path, std::string vaePath = "") {
+    bool loadModel(const std::string path, SDModelOptions options) {
 
         selectDevice();
         setAllowSharedMemory();
