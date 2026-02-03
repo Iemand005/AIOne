@@ -84,6 +84,7 @@ public:
 
         params.model_path = path.c_str();
         params.vae_path = options.vaePath.c_str();
+        params.taesd_path = options.taePath.c_str();
         params.n_threads = options.threadCount;
 
         params.keep_clip_on_cpu = options.keepClipOnCpu;
@@ -101,7 +102,7 @@ public:
         // params.llm_vision_path = "";
         // params.diffusion_model_path = "";
         // params.high_noise_diffusion_model_path = "";
-        params.taesd_path = "";
+
         params.control_net_path = "";
         params.embeddings = nullptr;
         params.embedding_count = 0;
