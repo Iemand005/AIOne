@@ -23,28 +23,28 @@ Message& operator=(Message&& other) noexcept = default;
   }
 
   Message(Role role, std::string content = "", uint64_t parentId = 0) 
-    : id(Timestamps().randomId()), 
-      parentId(parentId), 
-      role(roleToString(role)),
-      content(content),
-      timestamps() {
-    this->timestamps.start();
-}
+    : parentId(parentId), 
+      content(content) {
+      this->timestamps.start();
+      this->id = timestamps.randomId();
+      this->role = roleToString(role);
+  }
 
-Message(std::string role, std::string content, uint64_t parentId = 0) 
-    : id(Timestamps().randomId()),
-      parentId(parentId), 
+  Message(std::string role, std::string content, uint64_t parentId = 0) 
+    : parentId(parentId), 
       role(role), 
-      content(content),
-      timestamps() {
-    this->timestamps.start();
-}
+      content(content) {
+      this->timestamps.start();
+      this->id = timestamps.randomId();
+  }
+
   ~Message() {
         std::cout << "[DEBUG] Message destructor called for id: " << id 
                   << ", role: " << role 
                   << ", content size: " << content.size() 
                   << std::endl;
     }
+    
   std::string roleToString(Role role) {
     switch (role) {
       case Role::System: return "system";
@@ -53,7 +53,5 @@ Message(std::string role, std::string content, uint64_t parentId = 0)
     }
   }
 
-  void finished() {
-    this->timestamps.update();
-  }
+  void finished() { this->timestamps.update(); }
 };

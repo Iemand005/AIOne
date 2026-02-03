@@ -1,9 +1,7 @@
 #pragma once
 
 #include <string>
-#include <iostream>
 #include <functional>
-#include <array>
 #include <deque>
 #include <mutex>
 #include <thread>
@@ -14,10 +12,8 @@
 #include <llama-context.h>
 #include <common/chat.h>
 
-#include "Role.h"
 #include "Model.hpp"
 #include "LLModelOptions.hpp"
-#include "PreferredDevice.h"
 #include "TextGenOptions.hpp"
 #include "TextGenResult.hpp"
 #include "TextContext.hpp"
@@ -26,16 +22,9 @@
 #include "Chat.hpp"
 #include "LlamaUtil.hpp"
 
-// typedef std::function<void(const float progress)> ProgressCallback;
-// typedef std::function<void(const std::string &token)> TokenCallback;
-// typedef std::function<void(const TextGenResult &output)> FinishCallback;
-
-
 
 class LLModel : public Model
 {
-    // std::string modelPath;
-
     // struct Llama;
     // std::unique_ptr<Llama> llama;
     
@@ -62,7 +51,7 @@ class LLModel : public Model
 
 
     static void* llamaMalloc(size_t size) {
-        return malloc(size);  // Or use your static runtime allocator
+        return malloc(size);
     }
 
     static void llamaFree(void* ptr) {
