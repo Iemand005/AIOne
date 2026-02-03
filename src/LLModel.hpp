@@ -178,13 +178,11 @@ public:
     std::vector<llama_token> tokenize(std::string prompt, bool addSpecialTokens) ;
 
     void generateAsync(std::shared_ptr<Chat> chat, const AsyncTextGenOptions& options = {}) {
-        // auto chatCopy = std::make_shared<Chat>(*chat);
         generateAsync(chatToPrompt(chat.get()), options);
     }
 
     // Continue writing a draft message
     void generateAsync(std::shared_ptr<Chat> chat, Message draft, const AsyncTextGenOptions& options = {}) {
-        // auto chatCopy = std::make_shared<Chat>(*chat);
         generateAsync(chatToPrompt(chat.get(), draft), options);
     }
 
@@ -256,12 +254,12 @@ public:
         return commonMsgs;
     }
 
-    std::string chatToPrompt(std::vector<Message> &messages, bool addAss = true) {
+    std::string chatToPrompt(std::vector<Message> messages, bool addAss = true) {
         auto commonMsgs = toCommonMessages(messages);
         return applyJinjaTemplate(model.get(), commonMsgs, addAss);
     }
 
-    std::string chatToPrompt(std::vector<Message> &messages, Message &draft) {
+    std::string chatToPrompt(std::vector<Message> messages, Message &draft) {
         messages.push_back(draft);
         auto prompt = chatToPrompt(messages, false);
         auto vocab = llama_model_get_vocab(this->model.get());

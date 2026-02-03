@@ -56,6 +56,10 @@ public:
         this->setSystemPrompt(systemPrompt);
     }
 
+    ~Chat() {
+        std::cout<< "dleted chat";
+    }
+
   size_t addMessage(Role role, std::string message, bool save = true) {
       std::lock_guard<std::mutex> lock(messagesMutex);
     return addMessageNoLock(Message(role, message), save);
@@ -100,7 +104,7 @@ public:
     std::cout << "[DEBUG] addMessage called. 2 Current size: " << messages.size() << " Thread ID: " << std::this_thread::get_id() << std::endl;
   }
 
-  std::vector<Message> &getMessages() {
+  std::vector<Message> getMessages() {
     std::lock_guard<std::mutex> lock(messagesMutex);
     return messages;
   }

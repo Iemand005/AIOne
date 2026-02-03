@@ -12,17 +12,33 @@ struct Message {
   std::string content;
   Timestamps timestamps;
 
+  Message(const Message& other) = default;
+Message(Message&& other) noexcept = default;
+Message& operator=(const Message& other) = default;
+Message& operator=(Message&& other) noexcept = default;
+
   Message() {
       this->timestamps.start();
       this->id = timestamps.randomId();
   }
 
-  Message(Role role, std::string content = "", uint64_t parentId = 0) : parentId(parentId), content(content) {
-      this->role = roleToString(role);
-  }
+  Message(Role role, std::string content = "", uint64_t parentId = 0) 
+    : id(Timestamps().randomId()), 
+      parentId(parentId), 
+      role(roleToString(role)),
+      content(content),
+      timestamps() {
+    this->timestamps.start();
+}
 
-  Message(std::string role, std::string content, uint64_t parentId = 0) : parentId(parentId), role(role), content(content) {}
-  
+Message(std::string role, std::string content, uint64_t parentId = 0) 
+    : id(Timestamps().randomId()),
+      parentId(parentId), 
+      role(role), 
+      content(content),
+      timestamps() {
+    this->timestamps.start();
+}
   ~Message() {
         std::cout << "[DEBUG] Message destructor called for id: " << id 
                   << ", role: " << role 
