@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <future>
 
 #include <llama-cpp.h>
 
@@ -24,6 +25,11 @@ public:
         std::thread(func).detach();
     }
 
+    // template<typename ReturnT>
+    // void runAsync(std::function<void()> func, FinishedCallback<ReturnT> cb) {
+    //     std::thread(func).detach();
+    // }
+
     LLModelPtr loadLLM(const std::string path, LLModelOptions options) {
         initLlama();
         return std::make_unique<LLModel>(path, options);
@@ -39,9 +45,9 @@ public:
     }
 
     void convertSDModelAsync(std::string source, QuantTypes level, std::string destination, ProgressCallback callback, FinishedCallback<bool> onDone = nullptr) {
-        std::thread([this, source, level, destination, callback, onDone]() {
+        runAsync([this, source, level, destination, callback, onDone]() {
             onDone(convertSDModel(source, level, destination, callback));
-        }).detach();
+        });
     }
 
     bool convertSDModel(std::string source, QuantTypes level, std::string destination, ProgressCallback callback, FinishedCallback<bool> onDone = nullptr) {
