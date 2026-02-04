@@ -182,6 +182,11 @@ public:
         });
     }
 
+    llama_token getToken(std::string text) {
+        auto tokens = tokenize(text, false);
+        return !tokens.empty() ? tokens[0] : -1;
+    }
+
     /**
      * Complete using any registered context.
      */

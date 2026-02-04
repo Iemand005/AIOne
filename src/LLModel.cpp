@@ -144,6 +144,8 @@ std::vector<llama_token> LLModel::tokenize(std::string prompt, bool addSpecialTo
     return promptTokens;
 }
 
+
+
 TextGenResult LLModel::complete(
     std::shared_ptr<TextContext> textContext,
     std::vector<llama_token> &promptTokens,
@@ -151,6 +153,10 @@ TextGenResult LLModel::complete(
     TextGenOptions options
 ) {
     generating = true;
+
+    bool thinking = false;
+    llama_token thinkStartToken = getToken("<think>");
+    llama_token thinkEndToken = getToken("</think>");
 
     // cache prompt and keep only the ones that were not already in the cache
     textContext->addCache(promptTokens, cacheMissIndex);
@@ -252,6 +258,8 @@ TextGenResult LLModel::complete(
         if (llama_vocab_is_eog(vocab, newTokenId))
             break;
 
+        
+
         // convert token to text
         char buf[128];
         int n = llama_token_to_piece(vocab, newTokenId, buf, sizeof(buf), 0, true);
@@ -266,7 +274,7 @@ TextGenResult LLModel::complete(
 
         // std::cout << text.c_str();
         output.append(text);
-        if (options.onToken) options.onToken(text);
+        if (options.onToken) options.onToken(text, thinking);
 
         // wrap token in batch for decoding
         setBatch(batch, &newTokenId, 1);

@@ -6,7 +6,7 @@
 #include "TextGenResult.hpp"
 #include "Callbacks.h"
 
-typedef std::function<void(const std::string &token)> TokenCallback;
+typedef std::function<void(const std::string &token, bool thinking)> TokenCallback;
 typedef std::function<void(const TextGenResult &output)> FinishCallback;
 
 struct TextGenOptionsBase
