@@ -122,8 +122,9 @@ set(LLAMA_CUDA OFF CACHE BOOL "" FORCE)
 
 
 # Add the submodules
-add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
+
 add_subdirectory(${STABLE_DIFFUSION_CPP_DIR} ${CMAKE_BINARY_DIR}/stable-diffusion.cpp_build)
+add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
 
 # Automatically find all source files in src directory
 file(GLOB_RECURSE CORE_SOURCES 
@@ -163,8 +164,8 @@ if(AIONE_VULKAN)
 endif()
 
 target_link_libraries(AIOneCore PRIVATE
-    llama
     stable-diffusion
+    llama
     common
 )
 

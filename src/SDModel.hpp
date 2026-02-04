@@ -84,7 +84,7 @@ public:
         sd_ctx_params_t params;
         sd_ctx_params_init(&params);
 
-        // params.model_path = path.c_str();
+        params.model_path = path.c_str();
         params.vae_path = options.vaePath.c_str();
         params.taesd_path = options.taePath.c_str();
         params.n_threads = options.threadCount;
@@ -115,8 +115,8 @@ public:
         params.photo_maker_path = "";
         params.tensor_type_rules = "";
         params.free_params_immediately = false;
-        // params.wtype = SD_TYPE_COUNT;
-        params.wtype = SD_TYPE_Q4_K;
+        params.wtype = SD_TYPE_COUNT;
+        // params.wtype = SD_TYPE_Q4_K;
         params.rng_type = CUDA_RNG;
         params.sampler_rng_type = RNG_TYPE_COUNT;
         params.prediction = PREDICTION_COUNT;
@@ -312,8 +312,8 @@ public:
         safeCopy.height = lastResult.height;
         safeCopy.channel = lastResult.channel;
         safeCopy.data = lastResult.data.data();  // Point to our safe buffer
-
-        this->saveImageAsPNG(safeCopy, positive + "rawr.png");
+        // std::chars_format
+        this->saveImageAsPNG(safeCopy, positive +""+ std::to_string(img_gen_params.seed) + "rawr.png");
         
         return safeCopy;
     }
