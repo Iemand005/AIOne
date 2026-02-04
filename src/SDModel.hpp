@@ -204,7 +204,8 @@ public:
 
     void clearProgressCallback() {
         sd_set_progress_callback(nullptr, nullptr);
-        progressCallback = nullptr;
+        // progressCallback = nullptr;
+        super()->clearProgressCallback();
     }
     void clearPreviewCallback() {
         sd_set_preview_callback(nullptr, PREVIEW_NONE, 0, false, false, nullptr);

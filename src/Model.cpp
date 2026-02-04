@@ -40,10 +40,3 @@ void Model::selectDevice(PreferredDevice preferred) {
     std::cout << "==============" << std::endl;
 }
 
-void Model::setProgressCallback(ProgressCallback callback) {
-    onProgress = callback;
-}
-
-ProgressCallback Model::progressCallback() {
-    return onProgress;
-}
