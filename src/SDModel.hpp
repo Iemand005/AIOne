@@ -54,12 +54,14 @@ class SDModel : public Model {
     };
     SafeImage lastResult;
 
-    ProgressCallback progressCallback = nullptr;
+    // ProgressCallback progressCallback = nullptr;
     PreviewCallback previewCallback = nullptr;
 
 public:
     SDModel(){}
-    SDModel(std::string path, SDModelOptions options = {}, bool load = true) : modelPath(path), options(options) {
+    SDModel(std::string path, bool load = true) : modelPath(path) {}
+    SDModel(std::string path, SDModelOptions options, bool load = true) : SDModel(path) {
+        this->options = options;
         if (load) loadModel();
     }
 
@@ -180,10 +182,13 @@ public:
 
 
     void setProgressCallback(ProgressCallback callback) {
-        progressCallback = callback;
+        // progressCallback = callback;
+        super()->setProgressCallback(callback);
+
         sd_set_progress_callback([](int step, int steps, float time, void *data){
             auto model = (SDModel *)data;
-            if (model->progressCallback) model->progressCallback((float)step / (float)steps);
+            auto onProgress = model->progressCallback();
+            if (onProgress) onProgress((float)step / (float)steps);
             else model->clearProgressCallback();
         }, this);
     }
@@ -199,7 +204,8 @@ public:
 
     void clearProgressCallback() {
         sd_set_progress_callback(nullptr, nullptr);
-        progressCallback = nullptr;
+        // progressCallback = nullptr;
+        super()->clearProgressCallback();
     }
     void clearPreviewCallback() {
         sd_set_preview_callback(nullptr, PREVIEW_NONE, 0, false, false, nullptr);
@@ -347,3 +353,5 @@ public:
         return safeCopy;
     }
 };
+
+typedef std::unique_ptr<SDModel> SDModelPtr;
