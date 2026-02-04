@@ -38,7 +38,8 @@ public:
     bool convertSDModel(std::string source, QuantTypes level, std::string destination, ProgressCallback callback) {
         auto model = new SDModel(source, false);
         model->setProgressCallback(callback);
-        return model->exportToGGUF(destination, level, false);
+        bool success = model->exportToGGUF(destination, level, false);
+        return success;
     }
 
     const char *systemInfoStr() ;
