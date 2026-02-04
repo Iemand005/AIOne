@@ -29,9 +29,15 @@ public:
         return model;
     }
 
-    bool convertSDModel(std::string source, QuantTypes level, std::string destination, std::shared_ptr<ProgressCallback> callback) {
+    void convertSDModelAsync(std::string source, QuantTypes level, std::string destination, ProgressCallback callback) {
+        std::thread([this, source, level, destination, callback]() {
+            convertSDModel(source, level, destination, callback);
+        }).detach();
+    }
+
+    bool convertSDModel(std::string source, QuantTypes level, std::string destination, ProgressCallback callback) {
         auto model = new SDModel(source, false);
-        model->setProgressCallback(*callback);
+        model->setProgressCallback(callback);
         return model->exportToGGUF(destination, level, false);
     }
 
