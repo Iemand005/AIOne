@@ -29,9 +29,9 @@ public:
         return model;
     }
 
-    bool convertSDModel(std::string source, QuantTypes level, std::string destination, ProgressCallback callback = nullptr) {
-        auto model = new SDModel(source);
-        model->setProgressCallback(callback);
+    bool convertSDModel(std::string source, QuantTypes level, std::string destination, std::shared_ptr<ProgressCallback> callback) {
+        auto model = new SDModel(source, false);
+        model->setProgressCallback(*callback);
         return model->exportToGGUF(destination, level, false);
     }
 
