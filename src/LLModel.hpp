@@ -78,6 +78,8 @@ public:
 
     LLModel(const std::string path, const LLModelOptions &options = {});
 
+    Model *super() { return this; }
+
     bool isGenerating() { return generating; }
     // used by `TextContent`
     // checks if the llama context has been recreated

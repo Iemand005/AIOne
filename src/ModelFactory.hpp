@@ -38,13 +38,13 @@ public:
         return std::make_unique<SDModel>(path);
     }
 
-    void convertSDModelAsync(std::string source, QuantTypes level, std::string destination, ProgressCallback callback) {
-        std::thread([this, source, level, destination, callback]() {
-            convertSDModel(source, level, destination, callback);
+    void convertSDModelAsync(std::string source, QuantTypes level, std::string destination, ProgressCallback callback, FinishedCallback<bool> onDone = nullptr) {
+        std::thread([this, source, level, destination, callback, onDone]() {
+            onDone(convertSDModel(source, level, destination, callback));
         }).detach();
     }
 
-    bool convertSDModel(std::string source, QuantTypes level, std::string destination, ProgressCallback callback) {
+    bool convertSDModel(std::string source, QuantTypes level, std::string destination, ProgressCallback callback, FinishedCallback<bool> onDone = nullptr) {
         auto model = new SDModel(source, false);
         model->setProgressCallback(callback);
         bool success = model->exportToGGUF(destination, level, false);
