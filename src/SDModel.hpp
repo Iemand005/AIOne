@@ -54,7 +54,7 @@ class SDModel : public Model {
     };
     SafeImage lastResult;
 
-    ProgressCallback progressCallback = nullptr;
+    // ProgressCallback progressCallback = nullptr;
     PreviewCallback previewCallback = nullptr;
 
 public:
@@ -182,10 +182,13 @@ public:
 
 
     void setProgressCallback(ProgressCallback callback) {
-        progressCallback = callback;
+        // progressCallback = callback;
+        super()->setProgressCallback(callback);
+
         sd_set_progress_callback([](int step, int steps, float time, void *data){
             auto model = (SDModel *)data;
-            if (model->progressCallback) model->progressCallback((float)step / (float)steps);
+            auto onProgress = model->progressCallback();
+            if (onProgress) onProgress((float)step / (float)steps);
             else model->clearProgressCallback();
         }, this);
     }
@@ -349,3 +352,5 @@ public:
         return safeCopy;
     }
 };
+
+typedef std::unique_ptr<SDModel> SDModelPtr;

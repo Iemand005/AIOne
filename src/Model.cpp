@@ -39,3 +39,11 @@ void Model::selectDevice(PreferredDevice preferred) {
     std::cout << "Using device for inference: " << ggml_backend_dev_name(devices[0]) << std::endl;
     std::cout << "==============" << std::endl;
 }
+
+void Model::setProgressCallback(ProgressCallback callback) {
+    onProgress = callback;
+}
+
+ProgressCallback Model::progressCallback() {
+    return onProgress;
+}

@@ -7,9 +7,11 @@
 #include "LLModel.hpp"
 #include "SDModel.hpp"
 
+template<typename T>
+using FinishedCallback = std::function<void(T)>;
 
-
-
+typedef FinishedCallback<LLModelPtr> LoadLLModelFinished;
+typedef FinishedCallback<SDModelPtr> LoadSDModelFinished;
 
 class ModelFactory {
     bool loadedBackends = false;
@@ -18,15 +20,22 @@ public:
     void initLlama();
     void loadBackends();
 
-    std::unique_ptr<LLModel> loadLLM(const std::string path) {
-        initLlama();
-        auto model = std::make_unique<LLModel>(path);
-        return model;
+    void runAsync(std::function<void()> func) {
+        std::thread(func).detach();
     }
 
-    std::unique_ptr<SDModel> loadSDM(const std::string path) {
-        auto model = std::make_unique<SDModel>(path);
-        return model;
+    LLModelPtr loadLLM(const std::string path, LLModelOptions options) {
+        initLlama();
+        return std::make_unique<LLModel>(path, options);
+    }
+
+    void loadLLMAsync(const std::string path, LLModelOptions options = {}, LoadLLModelFinished onDone = nullptr, ProgressCallback onProgress = nullptr) {
+        options.onProgress = onProgress;
+        runAsync([this, path, options, onDone]() { onDone(loadLLM(path, options)); });
+    }
+
+    SDModelPtr loadSDM(const std::string path) {
+        return std::make_unique<SDModel>(path);
     }
 
     void convertSDModelAsync(std::string source, QuantTypes level, std::string destination, ProgressCallback callback) {
@@ -42,6 +51,6 @@ public:
         return success;
     }
 
-    const char *systemInfoStr() ;
+    const char *systemInfoStr();
 
 };
