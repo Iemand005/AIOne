@@ -7,11 +7,7 @@
 #include "LLModel.hpp"
 #include "SDModel.hpp"
 
-enum QuantizationLevels {
-    Q8,
-    Q4,
-    Q3,
-};
+
 
 
 
@@ -33,22 +29,19 @@ public:
         return model;
     }
 
-    sd_type_t getSDType(QuantizationLevels level) {
-        switch (level) {
-        case QuantizationLevels::Q4: return SD_TYPE_Q4_0;
-        case QuantizationLevels::Q8: return SD_TYPE_Q8_0;
-        // case QuantizationLevels::Q3: return SD_TYPE_Q3_0;
-        }
-    }
+
 
 
     bool convertSDModel(std::string source, QuantizationLevels level, std::string destination, bool convertName = false) {
-        std::string vaePath = "";
+        // std::string vaePath = "";
 
-        std::string tensor_type_rules = "";
+        // std::string tensor_type_rules = "";
 
-        bool success = convert(source.c_str(), vaePath.c_str(),destination.c_str(),getSDType(level),tensor_type_rules.c_str(),convertName);
-        return success;
+        // bool success = convert(source.c_str(), vaePath.c_str(),destination.c_str(),getSDType(level),tensor_type_rules.c_str(),convertName);
+        // return success;
+
+        auto model = new SDModel(source);
+        model->convertModel(destination, level, convertName);
     }
 
     const char *systemInfoStr() ;

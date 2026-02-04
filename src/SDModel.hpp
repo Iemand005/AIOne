@@ -29,11 +29,22 @@ inline void setEnvironmentVariable(const std::string& name, const std::string& v
 
 typedef std::function<void(int step, sd_image_t* image, bool isNoisy)> PreviewCallback;
 
-
+enum QuantTypes {
+    F32,
+    F16,
+    Q8_0,
+    Q5_0,
+    Q5_1,
+    Q4_0,
+    Q4_1
+};
 
 class SDModel : public Model {
     sd_ctx_t* ctx = nullptr;
-    std::string lastPrompt; 
+    std::string lastPrompt;
+
+    std::string modelPath = "";
+    SDModelOptions options = {};
     
     struct SafeImage {
         std::vector<uint8_t> data;
@@ -48,8 +59,8 @@ class SDModel : public Model {
 
 public:
     SDModel(){}
-    SDModel(std::string path, SDModelOptions options = {}) {
-        loadModel(path, options);
+    SDModel(std::string path, SDModelOptions options = {}, bool load = true) : modelPath(path), options(options) {
+        if (load) loadModel();
     }
 
     ~SDModel() {
@@ -71,6 +82,10 @@ public:
 
     void setAllowSharedMemory(bool allow = true) {
         setEnvironmentVariable("GGML_VK_ALLOW_SYSMEM_FALLBACK", std::to_string(allow));
+    }
+
+    bool loadModel() {
+        return loadModel(modelPath, options);
     }
 
     bool loadModel(const std::string path, SDModelOptions options = {}) {
@@ -144,6 +159,19 @@ public:
         }
 
         return true;
+    }
+
+    sd_type_t getSDType(QuantTypes level) {
+        switch (level) {
+        case ExportTypes::ExportQ4_0: return SD_TYPE_Q4_0;
+        case ExportTypes::ExportQ8_0: return SD_TYPE_Q8_0;
+            // case QuantizationLevels::Q3: return SD_TYPE_Q3_0;
+        }
+    }
+
+    bool convertModel(std::string destination, QuantTypes level = ExportQ4_0, bool convertTensorsName = false) {
+        std::string tensor_type_rules = "";
+        return convert(modelPath.c_str(), options.vaePath.c_str(), destination.c_str(),getSDType(level), tensor_type_rules.c_str(), convertTensorsName);
     }
 
     bool saveImageAsPNG(const sd_image_t& image, const std::string& filename) ;
