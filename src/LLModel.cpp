@@ -258,23 +258,32 @@ TextGenResult LLModel::complete(
         if (llama_vocab_is_eog(vocab, newTokenId))
             break;
 
-        
+        if (newTokenId == thinkStartToken) {
+            thinking = true;
+            if (options.onThinkStart) options.onThinkStart();
+        }
+
+        if (newTokenId == thinkEndToken) {
+            thinking = false;
+            if (options.onThinkStart) options.onThinkStart();
+        }
 
         // convert token to text
-        char buf[128];
-        int n = llama_token_to_piece(vocab, newTokenId, buf, sizeof(buf), 0, true);
-        if (n < 0)
+        char tokenBuffer[128];
+        bool outputSpecial = false;
+        int tokenSize = llama_token_to_piece(vocab, newTokenId, tokenBuffer, sizeof(tokenBuffer), 0, outputSpecial);
+        if (tokenSize < 0)
         {
             generating = false;
             throw std::runtime_error("Failed to evaluate input tokens");
         }
 
         // write text
-        std::string text(buf, n);
+        std::string text(tokenBuffer, tokenSize);
 
-        // std::cout << text.c_str();
         output.append(text);
-        if (options.onToken) options.onToken(text, thinking);
+        if (options.onToken) options.onToken(text);
+        if (options.onTokenReasoning) options.onTokenReasoning(text, thinking);
 
         // wrap token in batch for decoding
         setBatch(batch, &newTokenId, 1);
