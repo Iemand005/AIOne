@@ -35,9 +35,9 @@ public:
 
     sd_type_t getSDType(QuantizationLevels level) {
         switch (level) {
-        case QuantizationLevels::Q4: return SD_TYPE_Q4_K;
-        case QuantizationLevels::Q8: return SD_TYPE_Q8_K;
-        case QuantizationLevels::Q3: return SD_TYPE_Q3_K;
+        case QuantizationLevels::Q4: return SD_TYPE_Q4_0;
+        case QuantizationLevels::Q8: return SD_TYPE_Q8_0;
+        // case QuantizationLevels::Q3: return SD_TYPE_Q3_0;
         }
     }
 
