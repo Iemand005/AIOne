@@ -2,7 +2,7 @@
 
 #include "LLModel.hpp"
 
-LLModel::LLModel(const std::string path, const LLModelOptions &options, ProgressCallback onProgress)
+LLModel::LLModel(const std::string path, const LLModelOptions &options)
 {
     selectDevice(options.device);
 
@@ -10,11 +10,13 @@ LLModel::LLModel(const std::string path, const LLModelOptions &options, Progress
     llama_model_params modelParams = llama_model_default_params();
     modelParams.devices = devices.data();
     modelParams.n_gpu_layers = options.offloadLayers;
-    if (onProgress) {
-        modelParams.progress_callback_user_data = &onProgress;
-        modelParams.progress_callback = [](float progress, void *progressCallback){
-            ProgressCallback onProgress = *(ProgressCallback *)progressCallback;
-            onProgress(progress);
+    if (options.onProgress) {
+        setProgressCallback(options.onProgress);
+        modelParams.progress_callback_user_data = this;
+        modelParams.progress_callback = [](float progress, void *data){
+            auto model = (LLModel *)data;
+            auto onProgress = model->progressCallback();
+            if (onProgress) onProgress(progress);
             return true;
         };
     }

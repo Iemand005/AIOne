@@ -39,3 +39,4 @@ void Model::selectDevice(PreferredDevice preferred) {
     std::cout << "Using device for inference: " << ggml_backend_dev_name(devices[0]) << std::endl;
     std::cout << "==============" << std::endl;
 }
+

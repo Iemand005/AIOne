@@ -34,12 +34,8 @@ class LLModel : public Model
     llama_sampler_ptr sampler;
     
     std::thread generationWorker;
-    
-    
-    // std::shared_ptr<TextContext> context = nullptr;
+
     const llama_vocab *vocab = nullptr;
-    
-    
     
     std::vector<std::shared_ptr<TextContext>> registeredContexts;
     std::deque<llama_seq_id> freeSeqIds;
@@ -47,8 +43,7 @@ class LLModel : public Model
     bool generating = false;
     
     std::vector<std::thread> activeThreads;
-    std::mutex threadsMutex; // thread-safety
-
+    std::mutex threadsMutex;
 
     static void* llamaMalloc(size_t size) {
         return malloc(size);
@@ -81,7 +76,9 @@ class LLModel : public Model
     
 public:
 
-    LLModel(const std::string path, const LLModelOptions &options = {}, ProgressCallback onProgress = nullptr);
+    LLModel(const std::string path, const LLModelOptions &options = {});
+
+    Model *super() { return this; }
 
     bool isGenerating() { return generating; }
     // used by `TextContent`
@@ -275,3 +272,5 @@ public:
         // Smart pointers handle cleanup automatically
     }
 };
+
+typedef std::unique_ptr<LLModel> LLModelPtr;
