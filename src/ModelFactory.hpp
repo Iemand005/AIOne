@@ -29,19 +29,10 @@ public:
         return model;
     }
 
-
-
-
-    bool convertSDModel(std::string source, QuantizationLevels level, std::string destination, bool convertName = false) {
-        // std::string vaePath = "";
-
-        // std::string tensor_type_rules = "";
-
-        // bool success = convert(source.c_str(), vaePath.c_str(),destination.c_str(),getSDType(level),tensor_type_rules.c_str(),convertName);
-        // return success;
-
+    bool convertSDModel(std::string source, QuantTypes level, std::string destination, ProgressCallback callback = nullptr) {
         auto model = new SDModel(source);
-        model->convertModel(destination, level, convertName);
+        model->setProgressCallback(callback);
+        return model->exportToGGUF(destination, level, false);
     }
 
     const char *systemInfoStr() ;

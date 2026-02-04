@@ -29,14 +29,14 @@ inline void setEnvironmentVariable(const std::string& name, const std::string& v
 
 typedef std::function<void(int step, sd_image_t* image, bool isNoisy)> PreviewCallback;
 
-enum QuantTypes {
-    F32,
-    F16,
-    Q8_0,
-    Q5_0,
-    Q5_1,
-    Q4_0,
-    Q4_1
+enum QuantTypes : int {
+    Q4_0 = 0,
+    Q4_1 = 1,
+    Q5_0 = 2,
+    Q5_1 = 3,
+    Q8_0 = 4,
+    F16 = 5,
+    F32 = 6
 };
 
 class SDModel : public Model {
@@ -115,13 +115,10 @@ public:
         params.diffusion_flash_attn = options.flashAttention;
         params.vae_decode_only = options.vaeDecodeOnly;
 
-        // params.clip_l_path = "";
-        // params.clip_g_path = "";
         // params.clip_vision_path = "";
         // params.t5xxl_path = "";
         // params.llm_path = "";
         // params.llm_vision_path = "";
-        // params.diffusion_model_path = "";
         // params.high_noise_diffusion_model_path = "";
 
         params.control_net_path = "";
@@ -163,13 +160,17 @@ public:
 
     sd_type_t getSDType(QuantTypes level) {
         switch (level) {
-        case ExportTypes::ExportQ4_0: return SD_TYPE_Q4_0;
-        case ExportTypes::ExportQ8_0: return SD_TYPE_Q8_0;
-            // case QuantizationLevels::Q3: return SD_TYPE_Q3_0;
+        case QuantTypes::Q4_0: return SD_TYPE_Q4_0;
+        case QuantTypes::Q8_0: return SD_TYPE_Q8_0;
+        case QuantTypes::Q4_1: return SD_TYPE_Q4_1;
+        case QuantTypes::Q5_0: return SD_TYPE_Q5_0;
+        case QuantTypes::Q5_1: return SD_TYPE_Q5_1;
+        case QuantTypes::F16: return SD_TYPE_F16;
+        case QuantTypes::F32: return SD_TYPE_F32;
         }
     }
 
-    bool convertModel(std::string destination, QuantTypes level = ExportQ4_0, bool convertTensorsName = false) {
+    bool exportToGGUF(std::string destination, QuantTypes level = Q4_0, bool convertTensorsName = false) {
         std::string tensor_type_rules = "";
         return convert(modelPath.c_str(), options.vaePath.c_str(), destination.c_str(),getSDType(level), tensor_type_rules.c_str(), convertTensorsName);
     }
