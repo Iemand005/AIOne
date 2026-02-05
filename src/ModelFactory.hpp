@@ -61,4 +61,4 @@ public:
 
 };
 
-typedef std::unique_ptr<ModelFactory> ModelFactoryPtr
+typedef std::unique_ptr<ModelFactory> ModelFactoryPtr;
