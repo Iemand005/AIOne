@@ -60,3 +60,5 @@ public:
     const char *systemInfoStr();
 
 };
+
+typedef std::unique_ptr<ModelFactory> ModelFactoryPtr
