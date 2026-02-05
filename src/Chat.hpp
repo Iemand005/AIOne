@@ -14,6 +14,7 @@
 #include "Message.hpp"
 // #include "Role.h"
 #include "Timeable.hpp"
+#include "TextContext.hpp"
 
 class Chat {
     unsigned long id = 0;
@@ -21,6 +22,8 @@ class Chat {
     TextGenOptions options = {};
     Timestamps timestamps;
     std::mutex messagesMutex;
+
+    std::shared_ptr<TextContext> context;
 
     size_t addMessageNoLock(Role role, std::string message, bool save = true) {
         return addMessageNoLock(Message(role, message), save);
@@ -35,38 +38,31 @@ class Chat {
             uint64_t parentId = messages[messages.size() - 1].id;
             message.parentId = parentId;
         }
-        std::cerr << "I'm adding";
-        std::cout << "[DEBUG] addMessage called. 3 Current size: " << messages.size() << " Thread ID: " << std::this_thread::get_id() << std::endl;
+
         messages.push_back(message);
 
         timestamps.update();
 
         if (save) saveMessage(message);
 
-        std::cout << "[DEBUG] addMessage called. 4 Current size: " << messages.size() << " Thread ID: " << std::this_thread::get_id() << std::endl;
-
         return messages.size() - 1;
     }
 
 public:
-    Chat(std::string systemPrompt = "") {
-        std::cout << "[CONSTRUCTOR] Chat constructor called" << std::endl;
-        std::cout << "[CONSTRUCTOR] this: " << this << std::endl;
-        std::cout << "[CONSTRUCTOR] messages address: " << &messages << std::endl;
-        std::cout << "[CONSTRUCTOR] messages initial capacity: " << messages.capacity() << std::endl;
-        
+    Chat(std::string systemPrompt = "") {        
         messages = std::vector<Message>();
-        std::cout << "[CONSTRUCTOR] After vector init, capacity: " << messages.capacity() << std::endl;
         
         timestamps.start();
-        std::cout << "[CONSTRUCTOR] Timestamps started" << std::endl;
 
         this->setSystemPrompt(systemPrompt);
-        std::cout << "[CONSTRUCTOR] After setSystemPrompt, size: " << messages.size() << std::endl;
+    }
+
+    Chat(std::shared_ptr<TextContext> newContext) {
+      context = newContext;
     }
 
     ~Chat() {
-        std::cout<< "dleted chat";
+
     }
 
   size_t addMessage(Role role, std::string message, bool save = true) {
