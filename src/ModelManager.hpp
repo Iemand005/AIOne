@@ -20,7 +20,7 @@ public:
   void loadLLMAsync(std::string path, LLModelOptions options = {}) {
     factory->loadLLMAsync(path, options, [this](LLModelPtr model) {
       llm = std::move(model);
-      chatManager = std::make_unique<ChatManager>(llm);
+      chatManager = std::make_unique<ChatManager>(getLLM());
     });
   }
 

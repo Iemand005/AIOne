@@ -13,10 +13,7 @@ class ChatManager {
   Role userRole = Role::User; // if user wants to switch role I guess
 
 public:
-
-  ChatManager(LLModel *model) : ChatManager(model, "") {}
-
-  ChatManager(LLModel *model, std::string systemPrompt) : model(model) {
+  ChatManager(LLModel *model, std::string systemPrompt = "") : model(model) {
       factory = std::make_unique<ModelFactory>();
       chats = std::vector<std::shared_ptr<Chat>>();
       currentChat = std::make_shared<Chat>(systemPrompt);
