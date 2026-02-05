@@ -67,3 +67,5 @@ public:
   }
 
 };
+
+typedef std::unique_ptr<ChatManager> ChatManagerPtr;

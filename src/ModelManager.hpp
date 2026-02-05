@@ -1,10 +1,13 @@
 #pragma once
 
 #include "ModelFactory.hpp"
+#include "ChatManager.hpp"
 
 class ModelManager {
 
   ModelFactoryPtr factory;
+
+  ChatManagerPtr chatManager;
 
   LLModelPtr llm;
 
@@ -18,6 +21,16 @@ public:
       llm = std::move(model);
     });
   }
+
+  LLModel *llm() {
+    return llm.get();
+  }
+
+  Chat *chatManager() {
+    return chatManager.get();
+  }
+
+
 };
 
 typedef std::unique_ptr<ModelManager> ModelManagerPtr;
