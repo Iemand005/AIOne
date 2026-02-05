@@ -35,8 +35,7 @@ public:
         return std::make_unique<LLModel>(path, options);
     }
 
-    void loadLLMAsync(const std::string path, LLModelOptions options = {}, LoadLLModelFinished onDone = nullptr, ProgressCallback onProgress = nullptr) {
-        options.onProgress = onProgress;
+    void loadLLMAsync(const std::string path, LLModelOptions options = {}, LoadLLModelFinished onDone = nullptr) {
         runAsync([this, path, options, onDone]() { onDone(loadLLM(path, options)); });
     }
 
