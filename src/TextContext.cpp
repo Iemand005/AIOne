@@ -4,6 +4,7 @@
 // #include "LLModelImpl.hpp"
 #include "LLModel.hpp"
 #include <llama-cpp.h>
+#include <utility>
 
 struct TextContext::Impl {
     llama_context *context; // Kept alive by LLModel
@@ -15,6 +16,26 @@ TextContext::TextContext(LLModel *modelWrapper, llama_context *context) : modelW
     impl->context = context;
     // LLModel::Impl *pimple = (LLModel::Impl*)modelWrapper->getSecretThingy();
     impl->seqId = modelWrapper->claimSeqId();
+}
+
+TextContext::TextContext(TextContext&& other) noexcept
+    : modelWrapper(other.modelWrapper),
+      impl(std::move(other.impl)),
+      messages(std::move(other.messages)),
+      cache(std::move(other.cache)) {
+    other.modelWrapper = nullptr;
+}
+
+TextContext& TextContext::operator=(TextContext&& other) noexcept {
+    if (this != &other) {
+        destroy();
+        modelWrapper = other.modelWrapper;
+        impl = std::move(other.impl);
+        messages = std::move(other.messages);
+        cache = std::move(other.cache);
+        other.modelWrapper = nullptr;
+    }
+    return *this;
 }
 
 TextContext::~TextContext() {

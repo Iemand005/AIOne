@@ -39,6 +39,10 @@ class TextContext
 
 public:
     TextContext(LLModel *modelWrapper, llama_context *context);
+    TextContext(const TextContext&) = delete;
+    TextContext& operator=(const TextContext&) = delete;
+    TextContext(TextContext&& other) noexcept;
+    TextContext& operator=(TextContext&& other) noexcept;
 
     bool operator==(const TextContext& other) const ;
 
