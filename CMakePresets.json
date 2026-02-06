@@ -2,21 +2,47 @@
   "version": 8,
   "configurePresets": [
     {
-      "name": "QT",
-      "displayName": "GCC 15.2.0 x86_64-w64-mingw32 (ucrt64)",
-      "description": "Using compilers: C = C:\\msys64\\ucrt64\\bin\\gcc.exe, CXX = C:\\msys64\\ucrt64\\bin\\g++.exe",
-      "generator": "MinGW Makefiles",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "cacheVariables": {
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-        "CMAKE_C_COMPILER": "C:/msys64/ucrt64/bin/gcc.exe",
-        "CMAKE_CXX_COMPILER": "C:/msys64/ucrt64/bin/g++.exe",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_PREFIX_PATH": "C:/Qt/6.10.1/mingw_64",
-        "Qt6_DIR": "C:/Qt/6.10.1/mingw_64/lib/cmake/Qt6"
+      "name": "default",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
       },
-      "environment": {
-        "PATH": "C:/Qt/6.10.1/mingw_64/bin;C:/msys64/ucrt64/bin;${env:PATH}"
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl"
+      }
+    },
+    {
+      "name": "Vulkan",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/Vulkan",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl",
+        "AIONE_VULKAN": true
+      }
+    },
+    {
+      "name": "Vulkan Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/Vulkan",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "MinSizeRel",
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl",
+        "AIONE_VULKAN": true
       }
     },
     {
@@ -36,7 +62,7 @@
   "buildPresets": [
     {
       "name": "debug",
-      "configurePreset": "QT",
+      "configurePreset": "default",
       "configuration": "Debug"
     }
   ]

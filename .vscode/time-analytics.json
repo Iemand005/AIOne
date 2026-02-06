@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "project": {
+    "totalFocusTime": 351338,
+    "totalActiveTime": 4802
+  },
+  "files": {
+    "CMakePresets.json": {
+      "pending": 4802,
+      "focus": 130591
+    },
+    "src/LLModel.hpp": {
+      "pending": 0,
+      "focus": 92805
+    },
+    "src/LLModel.cpp": {
+      "pending": 0,
+      "focus": 5903
+    },
+    "src/ModelFactory.hpp": {
+      "pending": 0,
+      "focus": 21201
+    },
+    "src/AIOneAPI.hpp": {
+      "pending": 0,
+      "focus": 43273
+    }
+  }
+}
