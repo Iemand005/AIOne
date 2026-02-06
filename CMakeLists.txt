@@ -6,11 +6,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(AIONE_OPENCL "Enable OpenCL support via CLBlast" OFF)
 option(AIONE_VULKAN "Enable Vulkan support" OFF)
+option(AIONE_MSVC_STATIC_RUNTIME "Use static MSVC runtime (/MT,/MTd) for AIOneCore" OFF)
 
 if(MSVC)
+    # if(AIONE_MSVC_STATIC_RUNTIME)
+    #     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    # else()
+    #     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>")
+    # endif()
+
     set(CMAKE_C_FLAGS_INIT "/FS")
     set(CMAKE_CXX_FLAGS_INIT "/FS")
     add_compile_options(/FS /bigobj /MP /W3 /wd4244 /wd4267)
+    # add_compile_options(/GR- /EHs-) # no RTTI, no C++ exceptions
+    # add_compile_options(/GR-) # no RTTI, no C++ exceptions
+    # add_link_options(/MAP /MAPINFO:EXPORTS)
     string(APPEND CMAKE_C_FLAGS " /FS")
     string(APPEND CMAKE_CXX_FLAGS " /FS")
     set(CMAKE_JOB_POOLS compile=1 link=1)
@@ -20,6 +30,11 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FS" CACHE STRING "" FORCE)
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /FS" CACHE STRING "" FORCE)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /FS" CACHE STRING "" FORCE)
+else()
+    if(DEFINED CMAKE_MSVC_RUNTIME_LIBRARY)
+        unset(CMAKE_MSVC_RUNTIME_LIBRARY CACHE)
+        unset(CMAKE_MSVC_RUNTIME_LIBRARY)
+    endif()
 endif()
 
 set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
