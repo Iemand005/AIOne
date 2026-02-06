@@ -5,6 +5,7 @@
 
 // #include <llama-cpp.h>
 
+#include "AIOneAPI.hpp"
 #include "LLModel.hpp"
 #include "SDModel.hpp"
 
@@ -14,7 +15,7 @@ using FinishedCallback = std::function<void(T)>;
 typedef FinishedCallback<LLModelPtr> LoadLLModelFinished;
 typedef FinishedCallback<SDModelPtr> LoadSDModelFinished;
 
-class ModelFactory {
+class AIONE_API ModelFactory {
     bool loadedBackends = false;
     bool initializedLlama = false;
 public:
