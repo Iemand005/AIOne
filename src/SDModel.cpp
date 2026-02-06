@@ -152,6 +152,27 @@ bool SDModel::saveImageAsPNG(const SDImage& imageo, const std::string& filename)
         return true;
     }
 
+    void SDModel::setProgressCallback(ProgressCallback callback) {
+        // progressCallback = callback;
+        super()->setProgressCallback(callback);
+
+        sd_set_progress_callback([](int step, int steps, float time, void *data){
+            auto model = (SDModel *)data;
+            auto onProgress = model->progressCallback();
+            if (onProgress) onProgress((float)step / (float)steps);
+            else model->clearProgressCallback();
+        }, this);
+    }
+    void SDModel::clearProgressCallback() {
+        sd_set_progress_callback(nullptr, nullptr);
+        // progressCallback = nullptr;
+        super()->clearProgressCallback();
+    }
+    void SDModel::clearPreviewCallback() {
+        sd_set_preview_callback(nullptr, PREVIEW_NONE, 0, false, false, nullptr);
+        previewCallback = nullptr;
+    }
+
 
     bool SDModel::exportToGGUF(std::string destination, QuantTypes level , bool convertTensorsName ) {
         std::string tensor_type_rules = "";
