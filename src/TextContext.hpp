@@ -6,11 +6,14 @@
 #include <cstdint>
 #include <stdexcept>
 #include <algorithm>
+#include <memory>
+#include <vector>
 
-#include <llama-cpp.h>
-#include <ggml-backend.h>
-#include <llama-context.h>
+// #include <llama-cpp.h>
+// #include <ggml-backend.h>
+// #include <llama-context.h>
 
+#include "AIOneAPI.hpp"
 #include "TextContextOptions.h"
 #include "ContextInvalidError.hpp"
 
@@ -20,31 +23,28 @@ struct llama_context;
 struct llama_chat_message;
 typedef int32_t llama_seq_id;
 
-class TextContext
+class AIONE_API TextContext
 {
     LLModel *modelWrapper;
-    llama_context *context; // Kept alive by LLModel
 
-    std::vector<llama_chat_message> messages;
-    std::vector<llama_token> cache;
-    llama_seq_id seqId;
+    // llama_context *context; // Kept alive by LLModel
+    // llama_seq_id seqId;
 
-    void throwIfFreed() {
-        if (context == nullptr) {
-            throw std::runtime_error("This context is freed");
-        }
+    struct Impl;
+    std::unique_ptr<Impl> impl;
 
-        if (!isValid()) {
-            throw ContextInvalidError("Model context was reset; this context is invalid");
-        }
-    }
+
+
+    void throwIfFreed();
 
 public:
     TextContext(LLModel *modelWrapper, llama_context *context);
+    TextContext(const TextContext&) = delete;
+    TextContext& operator=(const TextContext&) = delete;
+    TextContext(TextContext&& other) noexcept;
+    TextContext& operator=(TextContext&& other) noexcept;
 
-    bool operator==(const TextContext& other) const {
-        return this->seqId == other.seqId;
-    }
+    bool operator==(const TextContext& other) const ;
 
     bool operator!=(const TextContext& other) const {
         return !(*this == other);
@@ -54,13 +54,9 @@ public:
 
     bool isConnectedTo(LLModel *model);
 
-    llama_context *getContext() {
-        return context;
-    }
+    llama_context *getContext();
 
-    llama_seq_id getSeqId() {
-        return seqId;
-    }
+    llama_seq_id getSeqId() ;
 
     uint32_t getContextLength() ;
 
@@ -92,11 +88,5 @@ public:
     
     size_t findCache(const std::vector<llama_token> &tokens) ;
 
-
-
-    void destroy();
-
-    ~TextContext() {
-        destroy();
-    }
+    ~TextContext();
 };

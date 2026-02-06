@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "AIOneAPI.hpp"
 #include "PreferredDevice.h"
 #include "Callbacks.h"
 
@@ -10,7 +11,7 @@ struct ggml_backend_device;
 typedef ggml_backend_device * ggml_backend_dev_t;
 
 // This is for the shared GGML stuff
-class Model {
+class AIONE_API Model {
     ProgressCallback onProgress;
 public:
     Model *super() { return this; }

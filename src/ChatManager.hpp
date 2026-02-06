@@ -25,6 +25,7 @@ public:
           currentChat->addMessage(output.output);
           if (options.onDone) options.onDone(output);
       };
+      if (!newOptions.systemPrompt.empty()) setSystemPrompt(newOptions.systemPrompt);
       sendAsAsync(message, userRole, newOptions);
   }
 
@@ -43,9 +44,6 @@ public:
   }
 
   void completeAsAsync(std::string message, std::string role, const AsyncTextGenOptions& options = {}) {
-    // auto last = currentChat->getLastMessage();
-    // if (last.role != role) last = currentChat->createAndAddEmptyMessage(role);
-    // currentChat->addMessage(role, message);
     model->generateAsync(currentChat, Message(role, message), options);
   }
 
