@@ -39,9 +39,7 @@ struct LLModel::Impl {
 
     void freeBatch(llama_batch &batch) ;
 
-        llama_seq_id claimSeqId() {
-        std::lock_guard<std::mutex> lock(threadsMutex);
-
+    llama_seq_id claimSeqId() {
         // get the first explicitly released seq id, or a new seq id
         if (freeSeqIds.empty()) {
             if (biggestSeqId == 0xFFFF) throw std::runtime_error("Maximum number of sequences reached (" + std::to_string(biggestSeqId) + ")");
@@ -55,46 +53,28 @@ struct LLModel::Impl {
 
         return seqId;
     }
-};
 
+    // TODO this method can be optimized for memory, though not too important:
+    // - claim seqId (0)
+    // - claim seqId (1)
+    // - release seqId 0 (added to freeSeqIds)
+    // - release seqId 1 (decremented biggestSeqId)
+    // result: all seqIds released, but `freeSeqIds` is not empty and `biggestSeqId` is 1
+    // I don't really care about this much personally but feel free to fix it
+    void releaseSeqId(llama_seq_id seqId) {
 
-LLModel::LLModel(const std::string path, const LLModelOptions &options)
-{
-    selectDevice(options.device);
+        // if the seq id to be released was the last one that was claimed,
+        // just decrement the last claimed seq id
+        if (biggestSeqId == seqId + 1) {
+            biggestSeqId--;
+            return;
+        }
 
-    // init model
-    llama_model_params modelParams = llama_model_default_params();
-    modelParams.devices = devices.data();
-    modelParams.n_gpu_layers = options.offloadLayers;
-    if (options.onProgress) {
-        setProgressCallback(options.onProgress);
-        modelParams.progress_callback_user_data = this;
-        modelParams.progress_callback = [](float progress, void *data){
-            auto model = (LLModel *)data;
-            auto onProgress = model->progressCallback();
-            if (onProgress) onProgress(progress);
-            return true;
-        };
+        // this seq id was somewhere in the middle, so add it to released ids
+        freeSeqIds.push_back(seqId);
     }
 
-    char *cpath = _strdup(path.c_str());
-
-    llama_model_ptr model(llama_model_load_from_file(cpath, modelParams));
-    if (!model)
-    {
-        throw std::runtime_error("Failed to load model");
-    }
-
-    this->model = std::move(model);
-    vocab = llama_model_get_vocab(this->model.get());
-
-    // create llama context
-    if (!resetWithOptions(options)) {
-        throw std::runtime_error("Failed to create context");
-    }
-}
-
-void LLModel::initBatch(llama_batch &batch, size_t maxBatchSize, llama_seq_id seqId){
+    void initBatch(llama_batch &batch, size_t maxBatchSize, llama_seq_id seqId){
     // note: `llama_batch_get_one` doesn't allow changing the sequence id (it's always 0)
     // another note: `llama_batch_init` mallocs memory for tokens while the vector
     // already has that memory too, so I'm gonna be a bad kitty and just set the
@@ -124,9 +104,10 @@ void LLModel::initBatch(llama_batch &batch, size_t maxBatchSize, llama_seq_id se
     batch.seq_id[maxBatchSize] = nullptr; // `llama_batch_init` does this so, so shall I
 }
 
-llama_model *LLModel::getLlamaModel() {
-    return model.get();
-}
+
+// llama_model *LLModel::getLlamaModel() {
+//     return model.get();
+// }
 /**
  * Warning: you are responsible for ensuring the `batchSize` does not exceed the batch's
  * `maxBatchSize`, else you will leak memory
@@ -134,7 +115,7 @@ llama_model *LLModel::getLlamaModel() {
  * Also, DO NOT EDIT the `tokens` vector AT ALL until you call `freeBatch` because
  * it just sets the tokens pointer to the vector data
  */
-void LLModel::setBatch(llama_batch &batch, std::vector<llama_token> &tokens, size_t index, size_t batchSize) {
+void setBatch(llama_batch &batch, std::vector<llama_token> &tokens, size_t index, size_t batchSize) {
     setBatch(batch, tokens.data() + index, batchSize);
 }
 
@@ -142,7 +123,7 @@ void LLModel::setBatch(llama_batch &batch, std::vector<llama_token> &tokens, siz
  * Warning: you are responsible for ensuring the `batchSize` does not exceed the batch's
  * `maxBatchSize`, else you will leak memory
  */
-void LLModel::setBatch(llama_batch &batch, llama_token *tokensStart, size_t batchSize) {
+void setBatch(llama_batch &batch, llama_token *tokensStart, size_t batchSize) {
     if (batchSize != batch.n_tokens) {
         batch.seq_id[batch.n_tokens] = batch.seq_id[0]; // reset previous nullptr seq_id to the actual seq_id
         batch.n_tokens = batchSize;
@@ -152,7 +133,7 @@ void LLModel::setBatch(llama_batch &batch, llama_token *tokensStart, size_t batc
     batch.token = tokensStart;
 }
 
-void LLModel::freeBatch(llama_batch &batch) {
+void freeBatch(llama_batch &batch) {
     if (batch.seq_id && batch.seq_id[0])
         llamaFree(batch.seq_id[0]); // free the one array that's reused for all other seq_id items
     if (batch.seq_id)
@@ -161,6 +142,69 @@ void LLModel::freeBatch(llama_batch &batch) {
         llamaFree(batch.n_seq_id);
     batch.token = nullptr; // stop referencing the vector
 }
+};
+
+std::string LLModel::chatToPrompt(std::vector<Message> messages, bool addAss = true) {
+    auto commonMsgs = toCommonMessages(messages);
+    return applyJinjaTemplate(impl->model.get(), commonMsgs, addAss);
+}
+
+std::string LLModel::chatToPrompt(std::vector<Message> messages, Message &draft) {
+        messages.push_back(draft);
+        auto prompt = chatToPrompt(messages, false);
+        auto vocab = llama_model_get_vocab(impl->model.get());
+
+        std::string eosToken = common_token_to_piece(vocab, llama_vocab_eos(vocab), true);
+
+        string_remove_suffix(prompt, "\n");
+        string_remove_suffix(prompt, eosToken);
+        return prompt;
+    }
+
+    TextContext LLModel::newContext() {
+        return TextContext(this, impl->context.get());
+    }
+
+
+LLModel::LLModel(const std::string path, const LLModelOptions &options)
+{
+    selectDevice(options.device);
+
+    // init model
+    llama_model_params modelParams = llama_model_default_params();
+    modelParams.devices = devices.data();
+    modelParams.n_gpu_layers = options.offloadLayers;
+    if (options.onProgress) {
+        setProgressCallback(options.onProgress);
+        modelParams.progress_callback_user_data = this;
+        modelParams.progress_callback = [](float progress, void *data){
+            auto model = (LLModel *)data;
+            auto onProgress = model->progressCallback();
+            if (onProgress) onProgress(progress);
+            return true;
+        };
+    }
+
+    char *cpath = _strdup(path.c_str());
+
+    llama_model_ptr model(llama_model_load_from_file(cpath, modelParams));
+    if (!model)
+    {
+        throw std::runtime_error("Failed to load model");
+    }
+
+    impl->model = std::move(model);
+    impl->vocab = llama_model_get_vocab(impl->model.get());
+
+    // create llama context
+    if (!resetWithOptions(options)) {
+        throw std::runtime_error("Failed to create context");
+    }
+}
+
+
+
+
 
 
 
@@ -176,23 +220,23 @@ bool LLModel::resetWithOptions(const TextContextOptions &options) {
     contextParams.n_batch = options.evalBatchSize;
     contextParams.n_threads = options.threadCount;
 
-    llama_context *context = llama_init_from_model(model.get(), contextParams);
+    llama_context *context = llama_init_from_model(impl->model.get(), contextParams);
 
     if (context == nullptr)
         return false;
 
-    this->context.reset(context);
+    impl->context.reset(context);
 
     return true;
 }
 
 std::vector<llama_token> LLModel::tokenize(std::string prompt, bool addSpecialTokens) {
     // first get length to allocate
-    const int promptTokenLen = -llama_tokenize(vocab, prompt.c_str(), prompt.size(), nullptr, 0, addSpecialTokens, true);
+    const int promptTokenLen = -llama_tokenize(impl->vocab, prompt.c_str(), prompt.size(), nullptr, 0, addSpecialTokens, true);
     std::vector<llama_token> promptTokens(promptTokenLen);
 
     // then write tokens into `promptTokens`
-    if (llama_tokenize(vocab, prompt.c_str(), prompt.size(), promptTokens.data(), promptTokenLen, addSpecialTokens, true) < 0)
+    if (llama_tokenize(impl->vocab, prompt.c_str(), prompt.size(), promptTokens.data(), promptTokenLen, addSpecialTokens, true) < 0)
     {
         throw std::runtime_error("Failed to tokenize the prompt");
     }
@@ -226,16 +270,16 @@ TextGenResult LLModel::complete(
     llama_sampler_chain_params samplerParams = llama_sampler_chain_default_params();
     samplerParams.no_perf = false; // TODO disable?
 
-    sampler = llama_sampler_ptr(llama_sampler_chain_init(samplerParams));
-    llama_sampler_chain_add(sampler.get(), llama_sampler_init_min_p(options.minP, 1));
-    llama_sampler_chain_add(sampler.get(), llama_sampler_init_temp(options.temperature));
-    llama_sampler_chain_add(sampler.get(), llama_sampler_init_dist(options.seed));
+    impl->sampler = llama_sampler_ptr(llama_sampler_chain_init(samplerParams));
+    llama_sampler_chain_add(impl->sampler.get(), llama_sampler_init_min_p(options.minP, 1));
+    llama_sampler_chain_add(impl->sampler.get(), llama_sampler_init_temp(options.temperature));
+    llama_sampler_chain_add(impl->sampler.get(), llama_sampler_init_dist(options.seed));
 
     uint32_t maxBatchSize = textContext->getBatchSize();
     
     // create a batch once and reuse it
     llama_batch batch = {}; // init pointers with nullptr (see llama_batch_get_one), the `{}` is required
-    initBatch(batch, maxBatchSize, textContext->getSeqId());
+    impl->initBatch(batch, maxBatchSize, textContext->getSeqId());
 
     for (size_t i = 0; i < promptTokens.size(); i += maxBatchSize)
     {
@@ -243,7 +287,7 @@ TextGenResult LLModel::complete(
 
         // set tokens in batch (size of remaining prompt tokens, max `maxBatchSize` length)
         size_t batchSize = std::min(remainingTokens, (size_t)maxBatchSize);
-        setBatch(batch, promptTokens, i, batchSize);
+        impl->setBatch(batch, promptTokens, i, batchSize);
 
         // if the model has an encoder, process input using encoder
         // in that case, the decoder is used on the "decoder start token" after this loop
@@ -251,9 +295,9 @@ TextGenResult LLModel::complete(
         //
         // if the model does not have an encoder, the decoder will be used
         // in that case, the last batch will not be decoded, because that'll be done after this loop
-        if (llama_model_has_encoder(model.get()))
+        if (llama_model_has_encoder(impl->model.get()))
         {
-            if (llama_encode(context.get(), batch))
+            if (llama_encode(impl->context.get(), batch))
             {
                 generating = false;
                 throw std::runtime_error("Failed to evaluate input tokens");
@@ -267,7 +311,7 @@ TextGenResult LLModel::complete(
                 break;
             }
 
-            if (llama_decode(context.get(), batch))
+            if (llama_decode(impl->context.get(), batch))
             {
                 generating = false;
                 throw std::runtime_error("Failed to evaluate input tokens");
@@ -277,14 +321,14 @@ TextGenResult LLModel::complete(
         if(options.onInputEval) options.onInputEval((float)i / promptTokens.size());
     }
 
-    if (llama_model_has_encoder(model.get()))
+    if (llama_model_has_encoder(impl->model.get()))
     {
-        llama_token startTokenId = llama_model_decoder_start_token(model.get());
+        llama_token startTokenId = llama_model_decoder_start_token(impl->model.get());
         if (startTokenId == LLAMA_TOKEN_NULL)
-            startTokenId = llama_vocab_bos(vocab);
+            startTokenId = llama_vocab_bos(impl->vocab);
 
         // this batch will be processed in generation loop
-        setBatch(batch, &startTokenId, 1);
+        impl->setBatch(batch, &startTokenId, 1);
     }
 
     // context = messageContext->getContext()
@@ -299,7 +343,7 @@ TextGenResult LLModel::complete(
     while (pos + batch.n_tokens < maxPos)
     {
         // decode last batch (either input or the newly generated token)
-        if (llama_decode(context.get(), batch)) // TODO if it fails, it fucks up the context :<
+        if (llama_decode(impl->context.get(), batch)) // TODO if it fails, it fucks up the context :<
         {
             generating = false;
             throw std::runtime_error("Failed to evaluate input tokens");
@@ -308,10 +352,10 @@ TextGenResult LLModel::complete(
         pos += batch.n_tokens;
 
         // generate a new token
-        llama_token newTokenId = llama_sampler_sample(sampler.get(), context.get(), -1);
+        llama_token newTokenId = llama_sampler_sample(impl->sampler.get(), impl->context.get(), -1);
 
         // if "end of generation" token emitted, stop generation
-        if (llama_vocab_is_eog(vocab, newTokenId))
+        if (llama_vocab_is_eog(impl->vocab, newTokenId))
             break;
 
         if (newTokenId == thinkStartToken) {
@@ -327,7 +371,7 @@ TextGenResult LLModel::complete(
         // convert token to text
         char tokenBuffer[128];
         bool outputSpecial = false;
-        int tokenSize = llama_token_to_piece(vocab, newTokenId, tokenBuffer, sizeof(tokenBuffer), 0, outputSpecial);
+        int tokenSize = llama_token_to_piece(impl->vocab, newTokenId, tokenBuffer, sizeof(tokenBuffer), 0, outputSpecial);
         if (tokenSize < 0)
         {
             generating = false;
@@ -342,12 +386,12 @@ TextGenResult LLModel::complete(
         if (options.onTokenReasoning) options.onTokenReasoning(text, thinking);
 
         // wrap token in batch for decoding
-        setBatch(batch, &newTokenId, 1);
+        impl->setBatch(batch, &newTokenId, 1);
 
         tokensGenerated++;
     }
 
-    freeBatch(batch);
+    impl->freeBatch(batch);
     // llama_sampler_free(sampler.get()); important: do not free if the sampler has been added to a llama_sampler_chain (via llama_sampler_chain_add)
 
     generating = false;

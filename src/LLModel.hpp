@@ -26,7 +26,7 @@
 class LLModel : public Model
 {
     struct Impl;
-    std::unique_ptr<Impl> llama;
+    std::unique_ptr<Impl> impl;
     
     // llama.cpp stuff yup
     // llama_model_ptr model;
@@ -69,30 +69,9 @@ public:
 
 
 
-    // TODO this method can be optimized for memory, though not too important:
-    // - claim seqId (0)
-    // - claim seqId (1)
-    // - release seqId 0 (added to freeSeqIds)
-    // - release seqId 1 (decremented biggestSeqId)
-    // result: all seqIds released, but `freeSeqIds` is not empty and `biggestSeqId` is 1
-    // I don't really care about this much personally but feel free to fix it
-    void releaseSeqId(llama_seq_id seqId) {
-        std::lock_guard<std::mutex> lock(threadsMutex);
 
-        // if the seq id to be released was the last one that was claimed,
-        // just decrement the last claimed seq id
-        if (biggestSeqId == seqId + 1) {
-            biggestSeqId--;
-            return;
-        }
 
-        // this seq id was somewhere in the middle, so add it to released ids
-        freeSeqIds.push_back(seqId);
-    }
-
-    TextContext newContext() {
-        return TextContext(this, context.get());
-    }
+    TextContext newContext() ;
 
     std::shared_ptr<TextContext> createContext() {
         auto context = std::make_shared<TextContext>(newContext());
@@ -214,22 +193,9 @@ public:
         return commonMsgs;
     }
 
-    std::string chatToPrompt(std::vector<Message> messages, bool addAss = true) {
-        auto commonMsgs = toCommonMessages(messages);
-        return applyJinjaTemplate(model.get(), commonMsgs, addAss);
-    }
+    std::string chatToPrompt(std::vector<Message> messages, bool addAss = true) ;
 
-    std::string chatToPrompt(std::vector<Message> messages, Message &draft) {
-        messages.push_back(draft);
-        auto prompt = chatToPrompt(messages, false);
-        auto vocab = llama_model_get_vocab(this->model.get());
-
-        std::string eosToken = common_token_to_piece(vocab, llama_vocab_eos(vocab), true);
-
-        string_remove_suffix(prompt, "\n");
-        string_remove_suffix(prompt, eosToken);
-        return prompt;
-    }
+    std::string chatToPrompt(std::vector<Message> messages, Message &draft) ;
 
     void destroy()
     {
