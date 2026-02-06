@@ -86,12 +86,7 @@ bool SDModel::saveImageAsPNG(const SDImage& imageo, const std::string& filename)
             return false;
         }
 
-        int success = stbi_write_png(filename.c_str(),
-                                    image.width,
-                                    image.height,
-                                    image.channel,  // RGB
-                                    image.data,
-                                    image.width * image.channel);
+        int success = stbi_write_png(filename.c_str(), image.width, image.height, image.channel, image.data, image.width * image.channel);
 
         if (success) {
             std::cout << "Saved image to: " << filename << std::endl;

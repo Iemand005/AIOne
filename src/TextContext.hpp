@@ -89,9 +89,5 @@ public:
     
     size_t findCache(const std::vector<llama_token> &tokens) ;
 
-
-
-    void destroy();
-
     ~TextContext();
 };

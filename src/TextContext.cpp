@@ -4,7 +4,6 @@
 #include <utility>
 
 #include "TextContext.hpp"
-// #include "LLModelImpl.hpp"
 #include "LLModel.hpp"
 
 struct TextContext::Impl {
@@ -15,7 +14,6 @@ struct TextContext::Impl {
 TextContext::TextContext(LLModel *modelWrapper, llama_context *context) : modelWrapper(modelWrapper) {
     impl = std::make_unique<Impl>();
     impl->context = context;
-    // LLModel::Impl *pimple = (LLModel::Impl*)modelWrapper->getSecretThingy();
     impl->seqId = modelWrapper->claimSeqId();
 }
 
@@ -40,11 +38,10 @@ TextContext& TextContext::operator=(TextContext&& other) noexcept {
 }
 
 TextContext::~TextContext() {
-    destroy();
+    // TODO: do
 }
 
 bool TextContext::isValid() {
-    // LLModel::Impl *pimple = (LLModel::Impl*)modelWrapper->getSecretThingy();
     return modelWrapper->isValid(impl->context);
 }
 
@@ -64,18 +61,13 @@ bool TextContext::isConnectedTo(LLModel *model) {
     return modelWrapper == model;
 }
 
-void TextContext::destroy() {
-}
-
 void TextContext::throwIfFreed() {
-        if (impl->context == nullptr) {
-            throw std::runtime_error("This context is freed");
-        }
+    if (impl->context == nullptr)
+        throw std::runtime_error("This context is freed");
 
-        if (!isValid()) {
-            throw ContextInvalidError("Model context was reset; this context is invalid");
-        }
-    }
+    if (!isValid())
+        throw ContextInvalidError("Model context was reset; this context is invalid");
+}
 
 
 uint32_t TextContext::getContextLength() {

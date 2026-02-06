@@ -9,10 +9,6 @@
 #include <mutex >
 #include <queue>
 
-
-// #include <ggml-backend.h>
-// #include <stable-diffusion.h>
-
 #include "AIOneAPI.hpp"
 #include "SDImageOptions.h"
 #include "SDModelOptions.hpp"
@@ -74,7 +70,7 @@ struct Impl;
     SafeImage lastResult;
 
     // ProgressCallback progressCallback = nullptr;
-    
+
     PreviewCallback previewCallback = nullptr;
 
 public:
