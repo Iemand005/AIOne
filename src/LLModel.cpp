@@ -201,7 +201,7 @@ std::string LLModel::chatToPrompt(std::vector<Message> messages, Message &draft)
     }
 
 
-LLModel::LLModel(const std::string path, const LLModelOptions &options)
+LLModel::LLModel(const std::string path, const LLModelOptions &options) : impl(std::make_unique<Impl>())
 {
     selectDevice(options.device);
 
@@ -224,11 +224,8 @@ LLModel::LLModel(const std::string path, const LLModelOptions &options)
 
     llama_model_ptr model(llama_model_load_from_file(cpath, modelParams));
     if (!model)
-    {
         throw std::runtime_error("Failed to load model");
-    }
-
-    impl = std::make_unique<Impl>();
+    
 
     impl->model = std::move(model);
     impl->vocab = llama_model_get_vocab(impl->model.get());
