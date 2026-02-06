@@ -224,8 +224,8 @@ add_library(AIOne::Core ALIAS AIOneCore)
 
 if(AIONE_BUILD_SHARED_LIBS)
     # CMake defines AIOneCore_EXPORTS for SHARED automatically.
+    target_compile_definitions(AIOneCore PUBLIC AIONE_DYNAMIC)
 else()
-    target_compile_definitions(AIOneCore PUBLIC AIONE_STATIC)
 endif()
 
 # Add header files to the library (for IDE support)
