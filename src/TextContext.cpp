@@ -1,14 +1,21 @@
 
 
 #include "TextContext.hpp"
-#include "LLModel.hpp"
+// #include "LLModelImpl.hpp"
+
+struct TextContext::Impl {
+    llama_context *context; // Kept alive by LLModel
+    llama_seq_id seqId;
+}
 
 TextContext::TextContext(LLModel *modelWrapper, llama_context *context) : modelWrapper(modelWrapper), context(context) {
-    seqId = modelWrapper->claimSeqId();
+    // LLModel::Impl *pimple = (LLModel::Impl*)modelWrapper->getSecretThingy();
+    seqId = pimple->claimSeqId();
 }
 
 bool TextContext::isValid() {
-    return modelWrapper->isValid(context);
+    // LLModel::Impl *pimple = (LLModel::Impl*)modelWrapper->getSecretThingy();
+    return pimple->isValid(context);
 }
 
 bool TextContext::isConnectedTo(LLModel *model) {

@@ -27,6 +27,8 @@ class LLModel : public Model
 {
     struct Impl;
     std::unique_ptr<Impl> impl;
+
+    
     
     // llama.cpp stuff yup
     // llama_model_ptr model;
@@ -57,6 +59,7 @@ class LLModel : public Model
     
     
 public:
+void *getSecretThingy() ;
 
     LLModel(const std::string path, const LLModelOptions &options = {});
 
@@ -202,13 +205,7 @@ public:
         
     }
 
-    ~LLModel()
-    {
-        for (auto& thread : activeThreads)
-            if (thread.joinable()) thread.join();
-        destroy();
-        // Smart pointers handle cleanup automatically
-    }
+    ~LLModel();
 };
 
 typedef std::unique_ptr<LLModel> LLModelPtr;

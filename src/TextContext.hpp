@@ -7,9 +7,9 @@
 #include <stdexcept>
 #include <algorithm>
 
-#include <llama-cpp.h>
-#include <ggml-backend.h>
-#include <llama-context.h>
+// #include <llama-cpp.h>
+// #include <ggml-backend.h>
+// #include <llama-context.h>
 
 #include "TextContextOptions.h"
 #include "ContextInvalidError.hpp"
@@ -23,11 +23,15 @@ typedef int32_t llama_seq_id;
 class TextContext
 {
     LLModel *modelWrapper;
-    llama_context *context; // Kept alive by LLModel
+
+    // llama_context *context; // Kept alive by LLModel
+    // llama_seq_id seqId;
+
+    struct Impl;
+    std::unique_ptr<Impl> impl;
 
     std::vector<llama_chat_message> messages;
     std::vector<llama_token> cache;
-    llama_seq_id seqId;
 
     void throwIfFreed() {
         if (context == nullptr) {

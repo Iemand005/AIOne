@@ -56,7 +56,12 @@ class SDModel : public Model {
     std::string modelPath = "";
     SDModelOptions options = {};
 
-    struct Impl;
+public:
+// struct Impl;
+// 
+private:
+
+struct Impl;
     std::unique_ptr<Impl> impl;
     
     struct SafeImage {
@@ -72,17 +77,13 @@ class SDModel : public Model {
 
 public:
     SDModel();
-    SDModel(std::string path, bool load = true) : modelPath(path) ;
+    SDModel(std::string path, bool load = true)  ;
     SDModel(std::string path, SDModelOptions options, bool load = true) : SDModel(path) {
         this->options = options;
         if (load) loadModel();
     }
 
-    ~SDModel() {
-        freeContext();
-        clearPreviewCallback();
-        clearProgressCallback();
-    }
+    ~SDModel();
 
     void freeContext() ;;
 

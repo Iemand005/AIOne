@@ -14,6 +14,7 @@ struct SDModel::Impl {
 
     sd_type_t getSDType(QuantTypes level) {
         switch (level) {
+            default:
         case QuantTypes::Q4_0: return SD_TYPE_Q4_0;
         case QuantTypes::Q8_0: return SD_TYPE_Q8_0;
         case QuantTypes::Q4_1: return SD_TYPE_Q4_1;
@@ -22,6 +23,7 @@ struct SDModel::Impl {
         case QuantTypes::F16: return SD_TYPE_F16;
         case QuantTypes::F32: return SD_TYPE_F32;
         }
+
     }
 
     SDImage toSDImage(sd_image_t oldImage) {
@@ -44,6 +46,7 @@ sd_image_t image;
 
     preview_t toPreviewT(SDPreviewMode mode) {
         switch (mode) {
+            default:
             case SDPreviewMode::None: return PREVIEW_NONE;
             case SDPreviewMode::Proj: return PREVIEW_PROJ;
             case SDPreviewMode::VAE: return PREVIEW_VAE;
@@ -58,9 +61,15 @@ SDModel::SDModel() {
 
 }
 
-SDModel::SDModel(std::string path, bool load) {
+SDModel::SDModel(std::string path, bool load): modelPath(path) {
     impl = std::make_unique<Impl>();
 
+}
+
+SDModel::~SDModel() {
+    freeContext();
+    clearPreviewCallback();
+    clearProgressCallback();
 }
 
 void SDModel::freeContext(){
@@ -267,8 +276,8 @@ bool SDModel::saveImageAsPNG(const SDImage& imageo, const std::string& filename)
         img_gen_params.sample_params.guidance.distilled_guidance = 3.5;
         img_gen_params.sample_params.guidance.slg.layer_count = high_noise_skip_layers.size();
         img_gen_params.sample_params.guidance.slg.layers = high_noise_skip_layers.data();
-        img_gen_params.sample_params.guidance.slg.layer_start = 0.01;
-        img_gen_params.sample_params.guidance.slg.layer_end = 0.2;
+        img_gen_params.sample_params.guidance.slg.layer_start = 0.01f;
+        img_gen_params.sample_params.guidance.slg.layer_end = 0.2f;
         img_gen_params.sample_params.guidance.slg.scale = 0;
         img_gen_params.sample_params.scheduler = SGM_UNIFORM_SCHEDULER;
         img_gen_params.sample_params.sample_method = EULER_A_SAMPLE_METHOD;
