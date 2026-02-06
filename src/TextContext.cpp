@@ -15,14 +15,13 @@ struct TextContext::Impl {
 };
 
 TextContext::TextContext(LLModel *modelWrapper, llama_context *context) : modelWrapper(modelWrapper) {
-br    impl = std::make_unique<Impl>();
+    impl = std::make_unique<Impl>();
     impl->context = context;
     impl->seqId = modelWrapper->claimSeqId();
 }
 
 TextContext::TextContext(TextContext&& other) noexcept : modelWrapper(other.modelWrapper), impl(std::move(other.impl)) {
     other.modelWrapper = nullptr;
-    // impl = std::move(other.impl);
 }
 
 TextContext& TextContext::operator=(TextContext&& other) noexcept {
