@@ -1,5 +1,8 @@
 #include <thread>
 
+#include <ggml-backend.h>
+#include <stable-diffusion.h>
+
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 

@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(AIONE_OPENCL "Enable OpenCL support via CLBlast" OFF)
 option(AIONE_VULKAN "Enable Vulkan support" OFF)
 option(AIONE_MSVC_STATIC_RUNTIME "Use static MSVC runtime (/MT,/MTd) for AIOneCore" OFF)
+option(AIONE_BUILD_SHARED_LIBS "Build AIOneCore as a shared library (DLL)" OFF)
+option(AIONE_DEPS_SHARED "Build llama.cpp and stable-diffusion.cpp as shared libraries" OFF)
 
 if(MSVC)
     # if(AIONE_MSVC_STATIC_RUNTIME)
@@ -167,8 +169,13 @@ set(LLAMA_LLGUIDANCE OFF CACHE BOOL "" FORCE)
 set(LLAMA_ALL_WARNINGS OFF CACHE BOOL "" FORCE)
 
 
-# Add the submodules (build as DLLs)
-set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+if(AIONE_DEPS_SHARED)
+    set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+    set(SD_BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+else()
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+    set(SD_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+endif()
 add_subdirectory(${STABLE_DIFFUSION_CPP_DIR} ${CMAKE_BINARY_DIR}/stable-diffusion.cpp_build)
 add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
@@ -193,9 +200,15 @@ file(GLOB_RECURSE CORE_HEADERS
 message(STATUS "Found ${CORE_SOURCES} source files in AIOneCore/src")
 message(STATUS "Found ${CORE_HEADERS} header files in AIOneCore/src")
 
-add_library(AIOneCore STATIC
-    ${CORE_SOURCES}
-)
+if(AIONE_BUILD_SHARED_LIBS)
+    add_library(AIOneCore SHARED
+        ${CORE_SOURCES}
+    )
+else()
+    add_library(AIOneCore STATIC
+        ${CORE_SOURCES}
+    )
+endif()
 
 add_library(AIOne::Core ALIAS AIOneCore)
 
@@ -210,7 +223,7 @@ if(AIONE_VULKAN)
     target_link_libraries(AIOneCore PRIVATE Vulkan::Vulkan)
 endif()
 
-target_link_libraries(AIOneCore PRIVATE
+target_link_libraries(AIOneCore PUBLIC
     stable-diffusion
     llama
     common

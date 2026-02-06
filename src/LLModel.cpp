@@ -1,6 +1,62 @@
 
 
+#include <llama-cpp.h>
+#include <ggml-backend.h>
+#include <llama-context.h>
+#include <common/chat.h>
+
 #include "LLModel.hpp"
+
+
+struct LLModel::Impl {
+    llama_model_ptr model;
+    llama_context_ptr context = nullptr;
+    llama_sampler_ptr sampler;
+
+    const llama_vocab *vocab = nullptr;
+
+    std::deque<llama_seq_id> freeSeqIds;
+    llama_seq_id biggestSeqId = 0;
+
+    void initBatch(llama_batch &batch, size_t maxBatchSize, llama_seq_id seqId) ;
+
+    // llama_model *getLlamaModel() ;
+
+    /**
+     * Warning: you are responsible for ensuring the `batchSize` does not exceed the batch's
+     * `maxBatchSize`, else you will leak memory
+     * 
+     * Also, DO NOT EDIT the `tokens` vector AT ALL until you call `freeBatch` because
+     * it just sets the tokens pointer to the vector data
+     */
+    void setBatch(llama_batch &batch, std::vector<llama_token> &tokens, size_t index, size_t batchSize) ;
+    
+    /**
+     * Warning: you are responsible for ensuring the `batchSize` does not exceed the batch's
+     * `maxBatchSize`, else you will leak memory
+     */
+    void setBatch(llama_batch &batch, llama_token *tokensStart, size_t batchSize) ;
+
+    void freeBatch(llama_batch &batch) ;
+
+        llama_seq_id claimSeqId() {
+        std::lock_guard<std::mutex> lock(threadsMutex);
+
+        // get the first explicitly released seq id, or a new seq id
+        if (freeSeqIds.empty()) {
+            if (biggestSeqId == 0xFFFF) throw std::runtime_error("Maximum number of sequences reached (" + std::to_string(biggestSeqId) + ")");
+            
+            return biggestSeqId++; // no explicitly released seq ids, get a new one
+        }
+
+        // a seq id somewhere in the middle was released, use that one
+        llama_seq_id seqId = freeSeqIds.front();
+        freeSeqIds.pop_front();
+
+        return seqId;
+    }
+};
+
 
 LLModel::LLModel(const std::string path, const LLModelOptions &options)
 {

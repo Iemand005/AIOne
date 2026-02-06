@@ -10,8 +10,9 @@
 #include <queue>
 
 
-#include <ggml-backend.h>
-#include <stable-diffusion.h>
+// #include <ggml-backend.h>
+// #include <stable-diffusion.h>
+
 #include "SDImageOptions.h"
 #include "SDModelOptions.hpp"
 #include "Callbacks.h"
