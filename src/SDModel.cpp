@@ -50,8 +50,8 @@ void SDModel::freeContext(){
         }
     }
 
-bool SDModel::saveImageAsPNG(const SDImage& image, const std::string& filename) {
-    sd_image_t image = impl->fromSDImage(image);
+bool SDModel::saveImageAsPNG(const SDImage& imageo, const std::string& filename) {
+    sd_image_t image = impl->fromSDImage(imageo);
         if (!image.data || image.width == 0 || image.height == 0) {
                 std::cerr << "Invalid image data" << std::endl;
             return false;
@@ -73,7 +73,7 @@ bool SDModel::saveImageAsPNG(const SDImage& image, const std::string& filename) 
         }
     }
 
-    void SDModel::setPreviewCallback(PreviewCallback callback, SDPreviewMode mode = Proj) {
+    void SDModel::setPreviewCallback(PreviewCallback callback, SDPreviewMode mode ) {
         previewCallback = callback;
         sd_set_preview_callback([](int step, int batchSize, sd_image_t* image, bool isNoisy, void* data) {
             auto model = (SDModel *)data;
@@ -82,7 +82,7 @@ bool SDModel::saveImageAsPNG(const SDImage& image, const std::string& filename) 
         }, toPreviewT(mode), 1, true, true, this);
     }
 
-    bool SDModel::loadModel(const std::string path, SDModelOptions options = {}) {
+    bool SDModel::loadModel(const std::string path, SDModelOptions options ) {
 
         selectDevice();
         setAllowSharedMemory();
@@ -153,13 +153,13 @@ bool SDModel::saveImageAsPNG(const SDImage& image, const std::string& filename) 
     }
 
 
-    bool SDModel::exportToGGUF(std::string destination, QuantTypes level = Q4_0, bool convertTensorsName = false) {
+    bool SDModel::exportToGGUF(std::string destination, QuantTypes level , bool convertTensorsName ) {
         std::string tensor_type_rules = "";
         return convert(modelPath.c_str(), options.vaePath.c_str(), destination.c_str(),impl->getSDType(level), tensor_type_rules.c_str(), convertTensorsName);
     }
 
     
-    SDImage SDModel::generateImage(const std::string positive, const std::string negative = "", SDImageOptions options = SDImageOptions{}) {
+    SDImage SDModel::generateImage(const std::string positive, const std::string negative , SDImageOptions options) {
         if (!impl->ctx) {
             std::cerr << "Error: Model not loaded. Call loadModel() first!" << std::endl;
             return {};
