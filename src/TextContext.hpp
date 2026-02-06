@@ -33,8 +33,7 @@ class AIONE_API TextContext
     struct Impl;
     std::unique_ptr<Impl> impl;
 
-    std::vector<llama_chat_message> messages;
-    std::vector<llama_token> cache;
+
 
     void throwIfFreed();
 

@@ -9,29 +9,27 @@
 struct TextContext::Impl {
     llama_context *context; // Kept alive by LLModel
     llama_seq_id seqId;
+
+    std::vector<llama_chat_message> messages;
+    std::vector<llama_token> cache;
 };
 
 TextContext::TextContext(LLModel *modelWrapper, llama_context *context) : modelWrapper(modelWrapper) {
-    impl = std::make_unique<Impl>();
+br    impl = std::make_unique<Impl>();
     impl->context = context;
     impl->seqId = modelWrapper->claimSeqId();
 }
 
-TextContext::TextContext(TextContext&& other) noexcept
-    : modelWrapper(other.modelWrapper),
-      impl(std::move(other.impl)),
-      messages(std::move(other.messages)),
-      cache(std::move(other.cache)) {
+TextContext::TextContext(TextContext&& other) noexcept : modelWrapper(other.modelWrapper), impl(std::move(other.impl)) {
     other.modelWrapper = nullptr;
+    // impl = std::move(other.impl);
 }
 
 TextContext& TextContext::operator=(TextContext&& other) noexcept {
     if (this != &other) {
-        destroy();
+        // destroy();
         modelWrapper = other.modelWrapper;
         impl = std::move(other.impl);
-        messages = std::move(other.messages);
-        cache = std::move(other.cache);
         other.modelWrapper = nullptr;
     }
     return *this;
@@ -119,21 +117,21 @@ size_t TextContext::addCache(const std::vector<llama_token> &tokens) {
 void TextContext::addCache(const std::vector<llama_token> &tokens, size_t cacheMissIndex) {
     // truncate cached context starting from `cacheMissIndex`
     // (if it's after the cached context size, skip truncation because whole cached prompt matched)
-    if (cacheMissIndex < cache.size()) {
+    if (cacheMissIndex < impl->cache.size()) {
         llama_memory_seq_rm(llama_get_memory(impl->context), impl->seqId, cacheMissIndex, -1);
     }
 
     // copy only new tokens into the cache
-    cache.resize(tokens.size());
-    std::copy(tokens.begin() + cacheMissIndex, tokens.end(), cache.begin() + cacheMissIndex);
+    impl->cache.resize(tokens.size());
+    std::copy(tokens.begin() + cacheMissIndex, tokens.end(), impl->cache.begin() + cacheMissIndex);
 }
 
 size_t TextContext::findCache(const std::vector<llama_token> &tokens) {
-    size_t searchLength = std::min(tokens.size(), cache.size());
+    size_t searchLength = std::min(tokens.size(), impl->cache.size());
 
     // loop through the cache until `tokens[i]` does not match `cache[i]` anymore
     size_t cacheMissIndex = 0;
-    while (cacheMissIndex < searchLength && tokens[cacheMissIndex] == cache[cacheMissIndex]) {
+    while (cacheMissIndex < searchLength && tokens[cacheMissIndex] == impl->cache[cacheMissIndex]) {
         cacheMissIndex++;
     }
 
