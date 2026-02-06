@@ -41,6 +41,15 @@ sd_image_t image;
         image.width = oldImage.width;
         return image;
     }
+
+    preview_t toPreviewT(SDPreviewMode mode) {
+        switch (mode) {
+            case SDPreviewMode::None: return PREVIEW_NONE;
+            case SDPreviewMode::Proj: return PREVIEW_PROJ;
+            case SDPreviewMode::VAE: return PREVIEW_VAE;
+            case SDPreviewMode::TAE: return PREVIEW_TAE;
+        }
+    }
 };
 
 void SDModel::freeContext(){
@@ -79,7 +88,7 @@ bool SDModel::saveImageAsPNG(const SDImage& imageo, const std::string& filename)
             auto model = (SDModel *)data;
             if (model->previewCallback) model->previewCallback(step, &model->impl->toSDImage(*image), isNoisy);
             else model->clearPreviewCallback();
-        }, toPreviewT(mode), 1, true, true, this);
+        }, impl->toPreviewT(mode), 1, true, true, this);
     }
 
     bool SDModel::loadModel(const std::string path, SDModelOptions options ) {

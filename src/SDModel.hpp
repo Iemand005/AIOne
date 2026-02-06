@@ -115,14 +115,7 @@ public:
     void clearProgressCallback() ;
     void clearPreviewCallback() ;
 
-    preview_t toPreviewT(SDPreviewMode mode) {
-        switch (mode) {
-            case SDPreviewMode::None: return PREVIEW_NONE;
-            case SDPreviewMode::Proj: return PREVIEW_PROJ;
-            case SDPreviewMode::VAE: return PREVIEW_VAE;
-            case SDPreviewMode::TAE: return PREVIEW_TAE;
-        }
-    }
+    
 
     std::thread generationWorker;
 
