@@ -1,6 +1,6 @@
 
 #include "ModelFactory.hpp"
-
+#include <llama-cpp.h>
 void ModelFactory::loadBackends() {
     if (loadedBackends) return;
     ggml_backend_load_all();

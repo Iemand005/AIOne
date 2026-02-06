@@ -7,6 +7,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(AIONE_OPENCL "Enable OpenCL support via CLBlast" OFF)
 option(AIONE_VULKAN "Enable Vulkan support" OFF)
 option(AIONE_MSVC_STATIC_RUNTIME "Use static MSVC runtime (/MT,/MTd) for AIOneCore" OFF)
+option(AIONE_BUILD_SHARED_LIBS "Build AIOneCore as a shared library (DLL)" OFF)
+option(AIONE_DEPS_SHARED "Build llama.cpp and stable-diffusion.cpp as shared libraries" OFF)
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 option(AIONE_GGML_SHARED "Use static MSVC runtime (/MT,/MTd) for AIOneCore" OFF)
 option(AIONE_SD_SHARED "Use static MSVC runtime (/MT,/MTd) for AIOneCore" OFF)
 
@@ -44,7 +50,7 @@ set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 set(LLAMA_CUBLAS OFF CACHE BOOL "" FORCE)
 # set(LLAMA_VULKAN OFF CACHE BOOL "" FORCE)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE) # Default static in this subdir
+# set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE) # Default static in this subdir
 
 
 set(SD_CUDA OFF CACHE BOOL "" FORCE)
@@ -159,7 +165,7 @@ set(LLAMA_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_SERVER OFF CACHE BOOL "" FORCE)
 set(LLAMA_TOOLS_INSTALL OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(LLAMA_BUILD_COMMON ON CACHE INTERNAL "") 
+set(LLAMA_BUILD_COMMON OFF CACHE INTERNAL "") 
 
 set(LLAMA_HTTPLIB OFF CACHE BOOL "" FORCE)
 set(LLAMA_OPENSSL OFF CACHE BOOL "" FORCE)
@@ -182,33 +188,40 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 endif()
 add_subdirectory(${STABLE_DIFFUSION_CPP_DIR} ${CMAKE_BINARY_DIR}/stable-diffusion.cpp_build)
 add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+# set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
 # Automatically find all source files in src directory
 file(GLOB_RECURSE CORE_SOURCES 
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
 )
 
 # Automatically find all header files in src directory
 file(GLOB_RECURSE CORE_HEADERS 
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hxx"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hh"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.inl"
 )
 
 message(STATUS "Found ${CORE_SOURCES} source files in AIOneCore/src")
 message(STATUS "Found ${CORE_HEADERS} header files in AIOneCore/src")
 
-add_library(AIOneCore STATIC
-    ${CORE_SOURCES}
-)
+if(AIONE_BUILD_SHARED_LIBS)
+    add_library(AIOneCore SHARED
+        ${CORE_SOURCES}
+    )
+else()
+    add_library(AIOneCore STATIC
+        ${CORE_SOURCES}
+    )
+endif()
 
 add_library(AIOne::Core ALIAS AIOneCore)
+
+if(AIONE_BUILD_SHARED_LIBS)
+    # CMake defines AIOneCore_EXPORTS for SHARED automatically.
+else()
+    target_compile_definitions(AIOneCore PUBLIC AIONE_STATIC)
+endif()
 
 # Add header files to the library (for IDE support)
 # target_sources(AIOneCore PUBLIC

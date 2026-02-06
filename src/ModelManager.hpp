@@ -12,10 +12,7 @@ class ModelManager {
   LLModelPtr llm;
 
 public:
-  ModelManager() {
-    factory = std::make_unique<ModelFactory>();
-    
-  }
+  ModelManager() : factory(std::make_unique<ModelFactory>()) {}
 
   void loadLLMAsync(std::string path, LLModelOptions options = {}) {
     factory->loadLLMAsync(path, options, [this](LLModelPtr model) {
@@ -24,14 +21,8 @@ public:
     });
   }
 
-  LLModel *getLLM() {
-    return llm.get();
-  }
-
-  ChatManager *getChatManager() {
-    return chatManager.get();
-  }
-
+  LLModel *getLLM() { return llm.get(); }
+  ChatManager *getChatManager() {return chatManager.get(); }
 
 };
 
