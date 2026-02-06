@@ -71,8 +71,8 @@ class SDModel : public Model {
     PreviewCallback previewCallback = nullptr;
 
 public:
-    SDModel(){}
-    SDModel(std::string path, bool load = true) : modelPath(path) {}
+    SDModel();
+    SDModel(std::string path, bool load = true) : modelPath(path) ;
     SDModel(std::string path, SDModelOptions options, bool load = true) : SDModel(path) {
         this->options = options;
         if (load) loadModel();

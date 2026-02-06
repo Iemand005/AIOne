@@ -52,6 +52,17 @@ sd_image_t image;
     }
 };
 
+SDModel::SDModel() {
+    impl = std::make_unique<Impl>();
+
+
+}
+
+SDModel::SDModel(std::string path, bool load) {
+    impl = std::make_unique<Impl>();
+
+}
+
 void SDModel::freeContext(){
         if (impl->ctx) {
             free_sd_ctx(impl->ctx);
