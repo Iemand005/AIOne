@@ -32,6 +32,8 @@ struct TextGenOptions : TextGenOptionsBase
     TokenReasoningCallback onTokenReasoning;
     ThinkStartCallback onThinkStart;
     ThinkEndCallback onThinkEnd;
+
+    std::string systemPrompt = "";
 };
 
 struct AsyncTextGenOptions : TextGenOptions {
