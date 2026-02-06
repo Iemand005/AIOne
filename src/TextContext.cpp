@@ -2,21 +2,41 @@
 
 #include "TextContext.hpp"
 // #include "LLModelImpl.hpp"
+#include "LLModel.hpp"
+#include <llama-cpp.h>
 
 struct TextContext::Impl {
     llama_context *context; // Kept alive by LLModel
     llama_seq_id seqId;
+};
+
+TextContext::TextContext(LLModel *modelWrapper, llama_context *context) : modelWrapper(modelWrapper) {
+    impl = std::make_unique<Impl>();
+    impl->context = context;
+    // LLModel::Impl *pimple = (LLModel::Impl*)modelWrapper->getSecretThingy();
+    impl->seqId = modelWrapper->claimSeqId();
 }
 
-TextContext::TextContext(LLModel *modelWrapper, llama_context *context) : modelWrapper(modelWrapper), context(context) {
-    // LLModel::Impl *pimple = (LLModel::Impl*)modelWrapper->getSecretThingy();
-    seqId = pimple->claimSeqId();
+TextContext::~TextContext() {
+    destroy();
 }
 
 bool TextContext::isValid() {
     // LLModel::Impl *pimple = (LLModel::Impl*)modelWrapper->getSecretThingy();
-    return pimple->isValid(context);
+    return modelWrapper->isValid(impl->context);
 }
+
+llama_context *TextContext::getContext() {
+        return impl->context;
+    }
+
+    llama_seq_id TextContext::getSeqId() {
+        return impl->seqId;
+    }
+
+    bool TextContext::operator==(const TextContext& other) const {
+        return impl->seqId == other.impl->seqId;
+    }
 
 bool TextContext::isConnectedTo(LLModel *model) {
     return modelWrapper == model;
@@ -25,28 +45,38 @@ bool TextContext::isConnectedTo(LLModel *model) {
 void TextContext::destroy() {
 }
 
+void TextContext::throwIfFreed() {
+        if (impl->context == nullptr) {
+            throw std::runtime_error("This context is freed");
+        }
+
+        if (!isValid()) {
+            throw ContextInvalidError("Model context was reset; this context is invalid");
+        }
+    }
+
 
 uint32_t TextContext::getContextLength() {
     throwIfFreed();
-    return llama_n_ctx(context);
+    return llama_n_ctx(impl->context);
 }
 
 uint32_t TextContext::getUsedContextLength() {
     throwIfFreed();
     
     // gets the last index in the kv cache, and adds 1 to get the length
-    return llama_memory_seq_pos_max(llama_get_memory(context), seqId) + 1;
+    return llama_memory_seq_pos_max(llama_get_memory(impl->context), impl->seqId) + 1;
 }
 
 uint32_t TextContext::getLastIndex() {
     throwIfFreed();
     
     // gets the last index in the kv cache
-    return llama_memory_seq_pos_max(llama_get_memory(context), seqId);
+    return llama_memory_seq_pos_max(llama_get_memory(impl->context), impl->seqId);
 }
 
 uint32_t TextContext::getBatchSize() {
-    return llama_n_batch(context);
+    return llama_n_batch(impl->context);
 }
 
 /**
@@ -76,7 +106,7 @@ void TextContext::addCache(const std::vector<llama_token> &tokens, size_t cacheM
     // truncate cached context starting from `cacheMissIndex`
     // (if it's after the cached context size, skip truncation because whole cached prompt matched)
     if (cacheMissIndex < cache.size()) {
-        llama_memory_seq_rm(llama_get_memory(context), seqId, cacheMissIndex, -1);
+        llama_memory_seq_rm(llama_get_memory(impl->context), impl->seqId, cacheMissIndex, -1);
     }
 
     // copy only new tokens into the cache

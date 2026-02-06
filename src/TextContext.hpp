@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <stdexcept>
 #include <algorithm>
+#include <memory>
+#include <vector>
 
 // #include <llama-cpp.h>
 // #include <ggml-backend.h>
@@ -33,22 +35,12 @@ class TextContext
     std::vector<llama_chat_message> messages;
     std::vector<llama_token> cache;
 
-    void throwIfFreed() {
-        if (context == nullptr) {
-            throw std::runtime_error("This context is freed");
-        }
-
-        if (!isValid()) {
-            throw ContextInvalidError("Model context was reset; this context is invalid");
-        }
-    }
+    void throwIfFreed();
 
 public:
     TextContext(LLModel *modelWrapper, llama_context *context);
 
-    bool operator==(const TextContext& other) const {
-        return this->seqId == other.seqId;
-    }
+    bool operator==(const TextContext& other) const ;
 
     bool operator!=(const TextContext& other) const {
         return !(*this == other);
@@ -58,13 +50,9 @@ public:
 
     bool isConnectedTo(LLModel *model);
 
-    llama_context *getContext() {
-        return context;
-    }
+    llama_context *getContext();
 
-    llama_seq_id getSeqId() {
-        return seqId;
-    }
+    llama_seq_id getSeqId() ;
 
     uint32_t getContextLength() ;
 
@@ -100,7 +88,5 @@ public:
 
     void destroy();
 
-    ~TextContext() {
-        destroy();
-    }
+    ~TextContext();
 };

@@ -21,7 +21,8 @@
 #include "Message.hpp"
 #include "Chat.hpp"
 #include "LlamaUtil.hpp"
-
+typedef int32_t llama_seq_id;
+    struct llama_context;
 
 class LLModel : public Model
 {
@@ -68,8 +69,9 @@ void *getSecretThingy() ;
     bool isGenerating() { return generating; }
     // used by `TextContent`
     // checks if the llama context has been recreated
-    // bool isValid(llama_context *context) { return context == this->context.get(); }
-
+    // struct llama_seq_id;
+    bool isValid(llama_context *context);
+llama_seq_id claimSeqId();
 
 
 

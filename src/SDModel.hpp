@@ -73,6 +73,7 @@ struct Impl;
     SafeImage lastResult;
 
     // ProgressCallback progressCallback = nullptr;
+    
     PreviewCallback previewCallback = nullptr;
 
 public:
