@@ -13,6 +13,7 @@
 // #include <ggml-backend.h>
 // #include <llama-context.h>
 
+#include "AIOneAPI.hpp"
 #include "TextContextOptions.h"
 #include "ContextInvalidError.hpp"
 
@@ -22,7 +23,7 @@ struct llama_context;
 struct llama_chat_message;
 typedef int32_t llama_seq_id;
 
-class TextContext
+class AIONE_API TextContext
 {
     LLModel *modelWrapper;
 

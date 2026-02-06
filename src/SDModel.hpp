@@ -13,6 +13,7 @@
 // #include <ggml-backend.h>
 // #include <stable-diffusion.h>
 
+#include "AIOneAPI.hpp"
 #include "SDImageOptions.h"
 #include "SDModelOptions.hpp"
 #include "Callbacks.h"
@@ -50,7 +51,7 @@ enum QuantTypes : int {
 
 
 
-class SDModel : public Model {
+class AIONE_API SDModel : public Model {
     std::string lastPrompt;
 
     std::string modelPath = "";

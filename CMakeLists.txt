@@ -223,7 +223,7 @@ if(AIONE_VULKAN)
     target_link_libraries(AIOneCore PRIVATE Vulkan::Vulkan)
 endif()
 
-target_link_libraries(AIOneCore PUBLIC
+target_link_libraries(AIOneCore PRIVATE
     stable-diffusion
     llama
     common

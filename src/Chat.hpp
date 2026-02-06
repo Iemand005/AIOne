@@ -10,12 +10,14 @@
 #include <mutex>
 
 
+#include "AIOneAPI.hpp"
 #include "Message.hpp"
 // #include "Role.h"
 #include "Timeable.hpp"
 #include "TextContext.hpp"
+#include "TextGenOptions.hpp"
 
-class Chat {
+class AIONE_API Chat {
     unsigned long id = 0;
     std::vector<Message> messages = std::vector<Message>();
     TextGenOptions options = {};

@@ -147,6 +147,15 @@ void freeBatch(llama_batch &batch) {
         llamaFree(batch.n_seq_id);
     batch.token = nullptr; // stop referencing the vector
 }
+
+std::vector<common_chat_msg> toCommonMessages(std::vector<Message> messages) {
+        std::vector<common_chat_msg> commonMsgs(messages.size());
+        
+        size_t i = 0;
+        for (auto &message : messages) commonMsgs[i++] = {message.role, message.content};
+
+        return commonMsgs;
+    }
 };
 
 bool LLModel::isValid(llama_context *context)  { return context == impl->context.get(); }
@@ -171,7 +180,7 @@ bool LLModel::isValid(llama_context *context)  { return context == impl->context
     }
 
 std::string LLModel::chatToPrompt(std::vector<Message> messages, bool addAss ) {
-    auto commonMsgs = toCommonMessages(messages);
+    auto commonMsgs = impl->toCommonMessages(messages);
     return applyJinjaTemplate(impl->model.get(), commonMsgs, addAss);
 }
 

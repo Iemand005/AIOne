@@ -6,12 +6,15 @@
 #include <mutex>
 #include <thread>
 #include <vector>
+#include <memory>
+#include <algorithm>
 
 // #include <llama-cpp.h>
 // #include <ggml-backend.h>
 // #include <llama-context.h>
 // #include <common/chat.h>
 
+#include "AIOneAPI.hpp"
 #include "Model.hpp"
 #include "LLModelOptions.hpp"
 #include "TextGenOptions.hpp"
@@ -21,9 +24,9 @@
 #include "Message.hpp"
 #include "Chat.hpp"
 typedef int32_t llama_seq_id;
-    struct llama_context;
+struct llama_context;
 
-class LLModel : public Model
+class AIONE_API LLModel : public Model
 {
     struct Impl;
     std::unique_ptr<Impl> impl;
@@ -70,7 +73,7 @@ public:
     // checks if the llama context has been recreated
     // struct llama_seq_id;
     bool isValid(llama_context *context);
-llama_seq_id LLModel::claimSeqId();
+    llama_seq_id claimSeqId();
 
 
 
@@ -188,14 +191,7 @@ llama_seq_id LLModel::claimSeqId();
         return chatToPrompt(chat->getMessages(), draft);
     }
 
-    std::vector<common_chat_msg> toCommonMessages(std::vector<Message> messages) {
-        std::vector<common_chat_msg> commonMsgs(messages.size());
-        
-        size_t i = 0;
-        for (auto &message : messages) commonMsgs[i++] = {message.role, message.content};
-
-        return commonMsgs;
-    }
+    
 
     std::string chatToPrompt(std::vector<Message> messages, bool addAss = true) ;
 
