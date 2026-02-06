@@ -172,7 +172,7 @@ public:
         std::string prompt,
         TextGenOptions options = {}
     ) {
-        std::vector promptTokens = tokenize(prompt, true);
+        auto promptTokens = tokenize(prompt, true);
         return complete(messageContext, promptTokens, messageContext->findCache(promptTokens), options);
     }
 
