@@ -1,10 +1,11 @@
+#pragma once
 
+#include <llama-cpp.h>
+#include <utility>
 
 #include "TextContext.hpp"
 // #include "LLModelImpl.hpp"
 #include "LLModel.hpp"
-#include <llama-cpp.h>
-#include <utility>
 
 struct TextContext::Impl {
     llama_context *context; // Kept alive by LLModel

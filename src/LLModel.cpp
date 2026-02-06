@@ -5,6 +5,9 @@
 #include <llama-context.h>
 #include <common/chat.h>
 
+#include "LlamaUtil.hpp"
+
+
 #pragma once
 
 #include "LLModel.hpp"

@@ -3,7 +3,7 @@
 #include <string>
 #include <future>
 
-#include <llama-cpp.h>
+// #include <llama-cpp.h>
 
 #include "LLModel.hpp"
 #include "SDModel.hpp"

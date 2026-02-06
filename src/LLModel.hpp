@@ -20,7 +20,6 @@
 #include "TextContextOptions.h"
 #include "Message.hpp"
 #include "Chat.hpp"
-#include "LlamaUtil.hpp"
 typedef int32_t llama_seq_id;
     struct llama_context;
 
@@ -60,7 +59,7 @@ class LLModel : public Model
     
     
 public:
-void *getSecretThingy() ;
+// void *getSecretThingy() ;
 
     LLModel(const std::string path, const LLModelOptions &options = {});
 
@@ -71,7 +70,7 @@ void *getSecretThingy() ;
     // checks if the llama context has been recreated
     // struct llama_seq_id;
     bool isValid(llama_context *context);
-llama_seq_id claimSeqId();
+llama_seq_id LLModel::claimSeqId();
 
 
 
