@@ -50,6 +50,7 @@ Message& operator=(Message&& other) noexcept = default;
       case Role::System: return "system";
       case Role::Assistant: return "assistant";
       case Role::User: return "user";
+      default: return "unknown";
     }
   }
 

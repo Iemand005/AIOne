@@ -228,6 +228,8 @@ LLModel::LLModel(const std::string path, const LLModelOptions &options)
         throw std::runtime_error("Failed to load model");
     }
 
+    impl = std::make_unique<Impl>();
+
     impl->model = std::move(model);
     impl->vocab = llama_model_get_vocab(impl->model.get());
 
