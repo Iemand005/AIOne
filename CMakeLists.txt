@@ -8,6 +8,10 @@ option(AIONE_OPENCL "Enable OpenCL support via CLBlast" OFF)
 option(AIONE_VULKAN "Enable Vulkan support" OFF)
 option(AIONE_MSVC_STATIC_RUNTIME "Use static MSVC runtime (/MT,/MTd) for AIOneCore" OFF)
 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 if(MSVC)
     # if(AIONE_MSVC_STATIC_RUNTIME)
     #     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
