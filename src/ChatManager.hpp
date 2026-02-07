@@ -38,9 +38,9 @@ public:
           if (options.onDone) options.onDone(output);
       };
       if (sanitizeReasoning) {
-          newOptions.onThinkEnd = [this, options]() {
-              needsNewLineTrim = true;
-              if (options.onThinkEnd) options.onThinkEnd();
+          newOptions.onThinkStateChange = [this, options](bool thinking) {
+              if (!thinking) needsNewLineTrim = true; // Thinking ended, cut out the newlines that come inbetween this and the first word.
+              if (options.onThinkStateChange) options.onThinkStateChange(thinking);
             };
           newOptions.onToken = [this, options](const std::string &token) {
             auto trimmedToken = token;

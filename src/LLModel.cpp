@@ -22,42 +22,6 @@ struct LLModel::Impl {
     std::deque<llama_seq_id> freeSeqIds;
     llama_seq_id biggestSeqId = 0;
 
-    // void initBatch(llama_batch &batch, size_t maxBatchSize, llama_seq_id seqId) ;
-
-    // llama_model *getLlamaModel() ;
-
-    /**
-     * Warning: you are responsible for ensuring the `batchSize` does not exceed the batch's
-     * `maxBatchSize`, else you will leak memory
-     * 
-     * Also, DO NOT EDIT the `tokens` vector AT ALL until you call `freeBatch` because
-     * it just sets the tokens pointer to the vector data
-     */
-    // void setBatch(llama_batch &batch, std::vector<llama_token> &tokens, size_t index, size_t batchSize) ;
-    
-    // /**
-    //  * Warning: you are responsible for ensuring the `batchSize` does not exceed the batch's
-    //  * `maxBatchSize`, else you will leak memory
-    //  */
-    // void setBatch(llama_batch &batch, llama_token *tokensStart, size_t batchSize) ;
-
-    // void freeBatch(llama_batch &batch) ;
-
-    // llama_seq_id claimSeqId() {
-    //     // get the first explicitly released seq id, or a new seq id
-    //     if (freeSeqIds.empty()) {
-    //         if (biggestSeqId == 0xFFFF) throw std::runtime_error("Maximum number of sequences reached (" + std::to_string(biggestSeqId) + ")");
-            
-    //         return biggestSeqId++; // no explicitly released seq ids, get a new one
-    //     }
-
-    //     // a seq id somewhere in the middle was released, use that one
-    //     llama_seq_id seqId = freeSeqIds.front();
-    //     freeSeqIds.pop_front();
-
-    //     return seqId;
-    // }
-
     // TODO this method can be optimized for memory, though not too important:
     // - claim seqId (0)
     // - claim seqId (1)
@@ -108,11 +72,6 @@ struct LLModel::Impl {
     batch.seq_id[maxBatchSize] = nullptr; // `llama_batch_init` does this so, so shall I
 }
 
-// bool 
-
-// llama_model *LLModel::getLlamaModel() {
-//     return model.get();
-// }
 /**
  * Warning: you are responsible for ensuring the `batchSize` does not exceed the batch's
  * `maxBatchSize`, else you will leak memory
@@ -159,10 +118,6 @@ std::vector<common_chat_msg> toCommonMessages(std::vector<Message> messages) {
 };
 
 bool LLModel::isValid(llama_context *context)  { return context == impl->context.get(); }
-
-// void *LLModel::getSecretThingy() {
-//         return impl.get();
-//     }
 
     llama_seq_id LLModel::claimSeqId() {
         // get the first explicitly released seq id, or a new seq id
@@ -374,12 +329,14 @@ TextGenResult LLModel::complete(
 
     // context = messageContext->getContext()
 
+    if (options.onGenerationStart) options.onGenerationStart();
+
     // generation loop
     size_t pos = 0;
     size_t maxPos = promptTokens.size() + options.maxTokens;
     size_t tokensGenerated = 0;
     std::string output;
-    output.reserve(156); // why 156? I dunno, it's yummi :3
+    output.reserve(156); // why 156? I dunno, it's yummi :3 yumymmymymyyyyyyyyy
 
     while (pos + batch.n_tokens < maxPos)
     {
