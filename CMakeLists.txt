@@ -207,9 +207,11 @@ add_subdirectory(${STABLE_DIFFUSION_CPP_DIR} ${CMAKE_BINARY_DIR}/stable-diffusio
 add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
 # set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
-if(AIONE_UWP)
-    target_compile_definitions(llama PRIVATE WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP)
-endif()
+# if(AIONE_UWP)
+#     # target_compile_definitions(llama PRIVATE WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP)
+#     # set(LLAMA_UWP 
+#     target_compile_definitions(llama LLAMA_UWP)
+# endif()
 
 # Automatically find all source files in src directory
 file(GLOB_RECURSE CORE_SOURCES 
@@ -236,6 +238,10 @@ else()
     )
 endif()
 
+# if(AIONE_UWP)
+#     target_compile_definitions(llama PUBLIC LLAMA_UWP)
+# endif()
+
 add_library(AIOne::Core ALIAS AIOneCore)
 
 if(AIONE_BUILD_SHARED_LIBS)
@@ -243,6 +249,8 @@ if(AIONE_BUILD_SHARED_LIBS)
     target_compile_definitions(AIOneCore PUBLIC AIONE_DYNAMIC)
 else()
 endif()
+
+target_compile_definitions(AIOneCore PUBLIC LLAMA_UWP)
 
 # Add header files to the library (for IDE support)
 # target_sources(AIOneCore PUBLIC
