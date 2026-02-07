@@ -403,13 +403,13 @@ TextGenResult LLModel::complete(
 
         if (newTokenId == thinkStartToken) {
             thinking = true;
-            specialToken = true;
+            if (options.onTokenReasoning) specialToken = true;
             if (options.onThinkStart) options.onThinkStart();
         }
 
         if (newTokenId == thinkEndToken) {
             thinking = false;
-            specialToken = true;
+            if (options.onTokenReasoning) specialToken = true;
             if (options.onThinkStart) options.onThinkStart();
         }
 
