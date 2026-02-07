@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "project": {
-    "totalFocusTime": 1842342,
+    "totalFocusTime": 2054902,
     "totalActiveTime": 14622
   },
   "files": {
@@ -27,7 +27,7 @@
     },
     "CMakeLists.txt": {
       "pending": 888,
-      "focus": 58509
+      "focus": 120323
     }
   }
 }
