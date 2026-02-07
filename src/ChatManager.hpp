@@ -46,7 +46,8 @@ public:
             auto trimmedToken = token;
             if (needsNewLineTrim)
                 trimmedToken = trimLeadingNewlines(token);
-            if (!trimmedToken.empty()) needsNewLineTrim = false;
+            if (trimmedToken.empty()) return;
+            needsNewLineTrim = false;
             if (options.onToken) options.onToken(trimmedToken);
           };
       }
