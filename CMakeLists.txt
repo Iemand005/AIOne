@@ -17,6 +17,7 @@ option(AIONE_VULKAN "Enable Vulkan support" OFF)
 option(AIONE_MSVC_STATIC_RUNTIME "Use static MSVC runtime (/MT,/MTd) for AIOneCore" OFF)
 option(AIONE_BUILD_SHARED_LIBS "Build AIOneCore as a shared library (DLL)" OFF)
 option(AIONE_DEPS_SHARED "Build llama.cpp and stable-diffusion.cpp as shared libraries" OFF)
+option(AIONE_UWP "Enable UWP support (Disables mmap)" ON)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -49,7 +50,12 @@ if(MSVC)
     add_definitions(-DNOMINMAX -D_CRT_SECURE_NO_WARNINGS)
 
     if(AIONE_UWP)
-        add_compile_options(/ZW)
+        # add_compile_options(/ZW)
+        # Ensure platform.winmd is found for C++/CX builds
+        if(DEFINED ENV{WindowsSdkDir} AND CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION)
+            add_compile_options(/AI"$ENV{WindowsSdkDir}UnionMetadata\\${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}")
+            add_compile_options(/AI"$ENV{WindowsSdkDir}References\\${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}")
+        endif()
     endif()
 
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /FS" CACHE STRING "" FORCE)
@@ -65,6 +71,12 @@ endif()
 
 set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+
+if(AIONE_UWP)
+    set(LLAMA_UWP ON CACHE BOOL "Enable UWP code paths in llama.cpp" FORCE)
+else()
+    set(LLAMA_UWP OFF CACHE BOOL "Enable UWP code paths in llama.cpp" FORCE)
+endif()
 
 set(LLAMA_CUBLAS OFF CACHE BOOL "" FORCE)
 # set(LLAMA_VULKAN OFF CACHE BOOL "" FORCE)
@@ -207,6 +219,15 @@ add_subdirectory(${STABLE_DIFFUSION_CPP_DIR} ${CMAKE_BINARY_DIR}/stable-diffusio
 add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
 # set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
+if(AIONE_UWP)
+    if(TARGET llama)
+        target_compile_definitions(llama PUBLIC LLAMA_UWP=1)
+    endif()
+    if(TARGET common)
+        target_compile_definitions(common PUBLIC LLAMA_UWP=1)
+    endif()
+endif()
+
 # if(AIONE_UWP)
 #     # target_compile_definitions(llama PRIVATE WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP)
 #     # set(LLAMA_UWP 
@@ -250,7 +271,7 @@ if(AIONE_BUILD_SHARED_LIBS)
 else()
 endif()
 
-target_compile_definitions(AIOneCore PUBLIC LLAMA_UWP)
+# target_compile_definitions(AIOneCore PUBLIC LLAMA_UWP)
 
 # Add header files to the library (for IDE support)
 # target_sources(AIOneCore PUBLIC
