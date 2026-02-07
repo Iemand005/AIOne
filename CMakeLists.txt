@@ -4,6 +4,14 @@ project(AIOneCore VERSION 0.1 LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# if(AIONE_UWP)
+#     target_compile_definitions(llama PRIVATE WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP)
+    # set(CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION "10.0.22621.0" CACHE STRING "" FORCE)
+    # set(WINAPI_FAMILY "WINAPI_FAMILY_DESKTOP_APP" CACHE STRING "" FORCE)
+    # add_definitions(-DWINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP)
+    # -D=
+# endif()
+
 option(AIONE_OPENCL "Enable OpenCL support via CLBlast" OFF)
 option(AIONE_VULKAN "Enable Vulkan support" OFF)
 option(AIONE_MSVC_STATIC_RUNTIME "Use static MSVC runtime (/MT,/MTd) for AIOneCore" OFF)
@@ -39,6 +47,10 @@ if(MSVC)
     string(APPEND CMAKE_CXX_FLAGS " /FS")
     set(CMAKE_JOB_POOLS compile=1 link=1)
     add_definitions(-DNOMINMAX -D_CRT_SECURE_NO_WARNINGS)
+
+    if(AIONE_UWP)
+        add_compile_options(/ZW)
+    endif()
 
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /FS" CACHE STRING "" FORCE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FS" CACHE STRING "" FORCE)
@@ -195,6 +207,10 @@ add_subdirectory(${STABLE_DIFFUSION_CPP_DIR} ${CMAKE_BINARY_DIR}/stable-diffusio
 add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
 # set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
+if(AIONE_UWP)
+    target_compile_definitions(llama PRIVATE WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP)
+endif()
+
 # Automatically find all source files in src directory
 file(GLOB_RECURSE CORE_SOURCES 
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
@@ -237,6 +253,10 @@ endif()
 
 if(AIONE_VULKAN)
     target_link_libraries(AIOneCore PRIVATE Vulkan::Vulkan)
+endif()
+
+if(AIONE_UWP)
+    target_link_libraries(AIOneCore PRIVATE windowsapp)
 endif()
 
 target_link_libraries(AIOneCore PRIVATE

@@ -11,4 +11,5 @@ struct LLModelOptions : ModelOptions, TextContextOptions
 {
     PreferredDevice device = PreferredDevice::ANY;
     int32_t offloadLayers = -1; // -1 for all layers
+    bool useMmap = false;
 };
