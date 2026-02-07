@@ -410,7 +410,7 @@ TextGenResult LLModel::complete(
         if (newTokenId == thinkEndToken) {
             thinking = false;
             if (options.onTokenReasoning) specialToken = true;
-            if (options.onThinkStart) options.onThinkStart();
+            if (options.onThinkEnd) options.onThinkEnd();
         }
 
         if (!specialToken) {
