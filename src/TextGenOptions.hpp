@@ -8,7 +8,7 @@
 
 typedef std::function<void(const std::string &token)> TokenCallback;
 typedef std::function<void(const std::string &token, bool thinking)> TokenReasoningCallback;
-typedef std::function<void(const TextGenResult &output)> FinishCallback;
+typedef std::function<void(const TextGenResult &output)> TextFinishCallback;
 typedef std::function<void()> ThinkStartCallback;
 typedef std::function<void()> ThinkEndCallback;
 
@@ -37,5 +37,5 @@ struct TextGenOptions : TextGenOptionsBase
 };
 
 struct AsyncTextGenOptions : TextGenOptions {
-    FinishCallback onDone = nullptr;
+    TextFinishCallback onDone = nullptr;
 };

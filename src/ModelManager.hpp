@@ -18,15 +18,17 @@ class ModelManager {
 public:
   ModelManager() : factory(std::make_unique<ModelFactory>()) {}
 
-  void loadLLMAsync(std::wstring path, LLModelOptions options = {}) {
+  void loadLLMAsync(std::wstring path, LLModelOptionsAsync options = {}) {
       std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
         loadLLMAsync(converter.to_bytes(path), options);
   }
 
-  void loadLLMAsync(std::string path, LLModelOptions options = {}) {
-    factory->loadLLMAsync(path, options, [this](LLModelPtr model) {
+  void loadLLMAsync(std::string path, LLModelOptionsAsync options = {}) {
+      LLModelOptions& syncOptions = dynamic_cast<LLModelOptions&>(options);
+    factory->loadLLMAsync(path, syncOptions, [this, options](LLModelPtr model) {
       llm = std::move(model);
       chatManager = std::make_unique<ChatManager>(getLLM());
+      if (options.onDone) options.onDone();
     });
   }
 

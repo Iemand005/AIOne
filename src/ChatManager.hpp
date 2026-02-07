@@ -19,6 +19,11 @@ public:
       currentChat = std::make_shared<Chat>(model->createContext());
   };
 
+  void sendAsync(std::wstring message, const AsyncTextGenOptions& options = {}) {
+      std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+      sendAsync(converter.to_bytes(message), options);
+  }
+
   void sendAsync(std::string message, const AsyncTextGenOptions& options = {}) {
       AsyncTextGenOptions newOptions = options;
       newOptions.onDone = [this, options](const TextGenResult &output) {

@@ -8,12 +8,13 @@
 #include "AIOneAPI.hpp"
 #include "LLModel.hpp"
 #include "SDModel.hpp"
+#include "Callbacks.h"
 
-template<typename T>
-using FinishedCallback = std::function<void(T)>;
+// template<typename T>
+// using FinishedCallback = std::function<void(T)>;
 
-typedef FinishedCallback<LLModelPtr> LoadLLModelFinished;
-typedef FinishedCallback<SDModelPtr> LoadSDModelFinished;
+typedef FinishedTCallback<LLModelPtr> LoadLLModelFinished;
+typedef FinishedTCallback<SDModelPtr> LoadSDModelFinished;
 
 class AIONE_API ModelFactory {
     bool loadedBackends = false;
@@ -44,13 +45,13 @@ public:
         return std::make_unique<SDModel>(path);
     }
 
-    void convertSDModelAsync(std::string source, QuantTypes level, std::string destination, ProgressCallback callback, FinishedCallback<bool> onDone = nullptr) {
+    void convertSDModelAsync(std::string source, QuantTypes level, std::string destination, ProgressCallback callback, FinishedTCallback<bool> onDone = nullptr) {
         runAsync([this, source, level, destination, callback, onDone]() {
             onDone(convertSDModel(source, level, destination, callback));
         });
     }
 
-    bool convertSDModel(std::string source, QuantTypes level, std::string destination, ProgressCallback callback, FinishedCallback<bool> onDone = nullptr) {
+    bool convertSDModel(std::string source, QuantTypes level, std::string destination, ProgressCallback callback, FinishedTCallback<bool> onDone = nullptr) {
         auto model = new SDModel(source, false);
         model->setProgressCallback(callback);
         bool success = model->exportToGGUF(destination, level, false);
