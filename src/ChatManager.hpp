@@ -11,6 +11,7 @@ class ChatManager {
   std::shared_ptr<Chat> currentChat;
   LLModel *model;
   Role userRole = Role::User; // if user wants to switch role I guess
+  bool needsNewLineTrim = false;
 
 public:
   ChatManager(LLModel *model, std::string systemPrompt = "") : model(model) {
@@ -24,12 +25,31 @@ public:
       sendAsync(converter.to_bytes(message), options);
   }
 
-  void sendAsync(std::string message, const AsyncTextGenOptions& options = {}) {
+  std::string trimLeadingNewlines(const std::string& s) {
+      size_t start = 0;
+      while (start < s.size() && s[start] == '\n') ++start;
+      return s.substr(start);
+  }
+
+  void sendAsync(std::string message, const AsyncTextGenOptions& options = {}, bool sanitizeReasoning = true) {
       AsyncTextGenOptions newOptions = options;
       newOptions.onDone = [this, options](const TextGenResult &output) {
           currentChat->addMessage(output.output);
           if (options.onDone) options.onDone(output);
       };
+      if (sanitizeReasoning) {
+          newOptions.onThinkEnd = [this, options]() {
+              needsNewLineTrim = true;
+              if (options.onThinkEnd) options.onThinkEnd();
+            };
+          newOptions.onToken = [this, options](const std::string &token) {
+            auto trimmedToken = token;
+            if (needsNewLineTrim)
+                trimmedToken = trimLeadingNewlines(token);
+            if (!trimmedToken.empty()) needsNewLineTrim = false;
+            if (options.onToken) options.onToken(trimmedToken);
+          };
+      }
       if (!newOptions.systemPrompt.empty()) setSystemPrompt(newOptions.systemPrompt);
       sendAsAsync(message, userRole, newOptions);
   }
