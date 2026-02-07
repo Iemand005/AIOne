@@ -11,6 +11,7 @@ typedef std::function<void(const std::string &token, bool thinking)> TokenReason
 typedef std::function<void(const TextGenResult &output)> TextFinishCallback;
 typedef std::function<void()> ThinkStartCallback;
 typedef std::function<void()> ThinkEndCallback;
+typedef std::function<void(bool thinking)> ThinkStateChangedCallback;
 
 struct TextGenOptionsBase
 {
@@ -30,8 +31,7 @@ struct TextGenOptions : TextGenOptionsBase
     ProgressCallback onInputEval = nullptr;
 
     TokenReasoningCallback onTokenReasoning;
-    ThinkStartCallback onThinkStart;
-    ThinkEndCallback onThinkEnd;
+    ThinkStateChangedCallback onThinkStateChange;
 
     std::string systemPrompt = "";
 };

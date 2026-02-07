@@ -383,7 +383,7 @@ TextGenResult LLModel::complete(
 
     while (pos + batch.n_tokens < maxPos)
     {
-        bool specialToken = false;
+        bool isThinkTag = false;
 
         // decode last batch (either input or the newly generated token)
         if (llama_decode(impl->context.get(), batch)) // TODO if it fails, it fucks up the context :<
@@ -403,30 +403,26 @@ TextGenResult LLModel::complete(
 
         if (newTokenId == thinkStartToken) {
             thinking = true;
-            if (options.onTokenReasoning) specialToken = true;
-            if (options.onThinkStart) options.onThinkStart();
-        }
-
-        if (newTokenId == thinkEndToken) {
+            isThinkTag = true;
+        } else if (newTokenId == thinkEndToken) {
             thinking = false;
-            if (options.onTokenReasoning) specialToken = true;
-            if (options.onThinkEnd) options.onThinkEnd();
+            isThinkTag = true; // Skip the think start tag when listening for reasoning.
         }
 
-        if (!specialToken) {
+        if (isThinkTag && options.onThinkStateChange) options.onThinkStateChange(thinking);
+
         // convert token to text
         char tokenBuffer[128];
         bool outputSpecial = false;
         int tokenSize = llama_token_to_piece(impl->vocab, newTokenId, tokenBuffer, sizeof(tokenBuffer), 0, outputSpecial);
         if (tokenSize < 0)
-            throw std::runtime_error("Failed to evaluate input tokens");
-
+        throw std::runtime_error("Failed to evaluate input tokens");
+        
         std::string text(tokenBuffer, tokenSize);
-
+        
         output.append(text);
-            if (options.onToken) options.onToken(text);
-            if (options.onTokenReasoning) options.onTokenReasoning(text, thinking);
-        }
+        if (options.onToken) options.onToken(text);
+        if (!isThinkTag && options.onTokenReasoning) options.onTokenReasoning(text, thinking);
 
         // wrap token in batch for decoding
         impl->setBatch(batch, &newTokenId, 1);
