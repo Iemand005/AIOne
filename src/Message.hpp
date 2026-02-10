@@ -17,12 +17,13 @@ struct Message {
   Message& operator=(const Message& other) = default;
   Message& operator=(Message&& other) noexcept = default;
 
-  Message() {
+  Message(uint64_t parentId = 0) {
       this->timestamps.start();
       this->id = timestamps.randomId();
+      this->parentId = parentId;
   }
 
-  Message(std::string role, std::string content, uint64_t parentId = 0) : Message() {
+  Message(std::string role, std::string content, uint64_t parentId = 0) : Message(parentId) {
       this->parentId = parentId;
       this->role = role;
       this->content = content;
@@ -36,15 +37,6 @@ struct Message {
                   << ", content size: " << content.size() 
                   << std::endl;
     }
-    
-  // std::string roleToString(Role role) {
-  //   switch (role) {
-  //     case Role::System: return "system";
-  //     case Role::Assistant: return "assistant";
-  //     case Role::User: return "user";
-  //     default: return "unknown";
-  //   }
-  // }
 
   void finished() { this->timestamps.update(); }
 };

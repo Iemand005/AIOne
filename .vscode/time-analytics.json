@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "project": {
-    "totalFocusTime": 3113816,
-    "totalActiveTime": 287937
+    "totalFocusTime": 3127422,
+    "totalActiveTime": 337767
   },
   "files": {
     "CMakePresets.json": {
@@ -10,12 +10,12 @@
       "focus": 284428
     },
     "src/LLModel.hpp": {
-      "pending": 239336,
-      "focus": 358077
+      "pending": 249308,
+      "focus": 371480
     },
     "src/LLModel.cpp": {
       "pending": 18030,
-      "focus": 339433
+      "focus": 348540
     },
     "src/ModelFactory.hpp": {
       "pending": 0,
@@ -46,8 +46,20 @@
       "focus": 112095
     },
     "src/ChatManager.hpp": {
-      "pending": 0,
-      "focus": 1937
+      "pending": 9965,
+      "focus": 11902
+    },
+    "src/TextGenResult.hpp": {
+      "pending": 9965,
+      "focus": 9965
+    },
+    "src/Chat.hpp": {
+      "pending": 9964,
+      "focus": 9964
+    },
+    "src/Message.hpp": {
+      "pending": 9964,
+      "focus": 9964
     }
   }
 }

@@ -392,10 +392,14 @@ TextGenResult LLModel::complete(
 
     generating = false;
 
-    return {
+    TextGenResult result = {
         /*tokensEvaluated = */ promptTokens.size(),
         /*tokensGenerated = */ tokensGenerated,
         /*tokensCached    = */ cacheMissIndex,
         /*output          = */ Message{Role::Assistant, output}
     };
+
+    //if (options.onDone) // TODO: move ondone callback to here!
+
+    return result;
 }
