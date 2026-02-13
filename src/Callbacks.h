@@ -10,3 +10,31 @@ template<typename T>
 using FinishedTCallback = std::function<void(T)>;
 
 typedef FinishedTCallback<void> FinishedCallback;
+
+// template <typename BaseT>
+// struct ResponseAsync : BaseT
+// {
+//     FinishedCallback onDone = nullptr;
+
+//     bool done() {
+//       if (onDone) {
+//         onDone();
+//         return true;
+//       }
+//       return false;
+//     }
+// };
+
+struct CallbackAsyncBase
+{
+    FinishedCallback onDone = nullptr;
+
+    bool done() const {
+      if (onDone) {
+        onDone();
+        return true;
+      }
+      return false;
+    }
+};
+

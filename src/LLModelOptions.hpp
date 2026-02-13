@@ -14,7 +14,7 @@ struct LLModelOptions : ModelOptions, TextContextOptions
     bool useMmap = false;
 };
 
-struct LLModelOptionsAsync : LLModelOptions
+struct LLModelOptionsAsync : CallbackAsyncBase, LLModelOptions
 {
-    FinishedCallback onDone = nullptr;
+    // FinishedCallback onDone = nullptr;
 };

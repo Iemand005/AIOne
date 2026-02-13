@@ -23,3 +23,16 @@ struct SDModelOptions : ModelOptions {
 
   ProgressCallback onProgress = nullptr;
 };
+
+struct SDModelOptionsAsync : CallbackAsyncBase, SDModelOptions
+{
+    // FinishedCallback onDone = nullptr;
+
+    // bool done() {
+    //   if (onDone) {
+    //     onDone();
+    //     return true;
+    //   }
+    //   return false;
+    // }
+};

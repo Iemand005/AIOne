@@ -9,9 +9,7 @@
 
 class ModelManager {
   ModelFactoryPtr factory;
-
   ChatManagerPtr chatManager;
-
   LLModelPtr llm;
 
  public:
