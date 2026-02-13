@@ -39,5 +39,4 @@ struct TextGenOptions : TextGenOptionsBase
 
 struct AsyncTextGenOptions : TextGenOptions {
     TextFinishCallback onDone = nullptr;
-    
 };

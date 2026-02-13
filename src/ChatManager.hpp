@@ -1,5 +1,11 @@
 #pragma once
 
+#include <string>
+#include <iostream>
+#include <sstream>
+#include <locale>
+#include <codecvt>
+
 #include "ModelFactory.hpp"
 #include "Chat.hpp"
 

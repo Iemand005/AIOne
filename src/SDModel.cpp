@@ -101,7 +101,8 @@ bool SDModel::saveImageAsPNG(const SDImage& imageo, const std::string& filename)
         previewCallback = callback;
         sd_set_preview_callback([](int step, int batchSize, sd_image_t* image, bool isNoisy, void* data) {
             auto model = (SDModel *)data;
-            if (model->previewCallback) model->previewCallback(step, &model->impl->toSDImage(*image), isNoisy);
+            SDImage sdImage = model->impl->toSDImage(*image);
+            if (model->previewCallback) model->previewCallback(step, &sdImage, isNoisy);
             else model->clearPreviewCallback();
         }, impl->toPreviewT(mode), 1, true, true, this);
     }
