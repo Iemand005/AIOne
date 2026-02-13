@@ -27,11 +27,6 @@ public:
         std::thread(func).detach();
     }
 
-    // template<typename ReturnT>
-    // void runAsync(std::function<void()> func, FinishedCallback<ReturnT> cb) {
-    //     std::thread(func).detach();
-    // }
-
     LLModelPtr loadLLM(const std::string path, LLModelOptions options) {
         initLlama();
         return std::make_unique<LLModel>(path, options);
