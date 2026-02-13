@@ -1,90 +1,81 @@
 #pragma once
 
-#include <vector>
-#include <functional>
-#include <fstream>
 #include <chrono>
-#include <sstream>
 #include <ctime>
+#include <fstream>
+#include <functional>
 #include <iostream>
 #include <mutex>
-
+#include <sstream>
+#include <vector>
 
 #include "AIOneAPI.hpp"
 #include "Message.hpp"
 // #include "Role.h"
-#include "Timeable.hpp"
 #include "TextContext.hpp"
 #include "TextGenOptions.hpp"
+#include "Timeable.hpp"
 
 class AIONE_API Chat {
-    unsigned long id = 0;
-    std::vector<Message> messages = std::vector<Message>();
-    TextGenOptions options = {};
-    Timestamps timestamps;
-    std::mutex messagesMutex;
+  unsigned long id = 0;
+  std::vector<Message> messages = std::vector<Message>();
+  TextGenOptions options = {};
+  Timestamps timestamps;
+  std::mutex messagesMutex;
 
-    std::shared_ptr<TextContext> context;
+  std::shared_ptr<TextContext> context;
 
-    size_t addMessageNoLock(Role role, std::string message, bool save = true) {
-        return addMessageNoLock(Message(role, message), save);
+  size_t addMessageNoLock(Role role, std::string message, bool save = true) { return addMessageNoLock(Message(role, message), save); }
+
+  size_t addMessageNoLock(std::string role, std::string message, bool save = true) { return addMessageNoLock(Message(role, message), save); }
+
+  size_t addMessageNoLock(Message message, bool save = true) {
+    if (messages.size() > 0) {
+      uint64_t parentId = messages[messages.size() - 1].id;
+      message.parentId = parentId;
     }
 
-    size_t addMessageNoLock(std::string role, std::string message, bool save = true) {
-        return addMessageNoLock(Message(role, message), save);
-    }
+    messages.push_back(message);
 
-    size_t addMessageNoLock(Message message, bool save = true) {
-        if (messages.size() > 0) {
-            uint64_t parentId = messages[messages.size() - 1].id;
-            message.parentId = parentId;
-        }
+    timestamps.update();
 
-        messages.push_back(message);
+    if (save) saveMessage(message);
 
-        timestamps.update();
+    return messages.size() - 1;
+  }
 
-        if (save) saveMessage(message);
+ public:
+  Chat(std::string systemPrompt = "") {
+    messages = std::vector<Message>();
 
-        return messages.size() - 1;
-    }
+    timestamps.start();
 
-public:
-    Chat(std::string systemPrompt = "") {        
-        messages = std::vector<Message>();
-        
-        timestamps.start();
+    this->setSystemPrompt(systemPrompt);
+  }
 
-        this->setSystemPrompt(systemPrompt);
-    }
+  Chat(std::shared_ptr<TextContext> newContext) { context = newContext; }
 
-    Chat(std::shared_ptr<TextContext> newContext) {
-      context = newContext;
-    }
-
-    ~Chat() {
-
-    }
+  ~Chat() {}
 
   size_t addMessage(Role role, std::string message, bool save = true) {
-      std::lock_guard<std::mutex> lock(messagesMutex);
+    std::lock_guard<std::mutex> lock(messagesMutex);
     return addMessageNoLock(Message(role, message), save);
   }
 
   size_t addMessage(std::string role, std::string message, bool save = true) {
-      std::lock_guard<std::mutex> lock(messagesMutex);
+    std::lock_guard<std::mutex> lock(messagesMutex);
     return addMessageNoLock(Message(role, message), save);
   }
 
   Message getLastMessage() {
     std::lock_guard<std::mutex> lock(messagesMutex);
     if (messages.size() < 1) return {};
-    return messages[messages.size() -1];
+    return messages[messages.size() - 1];
   }
 
   size_t addMessage(Message message, bool save = true) {
     std::lock_guard<std::mutex> lock(messagesMutex);
-      return addMessageNoLock(message, save);
+    return addMessageNoLock(message, save);
   }
 
   Message createAndAddEmptyMessage(Role role) {
@@ -102,11 +93,12 @@ public:
   }
 
   void setSystemPrompt(std::string prompt) {
-      std::lock_guard<std::mutex> lock(messagesMutex);
+    std::lock_guard<std::mutex> lock(messagesMutex);
     std::cout << "[DEBUG] addMessage called. 1 Current size: " << messages.size() << " Thread ID: " << std::this_thread::get_id() << std::endl;
     if (!messages.empty())
-        messages[0].content = prompt;
-    else this->addMessageNoLock(Role::System, prompt);
+      messages[0].content = prompt;
+    else
+      this->addMessageNoLock(Role::System, prompt);
     std::cout << "[DEBUG] addMessage called. 2 Current size: " << messages.size() << " Thread ID: " << std::this_thread::get_id() << std::endl;
   }
 
@@ -115,9 +107,7 @@ public:
     return messages;
   }
 
-  TextGenOptions *getOptions() {
-    return &options;
-  }
+  TextGenOptions* getOptions() { return &options; }
 
-  void saveMessage(Message &message);
+  void saveMessage(Message& message);
 };
