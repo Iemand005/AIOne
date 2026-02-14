@@ -1,14 +1,9 @@
-
-
 #include <llama-cpp.h>
 #include <ggml-backend.h>
 #include <llama-context.h>
 #include <common/chat.h>
 
 #include "LlamaUtil.hpp"
-
-
-#pragma once
 
 #include "LLModel.hpp"
 
@@ -49,9 +44,8 @@ struct LLModel::Impl {
     // struct manually to point to the vector's data for memory efficiency
     // (it's not much but let me have my 4 kB of memory savings okay)
 
-    if (maxBatchSize <= 0) {
+    if (maxBatchSize <= 0)
         throw std::runtime_error("Cannot create a batch with maximum size " + maxBatchSize);
-    }
     
     batch.n_tokens = maxBatchSize;
 
@@ -187,23 +181,9 @@ LLModel::LLModel(const std::string path, const LLModelOptions &options) : impl(s
     impl->vocab = llama_model_get_vocab(impl->model.get());
 
     // create llama context
-    if (!resetWithOptions(options)) {
+    if (!resetWithOptions(options))
         throw std::runtime_error("Failed to create context");
-    }
 }
-
-
-LLModel::~LLModel()
-    {
-        for (auto& thread : activeThreads)
-            if (thread.joinable()) thread.join();
-        destroy();
-        // Smart pointers handle cleanup automatically
-    }
-
-
-
-
 
 bool LLModel::resetWithOptions(const TextContextOptions &options) {
     if (generating) return false;
@@ -249,6 +229,11 @@ TextGenResult LLModel::complete(
     TextGenOptions options
 ) {
     generating = true;
+
+    auto onError = [&](std::string const& message) {
+      generating = false;
+      throw std::runtime_error(message);
+    };
     
     bool thinking = false;
     llama_token thinkStartToken = getToken("<think>");
@@ -294,24 +279,15 @@ TextGenResult LLModel::complete(
         if (llama_model_has_encoder(impl->model.get()))
         {
             if (llama_encode(impl->context.get(), batch))
-            {
-                generating = false;
-                throw std::runtime_error("Failed to evaluate input tokens");
-            }
+              onError("Failed to evaluate input tokens");
         }
         else
         {
             if (remainingTokens <= maxBatchSize)
-            {
-                // this is the last batch, which will be processed in the generation loop
-                break;
-            }
+                break; // this is the last batch, which will be processed in the generation loop
 
             if (llama_decode(impl->context.get(), batch))
-            {
-                generating = false;
-                throw std::runtime_error("Failed to evaluate input tokens");
-            }
+              onError("Failed to evaluate input tokens");
         }
 
         if(options.onInputEval) options.onInputEval((float)i / promptTokens.size());
@@ -344,10 +320,7 @@ TextGenResult LLModel::complete(
 
         // decode last batch (either input or the newly generated token)
         if (llama_decode(impl->context.get(), batch)) // TODO if it fails, it fucks up the context :<
-        {
-            generating = false;
-            throw std::runtime_error("Failed to evaluate input tokens");
-        }
+          onError("Failed to evaluate input tokens");
 
         pos += batch.n_tokens;
 
@@ -373,7 +346,7 @@ TextGenResult LLModel::complete(
         bool outputSpecial = false;
         int tokenSize = llama_token_to_piece(impl->vocab, newTokenId, tokenBuffer, sizeof(tokenBuffer), 0, outputSpecial);
         if (tokenSize < 0)
-        throw std::runtime_error("Failed to evaluate input tokens");
+          onError("Failed to evaluate input tokens");
         
         std::string text(tokenBuffer, tokenSize);
         
@@ -390,7 +363,7 @@ TextGenResult LLModel::complete(
     impl->freeBatch(batch);
     // llama_sampler_free(sampler.get()); important: do not free if the sampler has been added to a llama_sampler_chain (via llama_sampler_chain_add)
 
-    generating = false;
+
 
     TextGenResult result = {
         /*tokensEvaluated = */ promptTokens.size(),
@@ -400,6 +373,14 @@ TextGenResult LLModel::complete(
     };
 
     //if (options.onDone) // TODO: move ondone callback to here!
-
+    generating = false;
     return result;
+}
+
+
+LLModel::~LLModel()
+{
+  for (auto& thread : activeThreads)
+    if (thread.joinable()) thread.join();
+  destroy();
 }
