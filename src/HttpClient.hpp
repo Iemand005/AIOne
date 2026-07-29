@@ -13,7 +13,7 @@ struct HttpResponse {
 };
 
 class HttpClient {
-    httplib::Client cli;
+    httplib::SSLClient cli;
 public:
     HttpClient(const std::string& host)
         : cli(host) {}
@@ -23,8 +23,7 @@ public:
         if (res) {
             return { res->status, res->body };
         }
-        return { 0, "", httplib::to_string(res.error()), res.error(),
-                 res.ssl_error(), res.ssl_backend_error() };
+        return { 0, "", httplib::to_string(res.error()), res.error() };
     }
 
     HttpResponse Post(const std::string& path, const std::string& body, const std::string& contentType, const httplib::Headers& headers = {}) {
@@ -32,7 +31,6 @@ public:
         if (res) {
             return { res->status, res->body };
         }
-        return { 0, "", httplib::to_string(res.error()), res.error(),
-                 res.ssl_error(), res.ssl_backend_error() };
+        return { 0, "", httplib::to_string(res.error()), res.error() };
     }
 };
