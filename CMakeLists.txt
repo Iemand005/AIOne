@@ -177,6 +177,10 @@ if(AIONE_VULKAN)
     endif()
 endif()
 
+find_package(OpenSSL 3.0.0 COMPONENTS SSL Crypto REQUIRED)
+message(STATUS "OpenSSL found: ${OPENSSL_VERSION}")
+add_definitions(-DCPPHTTPLIB_OPENSSL_SUPPORT)
+
 if(AIONE_OPENCL)
     set(LLAMA_CLBLAST ON CACHE BOOL "Enable CLBlast for OpenCL" FORCE)
     set(SD_OPENCL ON CACHE BOOL "Enable Stable Diffusion OpenCL" FORCE)
@@ -293,6 +297,10 @@ target_link_libraries(AIOneCore PRIVATE
     llama
     common
 )
+
+if(OPENSSL_FOUND)
+    target_link_libraries(AIOneCore PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+endif()
 
 target_include_directories(AIOneCore PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
