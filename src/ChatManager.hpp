@@ -9,6 +9,10 @@
 #include "Chat.hpp"
 #include "ModelFactory.hpp"
 
+#include "./Providers/ILLMProvider.hpp"
+
+using namespace AIOne;
+
 class ChatManager {
 	std::unique_ptr<ModelFactory> factory;
 	std::vector<std::shared_ptr<Chat>> chats;
@@ -17,9 +21,12 @@ class ChatManager {
 	Role userRole = Role::User;  // if user wants to switch role I guess
 	bool needsNewLineTrim = false;
 
-	
+
 
  public:
+
+	 ChatManager(ILLMProvider& provider) : provider(provider) {}
+
   ChatManager(LLModel* model, std::string systemPrompt = "") : model(model) {
     factory = std::make_unique<ModelFactory>();
     chats = std::vector<std::shared_ptr<Chat>>();
@@ -81,6 +88,10 @@ class ChatManager {
   void setSystemPrompt(std::string prompt) { currentChat->setSystemPrompt(prompt); }
 
   TextGenOptions* currentChatOptions() { return currentChat->getOptions(); }
+
+private:
+
+    ILLMProvider& provider;
 };
 
 typedef std::unique_ptr<ChatManager> ChatManagerPtr;
