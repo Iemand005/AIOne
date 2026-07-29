@@ -2,6 +2,8 @@
 
 #include "ILLMProvider.hpp"
 
+#include "..//HttpClient.hpp"
+
 namespace AIOne {
     class OpenAIProvider : public ILLMProvider {
     public:
@@ -12,6 +14,8 @@ namespace AIOne {
         std::vector<Message> complete(const std::string& model, const std::vector<Message>& messages) override;
 
     private:
-        std::string baseUrl, apiKey;
+		HttpClient http;
+        std::string  apiKey;
+
     };
 }
