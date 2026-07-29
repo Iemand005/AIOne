@@ -8,8 +8,7 @@
 
 namespace AIOne {
     struct ModelInfo {
-        std::string id;
-        std::string provider;
+        std::string id, provider;
     };
 
 
@@ -19,9 +18,6 @@ namespace AIOne {
 
         virtual std::vector<ModelInfo> getModels() = 0;
 
-        virtual std::vector<Message> complete(
-            const std::string& model,
-            const std::vector<Message>& messages
-        ) = 0;
+        virtual std::vector<Message> complete(const std::string& model, const std::vector<Message>& messages) = 0;
     };
 }
