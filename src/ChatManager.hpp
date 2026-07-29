@@ -96,7 +96,10 @@ class ChatManager {
 
   void sendAsAsync(std::string message, std::string role, const AsyncTextGenOptions& options = {}) {
     currentChat->addMessage(role, message);
-    model->generateAsync(currentChat, options);
+	if (provider) {
+		proivder->c
+	}
+    else model->generateAsync(currentChat, options);
   }
 
   void completeAsync(std::string message, const AsyncTextGenOptions& options = {}) { model->generateAsync(currentChat, Message(userRole, message), options); }

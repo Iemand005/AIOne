@@ -5,6 +5,7 @@
 
 // #include "../Opena"
 #include "../Message.hpp"
+#include "../TextGenOptions.hpp"
 
 namespace AIOne {
 	struct ModelInfo {
@@ -18,6 +19,6 @@ namespace AIOne {
 
 		virtual std::vector<ModelInfo> getModels() = 0;
 
-		virtual std::vector<Message> complete(const std::string& model, const std::vector<Message>& messages) = 0;
+		virtual void complete(const std::string& model, const std::vector<Message>& messages, const AsyncTextGenOptions& options) = 0;
 	};
 }
