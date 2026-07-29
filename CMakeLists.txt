@@ -177,9 +177,8 @@ if(AIONE_VULKAN)
     endif()
 endif()
 
-find_package(OpenSSL 3.0.0 COMPONENTS SSL Crypto REQUIRED)
-message(STATUS "OpenSSL found: ${OPENSSL_VERSION}")
-add_definitions(-DCPPHTTPLIB_OPENSSL_SUPPORT)
+add_subdirectory(${THIRD_PARTY_DIR}/wolfssl ${CMAKE_BINARY_DIR}/wolfssl_build)
+add_definitions(-DCPPHTTPLIB_WOLFSSL_SUPPORT)
 
 if(AIONE_OPENCL)
     set(LLAMA_CLBLAST ON CACHE BOOL "Enable CLBlast for OpenCL" FORCE)
@@ -298,9 +297,7 @@ target_link_libraries(AIOneCore PRIVATE
     common
 )
 
-if(OPENSSL_FOUND)
-    target_link_libraries(AIOneCore PRIVATE OpenSSL::SSL OpenSSL::Crypto)
-endif()
+target_link_libraries(AIOneCore PUBLIC wolfssl)
 
 target_include_directories(AIOneCore PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
