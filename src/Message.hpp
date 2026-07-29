@@ -8,7 +8,7 @@
 
 struct Message {
   unsigned long long id, parentId;
-  std::string role;
+  std::string role; // TODO  Store enum value instead and convert when setting? but I left it string to ssupport any custo role in case needed..
   std::string content;
   Timestamps timestamps;
 
