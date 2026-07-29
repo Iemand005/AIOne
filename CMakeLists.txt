@@ -274,6 +274,8 @@ if(AIONE_BUILD_SHARED_LIBS)
 else()
 endif()
 
+target_compile_definitions(AIOneCore PUBLIC CPPHTTPLIB_WOLFSSL_SUPPORT)
+
 # target_compile_definitions(AIOneCore PUBLIC LLAMA_UWP)
 
 # Add header files to the library (for IDE support)
