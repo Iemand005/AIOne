@@ -68,28 +68,28 @@ class ChatManager {
     sendAsAsync(message, userRole, newOptions);
   }
 
-  void sendAsAsync(std::string message, Role role, const AsyncTextGenOptions& options = {}) {
-    sendAsAsync(message, RoleClass::toString(role), options);
-  }
+	void sendAsAsync(std::string message, Role role, const AsyncTextGenOptions& options = {}) {
+		sendAsAsync(message, RoleClass::toString(role), options);
+	}
 
-  void sendAsAsync(std::string message, std::string role, const AsyncTextGenOptions& options = {}) {
-    currentChat->addMessage(role, message);
+	void sendAsAsync(std::string message, std::string role, const AsyncTextGenOptions& options = {}) {
+	currentChat->addMessage(role, message);
 	if (provider) {
 		auto msgCopy = currentChat->getMessages();
 		std::thread([this, msgCopy, options]() {
 			provider->complete(selectedModel, msgCopy, options);
 		}).detach();
 	}
-    else model->generateAsync(currentChat, options);
-  }
+	else model->generateAsync(currentChat, options);
+	}
 
-  void completeAsync(std::string message, const AsyncTextGenOptions& options = {}) {
-	  model->generateAsync(currentChat, Message(userRole, message), options);
-  }
+	void completeAsync(std::string message, const AsyncTextGenOptions& options = {}) {
+		model->generateAsync(currentChat, Message(userRole, message), options);
+	}
 
-  void completeAsAsync(std::string message, std::string role, const AsyncTextGenOptions& options = {}) {
-	  model->generateAsync(currentChat, Message(role, message), options);
-  }
+	void completeAsAsync(std::string message, std::string role, const AsyncTextGenOptions& options = {}) {
+		model->generateAsync(currentChat, Message(role, message), options);
+	}
 
   void setModel(LLModel* model) { this->model = model; }
   void setModel(const std::string& model) { selectedModel = model; }
