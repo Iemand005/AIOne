@@ -1,4 +1,8 @@
-#import <string>
+#include <string>
+
+struct HttpResponse {
+    std::string body;
+};
 
 class HttpClient
 {
