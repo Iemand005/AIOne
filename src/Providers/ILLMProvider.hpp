@@ -1,12 +1,4 @@
-struct ChatMessage {
-    std::string role;
-    std::string content;
-};
 
-struct ModelInfo {
-    std::string id;
-    std::string provider;
-};
 
 class ILLMProvider {
 public:
