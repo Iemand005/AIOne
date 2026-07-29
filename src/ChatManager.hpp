@@ -91,7 +91,7 @@ class ChatManager {
 
 private:
 
-    ILLMProvider& provider;
+    ILLMProvider* provider = nullptr;
 };
 
 typedef std::unique_ptr<ChatManager> ChatManagerPtr;
