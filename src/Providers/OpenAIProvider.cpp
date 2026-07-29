@@ -23,3 +23,7 @@ std::vector<ModelInfo> OpenAIProvider::getModels() {
 	}
 	return models;
 }
+
+void OpenAIProvider::complete(const std::string& model, const std::vector<Message>& messages, const AsyncTextGenOptions& options) {
+
+}

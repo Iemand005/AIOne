@@ -5,17 +5,17 @@
 #include "..//HttpClient.hpp"
 
 namespace AIOne {
-    class OpenAIProvider : public ILLMProvider {
-    public:
-        OpenAIProvider(std::string baseUrl, std::string apiKey);
+	class OpenAIProvider : public ILLMProvider {
+	public:
+		OpenAIProvider(std::string baseUrl, std::string apiKey);
 
-        std::vector<ModelInfo> getModels() override;
+		std::vector<ModelInfo> getModels() override;
 
-        std::vector<Message> complete(const std::string& model, const std::vector<Message>& messages) override;
+		void complete(const std::string& model, const std::vector<Message>& messages, const AsyncTextGenOptions& options) override;
 
-    private:
+	private:
 		HttpClient http;
-        std::string  apiKey;
+		std::string  apiKey;
 
-    };
+	};
 }
