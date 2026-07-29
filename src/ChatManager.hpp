@@ -26,35 +26,13 @@ class ChatManager {
 
  public:
 
-	 ChatManager(ILLMProvider& provider) : provider(&provider) {}
+	ChatManager(ILLMProvider& provider) : provider(&provider) {}
 
   ChatManager(LLModel* model, std::string systemPrompt = "") : model(model) {
     factory = std::make_unique<ModelFactory>();
     chats = std::vector<std::shared_ptr<Chat>>();
     currentChat = std::make_shared<Chat>(model->createContext());
   };
-
-	// void sendAsync(std::string text, const AsyncTextGenOptions& options)
-	// {
-	// 	currentChat->addMessage(Role::User, text);
-	// 	// history.emplace_back(Role::User, text);
-
-	// 	provider->complete(
-	// 		model,
-	// 		history,
-	// 		{
-	// 			.onToken = [this](const std::string& token)
-	// 			{
-	// 				currentResponse += token;
-	// 			},
-
-	// 			.onFinished = [this](const Message& msg)
-	// 			{
-	// 				history.push_back(msg);
-	// 			}
-	// 		}
-	// 	);
-	// }
 
   void sendAsync(std::wstring message, const AsyncTextGenOptions& options = {}) {
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
@@ -97,7 +75,7 @@ class ChatManager {
   void sendAsAsync(std::string message, std::string role, const AsyncTextGenOptions& options = {}) {
     currentChat->addMessage(role, message);
 	if (provider) {
-		proivder->complete();
+		provider->complete(selectedModel, currentChat->getMessages(), options);
 	}
     else model->generateAsync(currentChat, options);
   }
@@ -117,6 +95,7 @@ class ChatManager {
 private:
 
     ILLMProvider* provider = nullptr;
+	std::string selectedModel;
 };
 
 typedef std::unique_ptr<ChatManager> ChatManagerPtr;
