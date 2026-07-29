@@ -302,5 +302,6 @@ target_include_directories(AIOneCore PUBLIC
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/src>
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/vendor>
     $<BUILD_INTERFACE:${STABLE_DIFFUSION_CPP_DIR}>
+    $<BUILD_INTERFACE:${THIRD_PARTY_DIR}/cpp-httplib>
     $<INSTALL_INTERFACE:include/AIOneCore>
 )
