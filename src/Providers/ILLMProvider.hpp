@@ -19,7 +19,7 @@ namespace AIOne {
 
         virtual std::vector<ModelInfo> getModels() = 0;
 
-        virtual std::string complete(
+        virtual std::vector<Message> complete(
             const std::string& model,
             const std::vector<Message>& messages
         ) = 0;

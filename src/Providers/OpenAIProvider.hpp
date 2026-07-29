@@ -2,15 +2,15 @@
 
 #include "ILLMProvider.hpp"
 
-class OpenAIProvider : public ILLMProvider {
+class OpenAIProvider : public AIOne::ILLMProvider {
 public:
     OpenAIProvider(
         std::string baseUrl,
         std::string apiKey);
 
-    std::vector<ModelInfo> getModels() override;
+    std::vector<AIOne::ModelInfo> getModels() override;
 
-    Message complete(
+    std::vector<Message> complete(
         const std::string& model,
         const std::vector<Message>& messages) override;
 
