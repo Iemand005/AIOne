@@ -1,4 +1,4 @@
-<string>
+#import <string>
 
 class HttpClient
 {
