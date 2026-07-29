@@ -84,12 +84,10 @@ class ChatManager {
   }
 
   void completeAsync(std::string message, const AsyncTextGenOptions& options = {}) {
-	  if (provider) return; // Not supported with cloud providers
 	  model->generateAsync(currentChat, Message(userRole, message), options);
   }
 
   void completeAsAsync(std::string message, std::string role, const AsyncTextGenOptions& options = {}) {
-	  if (provider) return;
 	  model->generateAsync(currentChat, Message(role, message), options);
   }
 
