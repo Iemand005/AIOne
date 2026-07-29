@@ -10,12 +10,14 @@
 #include "ModelFactory.hpp"
 
 class ChatManager {
-  std::unique_ptr<ModelFactory> factory;
-  std::vector<std::shared_ptr<Chat>> chats;
-  std::shared_ptr<Chat> currentChat;
-  LLModel* model;
-  Role userRole = Role::User;  // if user wants to switch role I guess
-  bool needsNewLineTrim = false;
+	std::unique_ptr<ModelFactory> factory;
+	std::vector<std::shared_ptr<Chat>> chats;
+	std::shared_ptr<Chat> currentChat;
+	LLModel* model;
+	Role userRole = Role::User;  // if user wants to switch role I guess
+	bool needsNewLineTrim = false;
+
+	
 
  public:
   ChatManager(LLModel* model, std::string systemPrompt = "") : model(model) {
