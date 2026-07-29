@@ -1,3 +1,15 @@
+#pragma once
+
+#include <string>
+#include <vector>
+
+// #include "../Opena"
+#include "../Message.hpp"
+
+struct ModelInfo {
+    std::string id;
+    std::string provider;
+};
 
 
 class ILLMProvider {
@@ -8,6 +20,6 @@ public:
 
     virtual std::string complete(
         const std::string& model,
-        const std::vector<ChatMessage>& messages
+        const std::vector<Message>& messages
     ) = 0;
 };

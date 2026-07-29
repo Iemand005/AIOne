@@ -6,7 +6,7 @@
 #include "Role.h"
 #include "Timeable.hpp"
 
-struct Message {
+struct Message { // TODO: erename to chatmessage? just to be clear
   unsigned long long id, parentId;
   std::string role; // TODO  Store enum value instead and convert when setting? but I left it string to ssupport any custo role in case needed..
   std::string content;
