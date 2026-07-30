@@ -56,7 +56,7 @@ class ChatManager {
     };
     if (sanitizeReasoning) {
       newOptions.onThinkStateChange = [this, options](bool thinking) {
-        if (!thinking) needsNewLineTrim = true;  // Thinking ended, cut out the newlines that come inbetween this and the first word.
+        if (!thinking) needsNewLineTrim = true;
         if (options.onThinkStateChange) options.onThinkStateChange(thinking);
       };
       newOptions.onToken = [this, options](const std::string& token) {
@@ -69,6 +69,39 @@ class ChatManager {
     }
     if (!newOptions.systemPrompt.empty()) setSystemPrompt(newOptions.systemPrompt);
     sendAsAsync(message, userRole, newOptions);
+  }
+
+  void regenerateAsync(uint64_t parentId, const AsyncTextGenOptions& options = {}, bool sanitizeReasoning = true) {
+    AsyncTextGenOptions newOptions = options;
+    newOptions.onDone = [this, options, parentId](const TextGenResult& output) {
+      Message msg = output.output;
+      msg.parentId = parentId;
+      currentChat->addMessage(msg);
+      if (options.onDone) options.onDone(output);
+    };
+    if (sanitizeReasoning) {
+      newOptions.onThinkStateChange = [this, options](bool thinking) {
+        if (!thinking) needsNewLineTrim = true;
+        if (options.onThinkStateChange) options.onThinkStateChange(thinking);
+      };
+      newOptions.onToken = [this, options](const std::string& token) {
+        auto trimmedToken = token;
+        if (needsNewLineTrim) trimmedToken = trimLeadingNewlines(token);
+        if (trimmedToken.empty()) return;
+        needsNewLineTrim = false;
+        if (options.onToken) options.onToken(trimmedToken);
+      };
+    }
+    auto contextMsgs = currentChat->getMessageChain(parentId);
+    if (provider) {
+      auto msgsCopy = contextMsgs;
+      std::thread([this, msgsCopy, newOptions]() {
+        provider->complete(selectedModel, msgsCopy, newOptions);
+      }).detach();
+    } else {
+      std::string prompt = model->chatToPrompt(contextMsgs);
+      model->generateAsync(prompt, newOptions);
+    }
   }
 
 	void sendAsAsync(std::string message, Role role, const AsyncTextGenOptions& options = {}) {
