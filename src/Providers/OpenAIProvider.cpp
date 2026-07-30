@@ -44,7 +44,7 @@ void OpenAIProvider::complete(const std::string& model, const std::vector<Messag
 	nlohmann::json reqBody;
 	reqBody["model"] = model;
 	reqBody["messages"] = msgsJson;
-	reqBody["max_tokens"] = options.maxTokens;
+	if (options.maxTokens > 0) reqBody["max_tokens"] = options.maxTokens;
 	reqBody["temperature"] = options.temperature;
   // reqBody["min_p"] = options.minP;
 	reqBody["stream"] = true;
