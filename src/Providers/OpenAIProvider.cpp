@@ -46,7 +46,7 @@ void OpenAIProvider::complete(const std::string& model, const std::vector<Messag
 	reqBody["messages"] = msgsJson;
 	reqBody["max_tokens"] = options.maxTokens;
 	reqBody["temperature"] = options.temperature;
-	reqBody["min_p"] = options.minP;
+  // reqBody["min_p"] = options.minP;
 	reqBody["stream"] = true;
 	if (options.seed != 0xFFFFFFFF) reqBody["seed"] = options.seed;
 

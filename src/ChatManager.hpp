@@ -26,7 +26,9 @@ class ChatManager {
 
  public:
 
-	ChatManager(ILLMProvider& provider) : provider(&provider) {}
+	ChatManager(ILLMProvider& provider) : provider(&provider) {
+		currentChat = std::make_shared<Chat>();
+	}
 
   ChatManager(LLModel* model, std::string systemPrompt = "") : model(model) {
     factory = std::make_unique<ModelFactory>();
