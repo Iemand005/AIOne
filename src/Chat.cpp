@@ -1,30 +1,27 @@
 #include "Chat.hpp"
 
-void Chat::saveMessage(Message &message) {
-    if (m_chatFolder.empty()) return;
-    std::string path = m_chatFolder + "/messages.jsonl";
-    std::ofstream(path, std::ios::app) << nlohmann::json{
+// function 
+nlohmann::json toJson(const Message &message) {
+	return nlohmann::json{
         {"id", message.id},
         {"parentId", message.parentId},
         {"creationTime", message.timestamps.creationTime},
         {"finishTime", message.timestamps.modificationTime},
         {"role", message.role},
         {"content", message.content}
-    }.dump() << '\n';
+    };
+}
+
+void Chat::saveMessage(Message &message) {
+    if (m_chatFolder.empty()) return;
+    std::string path = m_chatFolder + "/messages.jsonl";
+    std::ofstream(path, std::ios::app) << toJson(message).dump() << '\n';
 }
 
 nlohmann::json Chat::toJson() const {
     nlohmann::json msgArray = nlohmann::json::array();
-    for (const auto& msg : messages) {
-        msgArray.push_back({
-            {"id", msg.id},
-            {"parentId", msg.parentId},
-            {"role", msg.role},
-            {"content", msg.content},
-            {"creationTime", msg.timestamps.creationTime},
-            {"modificationTime", msg.timestamps.modificationTime}
-        });
-    }
+    for (const auto& message : messages)
+        msgArray.push_back(toJson(message));
 
     return {
         {"version", 1},
