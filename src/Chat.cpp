@@ -1,7 +1,6 @@
 #include "Chat.hpp"
 
-// function 
-nlohmann::json toJson(const Message &message) {
+snlohmann::json toJson(const Message &message) {
 	return nlohmann::json{
         {"id", message.id},
         {"parentId", message.parentId},
