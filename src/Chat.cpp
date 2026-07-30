@@ -1,4 +1,5 @@
 #include "Chat.hpp"
+#include <fstream>
 
 nlohmann::json toJsong(const Message &message) {
 	return nlohmann::json{

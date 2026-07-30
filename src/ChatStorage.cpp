@@ -118,6 +118,7 @@ std::vector<Message> ChatStorage::loadMessages(const std::string& folder) {
         if (line.empty()) continue;
         try {
             auto j = nlohmann::json::parse(line);
+            if (j.is_array() && !j.empty()) j = j[0]; // t TODO: this is for a fallback pls remooove later i mean alredy no need
             Message msg;
             msg.id = j.value("id", 0ULL);
             msg.parentId = j.value("parentId", 0ULL);
