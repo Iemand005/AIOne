@@ -104,12 +104,12 @@ class AIONE_API Chat {
 
   void setSystemPrompt(std::string prompt) {
     std::lock_guard<std::mutex> lock(*messagesMutex);
-    std::cout << "[DEBUG] addMessage called. 1 Current size: " << messages.size() << " Thread ID: " << std::this_thread::get_id() << std::endl;
-    if (!messages.empty())
+    if (!messages.empty()) {
+      messages[0].role = "system";
       messages[0].content = prompt;
-    else
+    } else {
       this->addMessageNoLock(Role::System, prompt);
-    std::cout << "[DEBUG] addMessage called. 2 Current size: " << messages.size() << " Thread ID: " << std::this_thread::get_id() << std::endl;
+    }
   }
 
   std::vector<Message> getMessages() {

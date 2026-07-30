@@ -184,7 +184,12 @@ class ChatManager {
     auto meta = ChatStorage::loadMetadata(folder);
     auto msgs = ChatStorage::loadMessages(folder);
 
-    auto chat = std::make_shared<Chat>(meta.systemPrompt);
+    auto chat = std::make_shared<Chat>();
+    if (!msgs.empty() && msgs[0].role == "system") {
+      chat->setSystemPrompt(msgs[0].content);
+    } else if (!meta.systemPrompt.empty()) {
+      chat->setSystemPrompt(meta.systemPrompt);
+    }
     chat->setFolder(fullPath);
     chat->setModel(meta.model);
     chat->setMessages(std::move(msgs));
@@ -198,7 +203,8 @@ class ChatManager {
     meta.folder = currentChat->folder();
     meta.title = guessChatTitle();
     meta.model = currentChat->model();
-    meta.systemPrompt = currentChat->getMessages().empty() ? "" : currentChat->getMessages()[0].content;
+    auto chatMsgs = currentChat->getMessages();
+    meta.systemPrompt = (!chatMsgs.empty() && chatMsgs[0].role == "system") ? chatMsgs[0].content : "";
     meta.params = *currentChat->getOptions();
     meta.updated = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
