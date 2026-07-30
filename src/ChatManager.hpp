@@ -86,11 +86,21 @@ class ChatManager {
 	}
 
 	void completeAsync(std::string message, const AsyncTextGenOptions& options = {}) {
-		model->generateAsync(currentChat, Message(userRole, message), options);
+    // model->generateAsync(currentChat, Message(userRole, message), options);
+    completeAsAsync(message, RoleClass::toString( userRole), options);
 	}
 
 	void completeAsAsync(std::string message, std::string role, const AsyncTextGenOptions& options = {}) {
-		model->generateAsync(currentChat, Message(role, message), options);
+		if (provider) {
+			currentChat->addMessage(role, message);
+			auto msgCopy = currentChat->getMessages();
+			std::thread([this, msgCopy, options]() {
+				provider->complete(selectedModel, msgCopy, options);
+			}).detach();
+		}
+		else {
+			model->generateAsync(currentChat, Message(role, message), options);
+		}
 	}
 
   void setModel(LLModel* model) { this->model = model; }
