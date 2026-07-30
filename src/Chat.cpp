@@ -3,14 +3,14 @@
 void Chat::saveMessage(Message &message) {
     if (m_chatFolder.empty()) return;
     std::string path = m_chatFolder + "/messages.jsonl";
-    std::ofstream(path, std::ios::app) << nlohmann::json{{
+    std::ofstream(path, std::ios::app) << nlohmann::json{
         {"id", message.id},
         {"parentId", message.parentId},
         {"creationTime", message.timestamps.creationTime},
         {"finishTime", message.timestamps.modificationTime},
         {"role", message.role},
         {"content", message.content}
-    }}.dump() << '\n';
+    }.dump() << '\n';
 }
 
 nlohmann::json Chat::toJson() const {
