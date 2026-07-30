@@ -1,6 +1,6 @@
 #include "Chat.hpp"
 
-nlohmann::json toJson(const Message &message) {
+nlohmann::json toJsong(const Message &message) {
 	return nlohmann::json{
         {"id", message.id},
         {"parentId", message.parentId},
@@ -14,13 +14,13 @@ nlohmann::json toJson(const Message &message) {
 void Chat::saveMessage(Message &message) {
     if (m_chatFolder.empty()) return;
     std::string path = m_chatFolder + "/messages.jsonl";
-    std::ofstream(path, std::ios::app) << toJson(message).dump() << '\n';
+    std::ofstream(path, std::ios::app) << toJsong(message).dump() << '\n';
 }
 
 nlohmann::json Chat::toJson() const {
     nlohmann::json msgArray = nlohmann::json::array();
     for (const auto& message : messages)
-        msgArray.push_back(toJson(message));
+        msgArray.push_back(toJsong(message));
 
     return {
         {"version", 1},
