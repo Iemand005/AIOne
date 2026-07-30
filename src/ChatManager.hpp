@@ -92,8 +92,8 @@ class ChatManager {
 
 	void completeAsAsync(std::string message, std::string role, const AsyncTextGenOptions& options = {}) {
 		if (provider) {
-			currentChat->addMessage(role, message);
 			auto msgCopy = currentChat->getMessages();
+			msgCopy.push_back(Message(role, message));
 			std::thread([this, msgCopy, options]() {
 				provider->complete(selectedModel, msgCopy, options);
 			}).detach();
