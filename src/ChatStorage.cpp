@@ -99,7 +99,7 @@ ChatMetadata ChatStorage::loadMetadata(const std::string& folder) {
     meta.systemPrompt = j.value("systemPrompt", "");
 
     auto p = j.value("parameters", nlohmann::json::object());
-    meta.params.maxTokens = p.value("maxTokens", 400);
+    meta.params.maxTokens = p.value("maxTokens", 50000);
     meta.params.temperature = p.value("temperature", 0.8f);
     meta.params.minP = p.value("minP", 0.05f);
     meta.params.seed = p.value("seed", 0xFFFFFFFF);

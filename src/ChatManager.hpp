@@ -73,7 +73,8 @@ class ChatManager {
 
   void regenerateAsync(uint64_t parentId, const AsyncTextGenOptions& options = {}, bool sanitizeReasoning = true) {
     AsyncTextGenOptions newOptions = options;
-    newOptions.onDone = [this, options, parentId](const TextGenResult& output) {
+    newOptions.onDone = [this, capturedChat = currentChat, options, parentId](const TextGenResult& output) {
+      if (currentChat != capturedChat) return;
       Message msg = output.output;
       msg.parentId = parentId;
       currentChat->addMessage(msg);
@@ -93,10 +94,20 @@ class ChatManager {
       };
     }
     auto contextMsgs = currentChat->getMessageChain(parentId);
+    if (contextMsgs.empty()) {
+      TextGenResult emptyResult{};
+      newOptions.onDone(emptyResult);
+      return;
+    }
     if (provider) {
       auto msgsCopy = contextMsgs;
       std::thread([this, msgsCopy, newOptions]() {
-        provider->complete(selectedModel, msgsCopy, newOptions);
+        try {
+          provider->complete(selectedModel, msgsCopy, newOptions);
+        } catch (...) {
+          TextGenResult errResult{};
+          newOptions.onDone(errResult);
+        }
       }).detach();
     } else {
       std::string prompt = model->chatToPrompt(contextMsgs);
@@ -113,7 +124,12 @@ class ChatManager {
 	if (provider) {
 		auto msgCopy = currentChat->getMessages();
 		std::thread([this, msgCopy, options]() {
-			provider->complete(selectedModel, msgCopy, options);
+			try {
+				provider->complete(selectedModel, msgCopy, options);
+			} catch (...) {
+				TextGenResult errResult{};
+        if (options.onDone) options.onDone(errResult);
+			}
 		}).detach();
 	}
 	else model->generateAsync(currentChat, options);

@@ -172,6 +172,18 @@ class AIONE_API Chat {
       result.push_back(siblings[idx]);
       pid = siblings[idx].id;
     }
+    // Fallback for old/malformed chats: if the chain didn't yield all messages,
+    // return everything in creation order (excluding system role).
+    if (result.size() < 2 && messages.size() > 1) {
+      result.clear();
+      auto sorted = messages;
+      std::sort(sorted.begin(), sorted.end(), [](const Message& a, const Message& b) {
+        return a.timestamps.creationTime < b.timestamps.creationTime;
+      });
+      for (auto& m : sorted) {
+        if (m.role != "system" || sorted.size() == 1) result.push_back(m);
+      }
+    }
     return result;
   }
 
