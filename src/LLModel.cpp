@@ -342,6 +342,13 @@ TextGenResult LLModel::complete(
 
         if (isThinkTag && options.onThinkStateChange) options.onThinkStateChange(thinking);
 
+        if (isThinkTag) {
+            // wrap token in batch for decoding
+            impl->setBatch(batch, &newTokenId, 1);
+            tokensGenerated++;
+            continue;
+        }
+
         // convert token to text
         char tokenBuffer[128];
         bool outputSpecial = false;
@@ -353,7 +360,7 @@ TextGenResult LLModel::complete(
         
         output.append(text);
         if (options.onToken) options.onToken(text);
-        if (!isThinkTag && options.onTokenReasoning) options.onTokenReasoning(text, thinking);
+        if (options.onTokenReasoning) options.onTokenReasoning(text, thinking);
 
         // wrap token in batch for decoding
         impl->setBatch(batch, &newTokenId, 1);

@@ -66,6 +66,13 @@ class ChatManager {
         needsNewLineTrim = false;
         if (options.onToken) options.onToken(trimmedToken);
       };
+      newOptions.onTokenReasoning = [this, options](const std::string& token, bool thinking) {
+        auto trimmedToken = token;
+        if (needsNewLineTrim) trimmedToken = trimLeadingNewlines(token);
+        if (trimmedToken.empty()) return;
+        needsNewLineTrim = false;
+        if (options.onTokenReasoning) options.onTokenReasoning(trimmedToken, thinking);
+      };
     }
     if (!newOptions.systemPrompt.empty()) setSystemPrompt(newOptions.systemPrompt);
     sendAsAsync(message, userRole, newOptions);
@@ -91,6 +98,13 @@ class ChatManager {
         if (trimmedToken.empty()) return;
         needsNewLineTrim = false;
         if (options.onToken) options.onToken(trimmedToken);
+      };
+      newOptions.onTokenReasoning = [this, options](const std::string& token, bool thinking) {
+        auto trimmedToken = token;
+        if (needsNewLineTrim) trimmedToken = trimLeadingNewlines(token);
+        if (trimmedToken.empty()) return;
+        needsNewLineTrim = false;
+        if (options.onTokenReasoning) options.onTokenReasoning(trimmedToken, thinking);
       };
     }
     auto contextMsgs = currentChat->getMessageChain(parentId);
