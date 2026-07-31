@@ -164,6 +164,23 @@ public:
 			auto it = m_currentVersionIndex.find(pid);
 			if (it != m_currentVersionIndex.end()) idx = it->second;
 			if (idx >= siblings.size()) idx = 0;
+
+			auto continues = [&](uint64_t id) {
+				for (const auto& m : messages)
+					if (m.parentId == id) return true;
+				return false;
+			};
+
+			// Version selection is runtime-only and resets on reload, while later
+			// messages always attach to the last-created sibling. If the selected
+			// version is a dead end but a sibling continues the chain, follow the
+			// continuing sibling so the whole chat loads after a reload.
+			if (!continues(siblings[idx].id)) {
+				size_t cont = 0;
+				while (cont < siblings.size() && !continues(siblings[cont].id)) ++cont;
+				if (cont < siblings.size()) idx = cont;
+			}
+
 			result.push_back(siblings[idx]);
 			pid = siblings[idx].id;
 		}
