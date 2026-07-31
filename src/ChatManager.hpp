@@ -193,7 +193,7 @@ class ChatManager {
     ChatStorage::init();
   }
 
-  void createNewChat(const std::string& title, const std::string& modelName = "",
+  std::string createNewChat(const std::string& title, const std::string& modelName = "",
                      const std::string& systemPrompt = "",
                      const TextGenOptionsBase& params = {}) {
     ChatMetadata meta;
@@ -207,6 +207,7 @@ class ChatManager {
     chat->setFolder(ChatStorage::rootPath() + "/" + folder);
     chat->setModel(modelName);
     currentChat = chat;
+    return folder;
   }
 
   void loadChat(const std::string& folder) {
@@ -229,16 +230,6 @@ class ChatManager {
   void saveCurrentChatMetadata() {
     if (!currentChat || currentChat->folder().empty()) return;
 
-    ChatMetadata meta;
-    meta.folder = currentChat->folder();
-    meta.title = guessChatTitle();
-    meta.model = currentChat->model();
-    auto chatMsgs = currentChat->getMessages();
-    meta.systemPrompt = (!chatMsgs.empty() && chatMsgs[0].role == "system") ? chatMsgs[0].content : "";
-    meta.params = *currentChat->getOptions();
-    meta.updated = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
-
     // Extract folder name from full path
     std::string folderName = currentChat->folder();
     auto pos = folderName.rfind('/');
@@ -247,6 +238,20 @@ class ChatManager {
     pos = folderName.rfind('\\');
     if (pos != std::string::npos)
       folderName = folderName.substr(pos + 1);
+
+    // Preserve the original creation time (saveCurrentChatMetadata would otherwise reset it to 0)
+    ChatMetadata existing = ChatStorage::loadMetadata(folderName);
+
+    ChatMetadata meta;
+    meta.folder = currentChat->folder();
+    meta.title = guessChatTitle();
+    meta.model = currentChat->model();
+    auto chatMsgs = currentChat->getMessages();
+    meta.systemPrompt = (!chatMsgs.empty() && chatMsgs[0].role == "system") ? chatMsgs[0].content : "";
+    meta.params = *currentChat->getOptions();
+    meta.created = existing.created;
+    meta.updated = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
 
     ChatStorage::saveMetadata(folderName, meta);
   }
