@@ -5,7 +5,6 @@
 
 using namespace AIOne;
 
-namespace {
 // Make sure the base URL ends with exactly one "/v1" segment so the request
 // paths below ("/models", "/chat/completions") resolve to the right endpoints.
 // Handles URLs that already end with "/v1", accidentally repeat it ("/v1/v1"),
@@ -76,7 +75,6 @@ std::string extractApiErrorMessage(const std::string& body, int status) {
 		msg = "HTTP " + std::to_string(status) + ": " + msg;
 	return msg;
 }
-}}
 
 OpenAIProvider::OpenAIProvider(std::string baseUrl, std::string apiKey) : http(normalizeBaseUrl(baseUrl)), apiKey(apiKey) {
 
