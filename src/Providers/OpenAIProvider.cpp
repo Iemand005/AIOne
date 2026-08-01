@@ -5,7 +5,27 @@
 
 using namespace AIOne;
 
-OpenAIProvider::OpenAIProvider(std::string baseUrl, std::string apiKey) : http(baseUrl), apiKey(apiKey) {
+namespace {
+// Make sure the base URL ends with exactly one "/v1" segment so the request
+// paths below ("/models", "/chat/completions") resolve to the right endpoints.
+// Handles URLs that already end with "/v1", accidentally repeat it ("/v1/v1"),
+// or have no "/v1" at all.
+std::string normalizeBaseUrl(std::string url) {
+	while (!url.empty() && url.back() == '/') url.pop_back();
+
+	while (url.size() >= 3 &&
+	       (url.compare(url.size() - 3, 3, "/v1") == 0 ||
+	        url.compare(url.size() - 3, 3, "/V1") == 0)) {
+		url.resize(url.size() - 3);
+		while (!url.empty() && url.back() == '/') url.pop_back();
+	}
+
+	url += "/v1";
+	return url;
+}
+}
+
+OpenAIProvider::OpenAIProvider(std::string baseUrl, std::string apiKey) : http(normalizeBaseUrl(baseUrl)), apiKey(apiKey) {
 
 }
 
@@ -13,13 +33,24 @@ std::vector<ModelInfo> OpenAIProvider::getModels() {
 	httplib::Headers headers = {
 		{"Authorization", "Bearer " + apiKey}
 	};
-	auto res = http.Get("/v1/models", headers);
+	auto res = http.Get("/models", headers);
 	if (res.status != 200) return {};
 
-	auto json = nlohmann::json::parse(res.body);
 	std::vector<ModelInfo> models;
-	for (auto& item : json["data"]) {
-		models.push_back({ item["id"], item["owned_by"] });
+	try {
+		auto json = nlohmann::json::parse(res.body);
+		if (!json.contains("data") || !json["data"].is_array()) return models;
+
+		for (auto& item : json["data"]) {
+			// Some providers omit "owned_by" (e.g. OpenRouter has "name" instead);
+			// never access fields with operator[] to avoid throwing on null.
+			std::string id = item.value("id", "");
+			if (id.empty()) continue;
+			std::string provider = item.value("owned_by", item.value("name", ""));
+			models.push_back({ id, provider });
+		}
+	} catch (...) {
+		return {};
 	}
 	return models;
 }
@@ -64,7 +95,7 @@ void OpenAIProvider::complete(const std::string& model, const std::vector<Messag
 
 	if (options.onGenerationStart) options.onGenerationStart();
 
-	http.PostStream("/v1/chat/completions", requestStr, "application/json", headers,
+	http.PostStream("/chat/completions", requestStr, "application/json", headers,
 		[&](const char* data, size_t len) -> bool {
 			sseBuf.append(data, len);
 
