@@ -208,8 +208,15 @@ void OpenAIProvider::complete(const std::string& model, const std::vector<Messag
 					auto finishReason = choice.value("finish_reason", nlohmann::json());
 					if (!finishReason.is_null()) return true;
 
-					if (delta.contains("reasoning_content") && !delta["reasoning_content"].is_null()) {
-						std::string token = delta["reasoning_content"];
+					// DeepSeek sends "reasoning_content"; OpenRouter sends "reasoning".
+					const char* reasoningKey = nullptr;
+					if (delta.contains("reasoning_content") && !delta["reasoning_content"].is_null())
+						reasoningKey = "reasoning_content";
+					else if (delta.contains("reasoning") && !delta["reasoning"].is_null())
+						reasoningKey = "reasoning";
+
+					if (reasoningKey) {
+						std::string token = delta[reasoningKey];
 						if (!thinking) {
 							thinking = true;
 							if (options.onThinkStateChange) options.onThinkStateChange(true);
