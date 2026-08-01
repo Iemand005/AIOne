@@ -10,6 +10,7 @@
 #include <ctime>
 #include <iomanip>
 #include <iostream>
+#include <map>
 
 namespace fs = std::filesystem;
 
@@ -114,6 +115,7 @@ std::vector<Message> ChatStorage::loadMessages(const std::string& folder) {
     if (!file.is_open()) return messages;
 
     std::string line;
+    std::map<uint64_t, size_t> lastIdx; // message id -> index in messages (last occurrence wins)
     while (std::getline(file, line)) {
         if (line.empty()) continue;
         try {
@@ -126,7 +128,15 @@ std::vector<Message> ChatStorage::loadMessages(const std::string& folder) {
             msg.content = j.value("content", "");
             msg.timestamps.creationTime = j.value("creationTime", 0LL);
             msg.timestamps.modificationTime = j.value("finishTime", 0LL);
-            messages.push_back(std::move(msg));
+            // messages.jsonl is append-only; edits/continues re-append the same id,
+            // so keep the last occurrence (position of the first is preserved).
+            auto it = lastIdx.find(msg.id);
+            if (it != lastIdx.end()) {
+                messages[it->second] = std::move(msg);
+            } else {
+                lastIdx[msg.id] = messages.size();
+                messages.push_back(std::move(msg));
+            }
         } catch (...) {
             std::cerr << "Failed to parse message line: " << line << std::endl;
         }

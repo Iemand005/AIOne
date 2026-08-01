@@ -129,6 +129,73 @@ class ChatManager {
     }
   }
 
+  void continueAsync(uint64_t parentId, const AsyncTextGenOptions& options = {}, bool sanitizeReasoning = true) {
+    AsyncTextGenOptions newOptions = options;
+    newOptions.onDone = [this, capturedChat = currentChat, options, parentId](const TextGenResult& output) {
+      if (currentChat != capturedChat) return;
+      // Extend the currently selected version of this turn in place.
+      auto siblings = currentChat->getSiblings(parentId);
+      size_t idx = currentChat->getCurrentVersionIndex(parentId);
+      if (idx >= siblings.size()) idx = siblings.empty() ? 0 : siblings.size() - 1;
+      if (idx < siblings.size()) {
+        Message updated = siblings[idx];
+        updated.content += output.output.content;
+        updated.timestamps.update();
+        currentChat->updateMessage(updated);
+      }
+      if (options.onDone) options.onDone(output);
+    };
+    if (sanitizeReasoning) {
+      newOptions.onThinkStateChange = [this, options](bool thinking) {
+        if (!thinking) needsNewLineTrim = true;
+        if (options.onThinkStateChange) options.onThinkStateChange(thinking);
+      };
+      newOptions.onToken = [this, options](const std::string& token) {
+        auto trimmedToken = token;
+        if (needsNewLineTrim) trimmedToken = trimLeadingNewlines(token);
+        if (trimmedToken.empty()) return;
+        needsNewLineTrim = false;
+        if (options.onToken) options.onToken(trimmedToken);
+      };
+      newOptions.onTokenReasoning = [this, options](const std::string& token, bool thinking) {
+        auto trimmedToken = token;
+        if (needsNewLineTrim) trimmedToken = trimLeadingNewlines(token);
+        if (trimmedToken.empty()) return;
+        needsNewLineTrim = false;
+        if (options.onTokenReasoning) options.onTokenReasoning(trimmedToken, thinking);
+      };
+    }
+    auto siblings = currentChat->getSiblings(parentId);
+    size_t idx = currentChat->getCurrentVersionIndex(parentId);
+    if (idx >= siblings.size()) idx = siblings.empty() ? 0 : siblings.size() - 1;
+    if (siblings.empty() || idx >= siblings.size()) {
+      TextGenResult emptyResult{};
+      newOptions.onDone(emptyResult);
+      return;
+    }
+    // Context ends at the assistant message itself so the model continues it.
+    auto contextMsgs = currentChat->getMessageChain(siblings[idx].id);
+    if (contextMsgs.empty()) {
+      TextGenResult emptyResult{};
+      newOptions.onDone(emptyResult);
+      return;
+    }
+    if (provider) {
+      auto msgsCopy = contextMsgs;
+      std::thread([this, msgsCopy, newOptions]() {
+        try {
+          provider->complete(selectedModel, msgsCopy, newOptions);
+        } catch (...) {
+          TextGenResult errResult{};
+          newOptions.onDone(errResult);
+        }
+      }).detach();
+    } else {
+      std::string prompt = model->chatToPrompt(contextMsgs);
+      model->generateAsync(prompt, newOptions);
+    }
+  }
+
 	void sendAsAsync(std::string message, Role role, const AsyncTextGenOptions& options = {}) {
 		sendAsAsync(message, RoleClass::toString(role), options);
 	}

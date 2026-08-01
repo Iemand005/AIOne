@@ -97,6 +97,18 @@ public:
 		if (save) saveMessage(messages[index]);
 	}
 
+	// Replace a message in place by id (used for "continue" so the same turn is extended)
+	void updateMessage(const Message& msg, bool save = true) {
+		std::lock_guard<std::mutex> lock(*messagesMutex);
+		for (auto& m : messages) {
+			if (m.id == msg.id) {
+				m = msg;
+				if (save) saveMessage(m);
+				break;
+			}
+		}
+	}
+
 	void setSystemPrompt(std::string prompt) {
 		std::lock_guard<std::mutex> lock(*messagesMutex);
 		if (!messages.empty() && messages[0].role == "system") {
@@ -166,7 +178,8 @@ public:
 			});
 			size_t idx = 0;
 			auto it = m_currentVersionIndex.find(pid);
-			if (it != m_currentVersionIndex.end()) idx = it->second;
+			bool hasExplicit = (it != m_currentVersionIndex.end());
+			if (hasExplicit) idx = it->second;
 			if (idx >= siblings.size()) idx = 0;
 
 			auto continues = [&](uint64_t id) {
@@ -176,10 +189,12 @@ public:
 			};
 
 			// Version selection is runtime-only and resets on reload, while later
-			// messages always attach to the last-created sibling. If the selected
-			// version is a dead end but a sibling continues the chain, follow the
-			// continuing sibling so the whole chat loads after a reload.
-			if (!continues(siblings[idx].id)) {
+			// messages always attach to the last-created sibling. Only when there is
+			// NO explicit selection (e.g. right after a reload) follow a sibling that
+			// continues the chain, so the whole chat loads; an explicit runtime
+			// selection (version switch, regenerate, edit) must be respected even if
+			// that version is currently a dead end.
+			if (!hasExplicit && !continues(siblings[idx].id)) {
 				size_t cont = 0;
 				while (cont < siblings.size() && !continues(siblings[cont].id)) ++cont;
 				if (cont < siblings.size()) idx = cont;
