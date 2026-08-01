@@ -99,9 +99,13 @@ public:
 
 	void setSystemPrompt(std::string prompt) {
 		std::lock_guard<std::mutex> lock(*messagesMutex);
-		if (!messages.empty()) {
-			messages[0].role = "system";
+		if (!messages.empty() && messages[0].role == "system") {
 			messages[0].content = prompt;
+		} else if (!messages.empty()) {
+			// Chat loaded without a system message: insert one at the front.
+			Message sys(Role::System, prompt);
+			messages[0].parentId = sys.id;
+			messages.insert(messages.begin(), sys);
 		} else {
 			this->addMessageNoLock(Role::System, prompt);
 		}

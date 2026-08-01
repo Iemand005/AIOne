@@ -216,14 +216,18 @@ class ChatManager {
     auto msgs = ChatStorage::loadMessages(folder);
 
     auto chat = std::make_shared<Chat>();
-    if (!msgs.empty() && msgs[0].role == "system") {
-      chat->setSystemPrompt(msgs[0].content);
-    } else if (!meta.systemPrompt.empty()) {
-      chat->setSystemPrompt(meta.systemPrompt);
-    }
     chat->setFolder(fullPath);
     chat->setModel(meta.model);
     chat->setMessages(std::move(msgs));
+    // chat.json is the authoritative source for the system prompt; it is kept
+    // in sync on every edit, while the system message in messages.jsonl can be
+    // stale (append-only, never rewritten). Apply it after setMessages so it
+    // overrides any stale on-disk system message in memory.
+    if (!meta.systemPrompt.empty()) {
+      chat->setSystemPrompt(meta.systemPrompt);
+    } else if (!chat->getMessages().empty() && chat->getMessages()[0].role == "system") {
+      chat->setSystemPrompt(chat->getMessages()[0].content);
+    }
     currentChat = chat;
   }
 
