@@ -12,6 +12,7 @@ typedef std::function<void(const TextGenResult &output)> TextFinishCallback;
 typedef std::function<void()> ThinkStartCallback;
 typedef std::function<void()> NotifyCallback;
 typedef std::function<void(bool thinking)> ThinkStateChangedCallback;
+typedef std::function<void(const std::string &error)> TextErrorCallback;
 
 struct TextGenOptionsBase
 {
@@ -39,4 +40,5 @@ struct TextGenOptions : TextGenOptionsBase
 
 struct AsyncTextGenOptions : TextGenOptions {
     TextFinishCallback onDone = nullptr;
+    TextErrorCallback onError = nullptr;
 };

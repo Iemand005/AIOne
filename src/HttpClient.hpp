@@ -86,9 +86,13 @@ public:
                  res.ssl_error(), res.ssl_backend_error() };
     }
 
-    bool PostStream(const std::string& path, const std::string& body, const std::string& contentType,
-                    const httplib::Headers& headers, httplib::ContentReceiver onChunk) {
+    HttpResponse PostStream(const std::string& path, const std::string& body, const std::string& contentType,
+                            const httplib::Headers& headers, httplib::ContentReceiver onChunk) {
         auto res = cli.Post(basePath + path, headers, body, contentType, onChunk);
-        return !!res;
+        if (!res) {
+            return { 0, "", httplib::to_string(res.error()), res.error(),
+                     res.ssl_error(), res.ssl_backend_error() };
+        }
+        return { res->status, res->body };
     }
 };

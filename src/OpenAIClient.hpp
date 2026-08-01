@@ -21,13 +21,21 @@ public:
         httplib::Headers headers = {
             {"Authorization", "Bearer " + apiKey}
         };
-        auto res = http.Get("/v1/models", headers);
+        auto res = http.Get("/models", headers);
         if (res.status != 200) return {};
 
-        auto json = nlohmann::json::parse(res.body);
         std::vector<OpenAIModel> models;
-        for (auto& item : json["data"]) {
-            models.push_back({ item["id"], item["owned_by"] });
+        try {
+            auto json = nlohmann::json::parse(res.body);
+            if (!json.contains("data") || !json["data"].is_array()) return models;
+            for (auto& item : json["data"]) {
+                std::string id = item.value("id", "");
+                if (id.empty()) continue;
+                std::string ownedBy = item.value("owned_by", item.value("name", ""));
+                models.push_back({ id, ownedBy });
+            }
+        } catch (...) {
+            return {};
         }
         return models;
     }

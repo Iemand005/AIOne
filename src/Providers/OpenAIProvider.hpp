@@ -13,9 +13,12 @@ namespace AIOne {
 
 		void complete(const std::string& model, const std::vector<Message>& messages, const AsyncTextGenOptions& options) override;
 
+		const std::string& getLastError() const { return lastError; }
+
 	private:
 		HttpClient http;
 		std::string  apiKey;
+		std::string  lastError;
 
 	};
 }
