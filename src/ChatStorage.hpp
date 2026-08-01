@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include "TextGenOptions.hpp"
 
@@ -18,6 +19,7 @@ struct ChatMetadata {
 struct AppSettings {
     std::string apiKey;
     std::string apiBaseUrl = "api.groq.com/openai";
+    std::map<std::string, std::string> apiKeys; // base URL -> API key
     std::string lastAIModel;
     std::string lastChatFolder;
 };

@@ -202,6 +202,13 @@ AppSettings ChatStorage::loadSettings() {
         s.apiBaseUrl = j.value("apiBaseUrl", "api.groq.com/openai");
         s.lastAIModel = j.value("lastAIModel", "");
         s.lastChatFolder = j.value("lastChatFolder", "");
+        if (j.contains("apiKeys") && j["apiKeys"].is_object()) {
+            for (auto& [url, key] : j["apiKeys"].items())
+                s.apiKeys[url] = key.get<std::string>();
+        }
+        // Backward compat: seed the per-URL map from the legacy flat fields
+        if (s.apiKeys.empty() && !s.apiKey.empty())
+            s.apiKeys[s.apiBaseUrl] = s.apiKey;
         return s;
     } catch (...) {
         return {};
@@ -210,11 +217,16 @@ AppSettings ChatStorage::loadSettings() {
 
 void ChatStorage::saveSettings(const AppSettings& settings) {
     std::string path = getAppDataDir() + "/settings.json";
+    nlohmann::json apiKeys = nlohmann::json::object();
+    for (auto& [url, key] : settings.apiKeys)
+        apiKeys[url] = key;
+
     nlohmann::json j = {
         {"apiKey", settings.apiKey},
         {"apiBaseUrl", settings.apiBaseUrl},
         {"lastAIModel", settings.lastAIModel},
-        {"lastChatFolder", settings.lastChatFolder}
+        {"lastChatFolder", settings.lastChatFolder},
+        {"apiKeys", apiKeys}
     };
     std::ofstream(path) << j.dump(2) << std::endl;
 }
