@@ -51,7 +51,8 @@ class ChatManager {
   void sendAsync(std::string message, const AsyncTextGenOptions& options = {}, bool sanitizeReasoning = true) {
     AsyncTextGenOptions newOptions = options;
     newOptions.onDone = [this, options](const TextGenResult& output) {
-      currentChat->addMessage(output.output);
+      if (hasValidRole(output.output))
+        currentChat->addMessage(output.output);
       if (options.onDone) options.onDone(output);
     };
     if (sanitizeReasoning) {
@@ -82,6 +83,10 @@ class ChatManager {
     AsyncTextGenOptions newOptions = options;
     newOptions.onDone = [this, capturedChat = currentChat, options, parentId](const TextGenResult& output) {
       if (currentChat != capturedChat) return;
+      if (!hasValidRole(output.output)) {
+        if (options.onDone) options.onDone(output);
+        return;
+      }
       Message msg = output.output;
       msg.parentId = parentId;
       currentChat->addMessage(msg);
@@ -134,14 +139,16 @@ class ChatManager {
     newOptions.onDone = [this, capturedChat = currentChat, options, parentId](const TextGenResult& output) {
       if (currentChat != capturedChat) return;
       // Extend the currently selected version of this turn in place.
-      auto siblings = currentChat->getSiblings(parentId);
-      size_t idx = currentChat->getCurrentVersionIndex(parentId);
-      if (idx >= siblings.size()) idx = siblings.empty() ? 0 : siblings.size() - 1;
-      if (idx < siblings.size()) {
-        Message updated = siblings[idx];
-        updated.content += output.output.content;
-        updated.timestamps.update();
-        currentChat->updateMessage(updated);
+      if (hasValidRole(output.output)) {
+        auto siblings = currentChat->getSiblings(parentId);
+        size_t idx = currentChat->getCurrentVersionIndex(parentId);
+        if (idx >= siblings.size()) idx = siblings.empty() ? 0 : siblings.size() - 1;
+        if (idx < siblings.size()) {
+          Message updated = siblings[idx];
+          updated.content += output.output.content;
+          updated.timestamps.update();
+          currentChat->updateMessage(updated);
+        }
       }
       if (options.onDone) options.onDone(output);
     };
@@ -346,6 +353,10 @@ class ChatManager {
   std::string selectedModelName() { return selectedModel; }
 
 private:
+
+    static bool hasValidRole(const Message& msg) {
+        return msg.role == "system" || msg.role == "user" || msg.role == "assistant";
+    }
 
     ILLMProvider* provider = nullptr;
 	std::string selectedModel;

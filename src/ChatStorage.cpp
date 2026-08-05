@@ -116,6 +116,7 @@ std::vector<Message> ChatStorage::loadMessages(const std::string& folder) {
 
     std::string line;
     std::map<uint64_t, size_t> lastIdx; // message id -> index in messages (last occurrence wins)
+    std::map<uint64_t, bool> loadedIds;
     while (std::getline(file, line)) {
         if (line.empty()) continue;
         try {
@@ -128,6 +129,13 @@ std::vector<Message> ChatStorage::loadMessages(const std::string& folder) {
             msg.content = j.value("content", "");
             msg.timestamps.creationTime = j.value("creationTime", 0LL);
             msg.timestamps.modificationTime = j.value("finishTime", 0LL);
+            // Heal broken entries (e.g. an empty role written after a failed
+            // generation): drop anything that isn't a real system/user/assistant
+            // message so the rest of the chain stays intact.
+            if (msg.role != "system" && msg.role != "user" && msg.role != "assistant") {
+                std::cerr << "Skipping broken message entry (invalid role '" << msg.role << "'): " << line << std::endl;
+                continue;
+            }
             // messages.jsonl is append-only; edits/continues re-append the same id,
             // so keep the last occurrence (position of the first is preserved).
             auto it = lastIdx.find(msg.id);
@@ -137,10 +145,22 @@ std::vector<Message> ChatStorage::loadMessages(const std::string& folder) {
                 lastIdx[msg.id] = messages.size();
                 messages.push_back(std::move(msg));
             }
+            loadedIds[msg.id] = true;
         } catch (...) {
             std::cerr << "Failed to parse message line: " << line << std::endl;
         }
     }
+
+    // Heal dangling parent links: a message whose parent was one of the dropped
+    // broken entries would otherwise be orphaned from the active path. Re-parent
+    // it to the last loaded message that precedes it in the file.
+    uint64_t lastId = 0;
+    for (auto& msg : messages) {
+        if (msg.parentId != 0 && !loadedIds.count(msg.parentId))
+            msg.parentId = lastId;
+        lastId = msg.id;
+    }
+
     return messages;
 }
 
