@@ -19,7 +19,7 @@ option(AIONE_BUILD_SHARED_LIBS "Build AIOneCore as a shared library (DLL)" OFF)
 option(AIONE_DEPS_SHARED "Build llama.cpp and stable-diffusion.cpp as shared libraries" OFF)
 option(AIONE_UWP "Enable UWP support (Disables mmap)" ON)
 option(AIONE_ENABLE_OPENAI "Enable OpenAI/HTTPS provider and remote API support" OFF)
-option(AIONE_ENABLE_STABLE_DIFFUSION "Enable stable-diffusion.cpp image generation support" ON)
+option(AIONE_ENABLE_STABLE_DIFFUSION "Enable stable-diffusion.cpp image generation support" OFF)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
