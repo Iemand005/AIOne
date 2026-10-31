@@ -10,6 +10,9 @@ void ModelFactory::loadBackends() {
 void ModelFactory::initLlama() {
     if (initializedLlama) return;
     llama_backend_init();
+#ifdef AIONE_VERBOSE
+    llama_log_set(llamaLogger, this);
+#endif
     initializedLlama = true;
 }
 

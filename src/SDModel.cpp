@@ -1,4 +1,4 @@
-#if defined(AIONE_ENABLE_STABLE_DIFFUSION)
+#ifdef AIONE_ENABLE_STABLE_DIFFUSION
 
 #include <thread>
 

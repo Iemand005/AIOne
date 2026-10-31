@@ -1,4 +1,4 @@
-#if defined(AIONE_ENABLE_OPENAI)
+#ifdef AIONE_ENABLE_OPENAI
 
 #include "OpenAIProvider.hpp"
 

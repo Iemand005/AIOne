@@ -33,7 +33,9 @@ void Model::selectDevice(PreferredDevice preferred) {
       throw std::runtime_error("No compatible device found");
   }
 
+#ifdef AIONE_VERBOSE
   std::cout << "==============" << std::endl;
   std::cout << "Using device for inference: " << ggml_backend_dev_name(devices[0]) << std::endl;
   std::cout << "==============" << std::endl;
+#endif
 }

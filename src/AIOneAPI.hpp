@@ -1,8 +1,8 @@
 #pragma once
 
 #if defined(_WIN32)
-  #if defined(AIONE_DYNAMIC)
-    #if defined(AIOneCore_EXPORTS)
+  #ifdef AIONE_DYNAMIC
+    #ifdef AIOneCore_EXPORTS
       #define AIONE_API __declspec(dllexport)
     #else
       #define AIONE_API __declspec(dllimport)

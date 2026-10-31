@@ -20,6 +20,7 @@ option(AIONE_DEPS_SHARED "Build llama.cpp and stable-diffusion.cpp as shared lib
 option(AIONE_UWP "Enable UWP support (Disables mmap)" ON)
 option(AIONE_ENABLE_OPENAI "Enable OpenAI/HTTPS provider and remote API support" OFF)
 option(AIONE_ENABLE_STABLE_DIFFUSION "Enable stable-diffusion.cpp image generation support" OFF)
+option(AIONE_VERBOSE "Enable verbose logging from AIOne and llama.cpp" OFF)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -284,6 +285,10 @@ if(AIONE_BUILD_SHARED_LIBS)
     # CMake defines AIOneCore_EXPORTS for SHARED automatically.
     target_compile_definitions(AIOneCore PUBLIC AIONE_DYNAMIC)
 else()
+endif()
+
+if(AIONE_VERBOSE)
+    target_compile_definitions(AIOneCore PRIVATE AIONE_VERBOSE)
 endif()
 
 # target_compile_definitions(AIOneCore PUBLIC LLAMA_UWP)
