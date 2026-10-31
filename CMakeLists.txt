@@ -40,15 +40,10 @@ if(MSVC)
     #     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>")
     # endif()
 
-    set(CMAKE_C_FLAGS_INIT "/FS")
-    set(CMAKE_CXX_FLAGS_INIT "/FS")
     add_compile_options(/FS /bigobj /MP /W3 /wd4244 /wd4267)
     # add_compile_options(/GR- /EHs-) # no RTTI, no C++ exceptions
     # add_compile_options(/GR-) # no RTTI, no C++ exceptions
     # add_link_options(/MAP /MAPINFO:EXPORTS)
-    string(APPEND CMAKE_C_FLAGS " /FS")
-    string(APPEND CMAKE_CXX_FLAGS " /FS")
-    set(CMAKE_JOB_POOLS compile=1 link=1)
     add_definitions(-DNOMINMAX -D_CRT_SECURE_NO_WARNINGS)
 
     if(AIONE_UWP)
@@ -59,11 +54,6 @@ if(MSVC)
             add_compile_options(/AI"$ENV{WindowsSdkDir}References\\${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}")
         endif()
     endif()
-
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /FS" CACHE STRING "" FORCE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FS" CACHE STRING "" FORCE)
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /FS" CACHE STRING "" FORCE)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /FS" CACHE STRING "" FORCE)
 else()
     if(DEFINED CMAKE_MSVC_RUNTIME_LIBRARY)
         unset(CMAKE_MSVC_RUNTIME_LIBRARY CACHE)
