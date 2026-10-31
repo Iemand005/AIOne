@@ -264,6 +264,7 @@ if(AIONE_BUILD_SHARED_LIBS)
 else()
     add_library(AIOneCore STATIC
         ${CORE_SOURCES}
+        src/ModelSession.cpp
     )
 endif()
 
