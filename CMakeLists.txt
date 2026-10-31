@@ -215,8 +215,14 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 else()
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 endif()
-add_subdirectory(${STABLE_DIFFUSION_CPP_DIR} ${CMAKE_BINARY_DIR}/stable-diffusion.cpp_build)
+# Both subprojects bundle a ggml copy, but only one "ggml" target can exist.
+# Build llama.cpp first so its (newer) ggml is the shared one; llama.cpp's sources
+# require ggml ops (ggml_gated_delta_net, ggml_rope_set_offset) missing from the
+# copy bundled with stable-diffusion.cpp.
+add_definitions(-DGGML_MAX_NAME=128)
+
 add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
+add_subdirectory(${STABLE_DIFFUSION_CPP_DIR} ${CMAKE_BINARY_DIR}/stable-diffusion.cpp_build)
 # set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
 if(AIONE_UWP)
