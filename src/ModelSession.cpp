@@ -1,6 +1,6 @@
 #include "ModelSession.hpp"
 
-
+namespace AIOne {
 
 void ModelSession::loadModel(const std::string& path) {
     unloadModel();
@@ -37,4 +37,6 @@ void ModelSession::unloadModel() {
 
 bool ModelSession::isLoaded() const {
     return model && context;
+}
+
 }
