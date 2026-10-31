@@ -1,3 +1,5 @@
+#if defined(AIONE_ENABLE_STABLE_DIFFUSION)
+
 #include <thread>
 
 #include <ggml-backend.h>
@@ -312,3 +314,59 @@ bool SDModel::saveImageAsPNG(const SDImage& imageo, const std::string& filename)
         
         return impl->toSDImage(safeCopy);
     }
+
+#else // !AIONE_ENABLE_STABLE_DIFFUSION
+
+#include "SDModel.hpp"
+
+struct SDModel::Impl {};
+
+static void warnStableDiffusionDisabled() {
+    std::cerr << "Stable diffusion support is disabled in this build" << std::endl;
+}
+
+SDModel::SDModel() : impl(std::make_unique<Impl>()) {}
+
+SDModel::SDModel(std::string path, bool load) : modelPath(path), impl(std::make_unique<Impl>()) {}
+
+SDModel::~SDModel() = default;
+
+void SDModel::freeContext() {}
+
+bool SDModel::loadModel(const std::string, SDModelOptions) {
+    warnStableDiffusionDisabled();
+    return false;
+}
+
+bool SDModel::exportToGGUF(std::string, QuantTypes, bool) {
+    warnStableDiffusionDisabled();
+    return false;
+}
+
+bool SDModel::saveImageAsPNG(const SDImage&, const std::string&) {
+    warnStableDiffusionDisabled();
+    return false;
+}
+
+void SDModel::setProgressCallback(ProgressCallback callback) {
+    super()->setProgressCallback(callback);
+}
+
+void SDModel::setPreviewCallback(PreviewCallback callback, SDPreviewMode) {
+    previewCallback = callback;
+}
+
+void SDModel::clearProgressCallback() {
+    super()->clearProgressCallback();
+}
+
+void SDModel::clearPreviewCallback() {
+    previewCallback = nullptr;
+}
+
+SDImage SDModel::generateImage(const std::string, const std::string, SDImageOptions) {
+    warnStableDiffusionDisabled();
+    return {};
+}
+
+#endif // AIONE_ENABLE_STABLE_DIFFUSION

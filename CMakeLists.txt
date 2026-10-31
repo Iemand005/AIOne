@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(AIOneCore VERSION 0.1 LANGUAGES CXX C)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # if(AIONE_UWP)
@@ -19,6 +19,7 @@ option(AIONE_BUILD_SHARED_LIBS "Build AIOneCore as a shared library (DLL)" OFF)
 option(AIONE_DEPS_SHARED "Build llama.cpp and stable-diffusion.cpp as shared libraries" OFF)
 option(AIONE_UWP "Enable UWP support (Disables mmap)" ON)
 option(AIONE_ENABLE_OPENAI "Enable OpenAI/HTTPS provider and remote API support" OFF)
+option(AIONE_ENABLE_STABLE_DIFFUSION "Enable stable-diffusion.cpp image generation support" ON)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -223,7 +224,11 @@ endif()
 add_definitions(-DGGML_MAX_NAME=128)
 
 add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
-add_subdirectory(${STABLE_DIFFUSION_CPP_DIR} ${CMAKE_BINARY_DIR}/stable-diffusion.cpp_build)
+
+# stable-diffusion.cpp is optional; when disabled SDModel compiles to a no-op stub.
+if(AIONE_ENABLE_STABLE_DIFFUSION)
+    add_subdirectory(${STABLE_DIFFUSION_CPP_DIR} ${CMAKE_BINARY_DIR}/stable-diffusion.cpp_build)
+endif()
 # set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
 if(AIONE_UWP)
@@ -281,6 +286,10 @@ if(AIONE_ENABLE_OPENAI)
     target_compile_definitions(AIOneCore PRIVATE AIONE_ENABLE_OPENAI)
 endif()
 
+if(AIONE_ENABLE_STABLE_DIFFUSION)
+    target_compile_definitions(AIOneCore PRIVATE AIONE_ENABLE_STABLE_DIFFUSION)
+endif()
+
 if(AIONE_BUILD_SHARED_LIBS)
     # CMake defines AIOneCore_EXPORTS for SHARED automatically.
     target_compile_definitions(AIOneCore PUBLIC AIONE_DYNAMIC)
@@ -304,8 +313,11 @@ if(AIONE_UWP)
     target_link_libraries(AIOneCore PRIVATE windowsapp)
 endif()
 
+if(AIONE_ENABLE_STABLE_DIFFUSION)
+    target_link_libraries(AIOneCore PRIVATE stable-diffusion)
+endif()
+
 target_link_libraries(AIOneCore PRIVATE
-    stable-diffusion
     llama
     common
 )
@@ -317,6 +329,11 @@ target_include_directories(AIOneCore PUBLIC
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/ggml/include>
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/src>
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/vendor>
-    $<BUILD_INTERFACE:${STABLE_DIFFUSION_CPP_DIR}>
     $<INSTALL_INTERFACE:include/AIOneCore>
 )
+
+if(AIONE_ENABLE_STABLE_DIFFUSION)
+    target_include_directories(AIOneCore PUBLIC
+        $<BUILD_INTERFACE:${STABLE_DIFFUSION_CPP_DIR}>
+    )
+endif()
