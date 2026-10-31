@@ -17,5 +17,5 @@ static std::string applyJinjaTemplate(const llama_model* model, std::vector<comm
   inputs.tools = tools;
   inputs.add_generation_prompt = addAss;
 
-  return common_chat_templates_apply(tmpls.get(), inputs).prompt;
+  return common_chat_templates_apply(tmpls.get(), inputs).prompt.str();
 }

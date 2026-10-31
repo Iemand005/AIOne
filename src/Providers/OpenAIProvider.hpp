@@ -1,5 +1,7 @@
 #pragma once
 
+#if defined(AIONE_ENABLE_OPENAI)
+
 #include "ILLMProvider.hpp"
 
 #include "..//HttpClient.hpp"
@@ -22,3 +24,5 @@ namespace AIOne {
 
 	};
 }
+
+#endif

@@ -1,5 +1,7 @@
 #pragma once
 
+#if defined(AIONE_ENABLE_OPENAI)
+
 #include <string>
 #include <vector>
 #include <nlohmann/json.hpp>
@@ -40,3 +42,5 @@ public:
         return models;
     }
 };
+
+#endif

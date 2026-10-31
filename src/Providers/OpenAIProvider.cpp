@@ -1,3 +1,5 @@
+#if defined(AIONE_ENABLE_OPENAI)
+
 #include "OpenAIProvider.hpp"
 
 #include <nlohmann/json.hpp>
@@ -270,3 +272,5 @@ void OpenAIProvider::complete(const std::string& model, const std::vector<Messag
 
 	if (options.onDone) options.onDone(result);
 }
+
+#endif

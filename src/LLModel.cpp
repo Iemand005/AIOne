@@ -158,7 +158,7 @@ LLModel::LLModel(const std::string path, const LLModelOptions &options) : impl(s
     llama_model_params modelParams = llama_model_default_params();
     modelParams.devices = devices.data();
     modelParams.n_gpu_layers = options.offloadLayers;
-    modelParams.use_mmap = options.useMmap;
+    modelParams.load_mode = options.useMmap ? LLAMA_LOAD_MODE_MMAP : LLAMA_LOAD_MODE_NONE;
     if (options.onProgress) {
         setProgressCallback(options.onProgress);
         modelParams.progress_callback_user_data = this;

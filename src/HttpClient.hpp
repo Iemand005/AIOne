@@ -1,5 +1,7 @@
 #pragma once
 
+#if defined(AIONE_ENABLE_OPENAI)
+
 #include <string>
 #include <httplib.h>
 
@@ -96,3 +98,5 @@ public:
         return { res->status, res->body };
     }
 };
+
+#endif
