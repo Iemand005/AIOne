@@ -320,7 +320,7 @@ target_link_libraries(AIOneCore PRIVATE
 
 target_include_directories(AIOneCore PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inlcude>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}>
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/include>
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/ggml/include>
