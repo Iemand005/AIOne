@@ -177,8 +177,6 @@ if(AIONE_VULKAN)
     endif()
 endif()
 
-add_subdirectory(${THIRD_PARTY_DIR}/wolfssl ${CMAKE_BINARY_DIR}/wolfssl_build)
-add_definitions(-DCPPHTTPLIB_WOLFSSL_SUPPORT)
 
 if(AIONE_OPENCL)
     set(LLAMA_CLBLAST ON CACHE BOOL "Enable CLBlast for OpenCL" FORCE)
@@ -274,7 +272,6 @@ if(AIONE_BUILD_SHARED_LIBS)
 else()
 endif()
 
-target_compile_definitions(AIOneCore PUBLIC CPPHTTPLIB_WOLFSSL_SUPPORT)
 
 # target_compile_definitions(AIOneCore PUBLIC LLAMA_UWP)
 
@@ -298,8 +295,6 @@ target_link_libraries(AIOneCore PRIVATE
     llama
     common
 )
-
-target_link_libraries(AIOneCore PUBLIC wolfssl)
 
 target_include_directories(AIOneCore PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
