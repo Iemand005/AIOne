@@ -304,7 +304,7 @@ if(AIONE_VULKAN)
     target_link_libraries(AIOneCore PRIVATE Vulkan::Vulkan)
 endif()
 
-if(AIONE_UWP)
+if(WIN32 AND NOT EMSCRIPTEN)
     target_link_libraries(AIOneCore PRIVATE windowsapp)
 endif()
 
