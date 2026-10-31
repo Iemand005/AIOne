@@ -5,3 +5,4 @@
 [submodule "external/stable-diffusion.cpp"]
 	path = external/stable-diffusion.cpp
 	url = https://github.com/Iemand005/stable-diffusion.cpp
+	update = none
