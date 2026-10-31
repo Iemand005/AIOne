@@ -7,6 +7,10 @@
 
 #include "LLModel.hpp"
 
+#ifdef _MSC_VER
+#define strdup _strdup
+#endif
+
 struct LLModel::Impl {
     llama_model_ptr model;
     llama_context_ptr context = nullptr;
@@ -170,7 +174,9 @@ LLModel::LLModel(const std::string path, const LLModelOptions &options) : impl(s
         };
     }
 
-    char *cpath = _strdup(path.c_str());
+#ifdef WIN32
+    char *cpath = strdup(path.c_str());
+#else
 
     llama_model_ptr model(llama_model_load_from_file(cpath, modelParams));
     if (!model)
