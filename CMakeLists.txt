@@ -319,7 +319,7 @@ endif()
 
 target_link_libraries(AIOneCore PRIVATE
     llama
-    common
+    llama-common
 )
 
 target_include_directories(AIOneCore PUBLIC
