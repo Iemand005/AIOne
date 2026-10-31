@@ -3,17 +3,33 @@
 namespace AIOne {
 
 void ModelSession::loadModel(const std::string& path) {
-    unloadModel();
 
-    factory.loadBackends();
+    bool ModelSession::loadModel(const std::string& path) {
+    std::printf("Loading model: %s\n", path.c_str());
+    std::fflush(stdout);
 
-    LLModelOptions options;
-    options.device = PreferredDevice::DGPU;
-    options.offloadLayers = -1;
-    options.useMmap = false;
+    try {
+        unloadModel();
 
-    model = factory.loadLLM(path, options);
-    context = model->createContext();
+        factory.loadBackends();
+
+        LLModelOptions options;
+        options.device = PreferredDevice::DGPU;
+        options.offloadLayers = -1;
+        options.useMmap = false;
+
+        model = factory.loadLLM(path, options);
+        context = model->createContext();
+    } catch (const std::exception& e) {
+        std::printf("C++ exception: %s\n", e.what());
+        std::fflush(stdout);
+        throw;
+    }
+
+    std::printf("Model loaded\n");
+    std::fflush(stdout);
+    return true;
+}
 }
 
 std::string ModelSession::generate(
