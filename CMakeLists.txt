@@ -18,6 +18,7 @@ option(AIONE_MSVC_STATIC_RUNTIME "Use static MSVC runtime (/MT,/MTd) for AIOneCo
 option(AIONE_BUILD_SHARED_LIBS "Build AIOneCore as a shared library (DLL)" OFF)
 option(AIONE_DEPS_SHARED "Build llama.cpp and stable-diffusion.cpp as shared libraries" OFF)
 option(AIONE_UWP "Enable UWP support (Disables mmap)" ON)
+option(AIONE_ENABLE_OPENAI "Enable OpenAI/HTTPS provider and remote API support" OFF)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -246,6 +247,11 @@ file(GLOB_RECURSE CORE_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
 )
 
+# OpenAI/HTTPS support is opt-in; only the local provider is built by default.
+if(NOT AIONE_ENABLE_OPENAI)
+    list(FILTER CORE_SOURCES EXCLUDE REGEX "OpenAIProvider\\.cpp")
+endif()
+
 # Automatically find all header files in src directory
 file(GLOB_RECURSE CORE_HEADERS 
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
@@ -270,6 +276,10 @@ endif()
 # endif()
 
 add_library(AIOne::Core ALIAS AIOneCore)
+
+if(AIONE_ENABLE_OPENAI)
+    target_compile_definitions(AIOneCore PRIVATE AIONE_ENABLE_OPENAI)
+endif()
 
 if(AIONE_BUILD_SHARED_LIBS)
     # CMake defines AIOneCore_EXPORTS for SHARED automatically.
