@@ -56,7 +56,7 @@ public:
     const char *systemInfoStr();
 
 private:
-#ifdef AIONE_VERBOSE
+#ifndef AIONE_VERBOSE
     static void llamaLogger(enum ggml_log_level level, const char *text, void *user_data) {}
 #endif
 };

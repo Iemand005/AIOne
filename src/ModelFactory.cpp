@@ -3,16 +3,19 @@
 #include <llama-cpp.h>
 void ModelFactory::loadBackends() {
     if (loadedBackends) return;
+#ifndef AIONE_VERBOSE
+    llama_log_set(llamaLogger, this);
+#endif
     ggml_backend_load_all();
     loadedBackends = true;
 }
 
 void ModelFactory::initLlama() {
     if (initializedLlama) return;
-    llama_backend_init();
-#ifdef AIONE_VERBOSE
+#ifndef AIONE_VERBOSE
     llama_log_set(llamaLogger, this);
 #endif
+    llama_backend_init();
     initializedLlama = true;
 }
 
