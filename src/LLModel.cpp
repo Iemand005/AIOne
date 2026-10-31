@@ -176,7 +176,7 @@ LLModel::LLModel(const std::string path, const LLModelOptions &options) : impl(s
 
 #ifdef WIN32
     char *cpath = strdup(path.c_str());
-#else
+#endif
 
     llama_model_ptr model(llama_model_load_from_file(cpath, modelParams));
     if (!model)
