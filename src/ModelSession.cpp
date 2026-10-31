@@ -29,7 +29,6 @@ void ModelSession::loadModel(const std::string& path) {
     std::fflush(stdout);
     return true;
 }
-}
 
 std::string ModelSession::generate(
     const std::string& prompt,
