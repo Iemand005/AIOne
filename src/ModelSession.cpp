@@ -2,7 +2,7 @@
 
 namespace AIOne {
 
-void ModelSession::loadModel(const std::string& path) {
+bool ModelSession::loadModel(const std::string& path) {
 
     std::printf("Loading model: %s\n", path.c_str());
     std::fflush(stdout);
