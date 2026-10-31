@@ -177,9 +177,6 @@ if(AIONE_VULKAN)
     endif()
 endif()
 
-add_subdirectory(${THIRD_PARTY_DIR}/wolfssl ${CMAKE_BINARY_DIR}/wolfssl_build)
-add_definitions(-DCPPHTTPLIB_WOLFSSL_SUPPORT)
-
 if(AIONE_OPENCL)
     set(LLAMA_CLBLAST ON CACHE BOOL "Enable CLBlast for OpenCL" FORCE)
     set(SD_OPENCL ON CACHE BOOL "Enable Stable Diffusion OpenCL" FORCE)
@@ -274,8 +271,6 @@ if(AIONE_BUILD_SHARED_LIBS)
 else()
 endif()
 
-target_compile_definitions(AIOneCore PUBLIC CPPHTTPLIB_WOLFSSL_SUPPORT)
-
 # target_compile_definitions(AIOneCore PUBLIC LLAMA_UWP)
 
 # Add header files to the library (for IDE support)
@@ -299,8 +294,6 @@ target_link_libraries(AIOneCore PRIVATE
     common
 )
 
-target_link_libraries(AIOneCore PUBLIC wolfssl)
-
 target_include_directories(AIOneCore PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}>
@@ -309,6 +302,5 @@ target_include_directories(AIOneCore PUBLIC
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/src>
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/vendor>
     $<BUILD_INTERFACE:${STABLE_DIFFUSION_CPP_DIR}>
-    $<BUILD_INTERFACE:${THIRD_PARTY_DIR}/cpp-httplib>
     $<INSTALL_INTERFACE:include/AIOneCore>
 )
