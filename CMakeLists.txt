@@ -218,17 +218,18 @@ else()
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 endif()
 # Both subprojects bundle a ggml copy, but only one "ggml" target can exist.
-# Build llama.cpp first so its (newer) ggml is the shared one; llama.cpp's sources
-# require ggml ops (ggml_gated_delta_net, ggml_rope_set_offset) missing from the
-# copy bundled with stable-diffusion.cpp.
-add_definitions(-DGGML_MAX_NAME=128)
-
-add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
+# Build stable-diffusion.cpp first so its ggml fork is the shared one (it requires
+# fork-only ops such as ggml_sage_attn and ggml_quantize_i8_convrot); llama.cpp
+# then reuses that ggml instead of adding its own. GGML_MAX_NAME must match the
+# value SD's CMake forces, or the two subprojects disagree on struct layouts.
+add_definitions(-DGGML_MAX_NAME=160)
 
 # stable-diffusion.cpp is optional; when disabled SDModel compiles to a no-op stub.
 if(AIONE_ENABLE_STABLE_DIFFUSION)
     add_subdirectory(${STABLE_DIFFUSION_CPP_DIR} ${CMAKE_BINARY_DIR}/stable-diffusion.cpp_build)
 endif()
+
+add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
 # set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
 if(AIONE_UWP)
