@@ -5,6 +5,3 @@
 [submodule "external/stable-diffusion.cpp"]
 	path = external/stable-diffusion.cpp
 	url = https://github.com/Iemand005/stable-diffusion.cpp
-[submodule "external/wolfssl"]
-	path = external/wolfssl
-	url = https://github.com/wolfSSL/wolfssl
