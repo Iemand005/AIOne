@@ -6,7 +6,7 @@
 #include <vector>
 #include <functional>
 #include <thread>
-#include <mutex >
+#include <mutex>
 #include <queue>
 
 #include "AIOneAPI.hpp"

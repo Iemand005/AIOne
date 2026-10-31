@@ -1,6 +1,11 @@
 
 #include "ModelFactory.hpp"
 #include <llama-cpp.h>
+
+#ifndef AIONE_VERBOSE
+static void llamaLogger(enum ggml_log_level level, const char *text, void *user_data) {}
+#endif
+
 void ModelFactory::loadBackends() {
     if (loadedBackends) return;
 #ifndef AIONE_VERBOSE

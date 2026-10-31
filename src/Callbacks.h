@@ -9,7 +9,7 @@ typedef std::shared_ptr<ProgressCallback> ProgressCallbackPtr;
 template<typename T>
 using FinishedTCallback = std::function<void(T)>;
 
-typedef FinishedTCallback<void> FinishedCallback;
+using FinishedCallback = std::function<void()>;
 
 // template <typename BaseT>
 // struct ResponseAsync : BaseT
