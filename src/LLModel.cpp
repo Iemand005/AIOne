@@ -249,7 +249,9 @@ TextGenResult LLModel::complete(
     if (cacheMissIndex > 0)
         promptTokens.erase(promptTokens.begin(), promptTokens.begin() + cacheMissIndex);
 
+#ifdef AIONE_VERBOSE
     std::cout << std::to_string(cacheMissIndex) + " cached tokens, " + std::to_string(promptTokens.size()) + " tokens to be evaluated" << std::endl;
+#endif
 
     // init sampler with options
     llama_sampler_chain_params samplerParams = llama_sampler_chain_default_params();
@@ -257,6 +259,8 @@ TextGenResult LLModel::complete(
 
     impl->sampler = llama_sampler_ptr(llama_sampler_chain_init(samplerParams));
     llama_sampler_chain_add(impl->sampler.get(), llama_sampler_init_min_p(options.minP, 1));
+    if (options.topK >= 0)
+        llama_sampler_chain_add(impl->sampler.get(), llama_sampler_init_top_k(options.topK));
     llama_sampler_chain_add(impl->sampler.get(), llama_sampler_init_temp(options.temperature));
     llama_sampler_chain_add(impl->sampler.get(), llama_sampler_init_dist(options.seed));
 
@@ -310,67 +314,72 @@ TextGenResult LLModel::complete(
     // context = messageContext->getContext()
 
     if (options.onGenerationStart) options.onGenerationStart();
-
-    // generation loop
-    size_t pos = 0;
-    size_t maxAdditionalTokens = options.maxTokens > 0 ? options.maxTokens : 1000000;
-    size_t maxPos = promptTokens.size() + maxAdditionalTokens;
+    
     size_t tokensGenerated = 0;
     std::string output;
-    output.reserve(156); // why 156? I dunno, it's yummi :3 yumymmymymyyyyyyyyy
 
-    while (pos + batch.n_tokens < maxPos)
-    {
-        bool isThinkTag = false;
+    // allowing 0 makes it be able to use cache warming like anthropic does
+    if (options.maxTokens != 0) {
+        // generation loop
+        size_t pos = 0;
+        size_t maxAdditionalTokens = options.maxTokens > 0 ? options.maxTokens : 10485760;
+        size_t maxPos = promptTokens.size() + maxAdditionalTokens;
+        output.reserve(156); // why 156? I dunno, it's yummi :3 yumymmymymyyyyyyyyy
 
-        // decode last batch (either input or the newly generated token)
-        if (llama_decode(impl->context.get(), batch)) // TODO if it fails, it fucks up the context :<
-          onError("Failed to evaluate input tokens");
+        while (pos + batch.n_tokens < maxPos)
+        {
+            bool isThinkTag = false;
 
-        pos += batch.n_tokens;
+            // decode last batch (either input or the newly generated token)
+            if (llama_decode(impl->context.get(), batch)) // TODO if it fails, it fucks up the context :<
+            onError("Failed to evaluate input tokens");
 
-        // generate a new token
-        llama_token newTokenId = llama_sampler_sample(impl->sampler.get(), impl->context.get(), -1);
+            pos += batch.n_tokens;
 
-        // if "end of generation" token emitted, stop generation
-        if (llama_vocab_is_eog(impl->vocab, newTokenId))
-            break;
+            // generate a new token
+            llama_token newTokenId = llama_sampler_sample(impl->sampler.get(), impl->context.get(), -1);
 
-        if (newTokenId == thinkStartToken) {
-            thinking = true;
-            isThinkTag = true;
-        } else if (newTokenId == thinkEndToken) {
-            thinking = false;
-            isThinkTag = true; // Skip the think start tag when listening for reasoning.
-        }
+            // if "end of generation" token emitted, stop generation
+            if (llama_vocab_is_eog(impl->vocab, newTokenId))
+                break;
 
-        if (isThinkTag && options.onThinkStateChange) options.onThinkStateChange(thinking);
+            if (newTokenId == thinkStartToken) {
+                thinking = true;
+                isThinkTag = true;
+            } else if (newTokenId == thinkEndToken) {
+                thinking = false;
+                isThinkTag = true; // Skip the think start tag when listening for reasoning.
+            }
 
-        if (isThinkTag) {
+            if (isThinkTag && options.onThinkStateChange) options.onThinkStateChange(thinking);
+
+            if (isThinkTag) {
+                // wrap token in batch for decoding
+                impl->setBatch(batch, &newTokenId, 1);
+                tokensGenerated++;
+                continue;
+            }
+
+            // convert token to text
+            char tokenBuffer[128];
+            bool outputSpecial = false;
+            int tokenSize = llama_token_to_piece(impl->vocab, newTokenId, tokenBuffer, sizeof(tokenBuffer), 0, outputSpecial);
+            if (tokenSize < 0)
+            onError("Failed to evaluate input tokens");
+            
+            std::string text(tokenBuffer, tokenSize);
+            
+            output.append(text);
+            if (options.onToken) options.onToken(text);
+            if (options.onTokenReasoning) options.onTokenReasoning(text, thinking);
+
             // wrap token in batch for decoding
             impl->setBatch(batch, &newTokenId, 1);
+
             tokensGenerated++;
-            continue;
         }
-
-        // convert token to text
-        char tokenBuffer[128];
-        bool outputSpecial = false;
-        int tokenSize = llama_token_to_piece(impl->vocab, newTokenId, tokenBuffer, sizeof(tokenBuffer), 0, outputSpecial);
-        if (tokenSize < 0)
-          onError("Failed to evaluate input tokens");
-        
-        std::string text(tokenBuffer, tokenSize);
-        
-        output.append(text);
-        if (options.onToken) options.onToken(text);
-        if (options.onTokenReasoning) options.onTokenReasoning(text, thinking);
-
-        // wrap token in batch for decoding
-        impl->setBatch(batch, &newTokenId, 1);
-
-        tokensGenerated++;
     }
+
 
     impl->freeBatch(batch);
     // llama_sampler_free(sampler.get()); important: do not free if the sampler has been added to a llama_sampler_chain (via llama_sampler_chain_add)
