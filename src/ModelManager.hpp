@@ -15,6 +15,10 @@ class ModelManager {
  public:
   ModelManager() : factory(std::make_unique<ModelFactory>()) {}
 
+  void initLlama() {
+    factory->initLlama();
+  }
+
   void loadLLMAsync(std::wstring path, LLModelOptionsAsync options = {}) {
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
     loadLLMAsync(converter.to_bytes(path), options);
