@@ -43,7 +43,6 @@ if(MSVC)
 
     add_compile_options( # need to do it this way or else they leak into nvcc which thinks they are input files
         "$<$<COMPILE_LANGUAGE:C,CXX>:/FS;/bigobj;/MP;/W3;/wd4244;/wd4267>"
-        "$<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/FS,-Xcompiler=/bigobj,-Xcompiler=/MP,-Xcompiler=/W3>"
     )
     # add_compile_options(/GR- /EHs-) # no RTTI, no C++ exceptions
     # add_compile_options(/GR-) # no RTTI, no C++ exceptions
