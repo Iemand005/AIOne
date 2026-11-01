@@ -41,7 +41,10 @@ if(MSVC)
     #     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>")
     # endif()
 
-    add_compile_options(/FS /bigobj /MP /W3 /wd4244 /wd4267)
+    add_compile_options( # need to do it this way or else they leak into nvcc which thinks they are input files
+        "$<$<COMPILE_LANGUAGE:C,CXX>:/FS;/bigobj;/MP;/W3;/wd4244;/wd4267>"
+        "$<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/FS,-Xcompiler=/bigobj,-Xcompiler=/MP,-Xcompiler=/W3>"
+    )
     # add_compile_options(/GR- /EHs-) # no RTTI, no C++ exceptions
     # add_compile_options(/GR-) # no RTTI, no C++ exceptions
     # add_link_options(/MAP /MAPINFO:EXPORTS)
@@ -71,11 +74,11 @@ else()
     set(LLAMA_UWP OFF CACHE BOOL "Enable UWP code paths in llama.cpp" FORCE)
 endif()
 
-set(LLAMA_CUBLAS OFF CACHE BOOL "" FORCE)
+# set(LLAMA_CUBLAS OFF CACHE BOOL "" FORCE)
 # set(LLAMA_VULKAN OFF CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE) # Default static in this subdir
 
-set(SD_CUDA OFF CACHE BOOL "" FORCE)
+# set(SD_CUDA OFF CACHE BOOL "" FORCE)
 set(SD_HIPBLAS OFF CACHE BOOL "" FORCE)
 set(SD_METAL OFF CACHE BOOL "" FORCE)
 # set(SD_VULKAN OFF CACHE BOOL "" FORCE)
@@ -83,8 +86,8 @@ set(SD_OPENCL OFF CACHE BOOL "" FORCE)
 set(SD_SYCL OFF CACHE BOOL "" FORCE)
 set(SD_MUSA OFF CACHE BOOL "" FORCE)
 
-set(GGML_CPU ON CACHE BOOL "" FORCE)
-set(GGML_CUDA OFF CACHE BOOL "" FORCE)
+# set(GGML_CPU ON CACHE BOOL "" FORCE)
+# set(GGML_CUDA OFF CACHE BOOL "" FORCE)
 set(GGML_HIP OFF CACHE BOOL "" FORCE)
 set(GGML_METAL OFF CACHE BOOL "" FORCE)
 # set(GGML_VULKAN OFF CACHE BOOL "" FORCE)
@@ -100,6 +103,28 @@ set(GGML_MUSA OFF CACHE BOOL "" FORCE)
 get_filename_component(THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external" ABSOLUTE)
 set(LLAMA_CPP_DIR "${THIRD_PARTY_DIR}/llama.cpp")
 set(STABLE_DIFFUSION_CPP_DIR "${THIRD_PARTY_DIR}/stable-diffusion.cpp")
+
+unset(GGML_CPU CACHE)
+
+if (AIONE_NOCPU)
+    set(GGML_CPU OFF CACHE BOOL "" FORCE)
+else()
+    set(GGML_CPU ON CACHE BOOL "" FORCE)
+endif()
+
+# unset(LLAMA_CUBLAS CACHE)
+unset(SD_CUDA CACHE)
+unset(GGML_CUDA CACHE)
+
+if (AIONE_CUDA)
+    # set(LLAMA_CUBLAS ON CACHE BOOL "" FORCE) # will not build if set to on cuz llama cpp wants GGML_CUDA
+    set(SD_CUDA ON CACHE BOOL "" FORCE)
+    set(GGML_CUDA ON CACHE BOOL "" FORCE)
+else()
+    # set(LLAMA_CUBLAS OFF CACHE BOOL "" FORCE)
+    set(SD_CUDA OFF CACHE BOOL "" FORCE)
+    set(GGML_CUDA OFF CACHE BOOL "" FORCE)
+endif()
 
 unset(SD_VULKAN CACHE)
 unset(LLAMA_VULKAN CACHE)
