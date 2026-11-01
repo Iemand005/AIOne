@@ -32,13 +32,15 @@ bool ModelSession::loadModel(const std::string& path) {
 
 std::string ModelSession::generate(
     const std::string& prompt,
-    unsigned int maxTokens
+    unsigned int maxTokens,
+    const TokenCallback& onToken
 ) {
     if (!model || !context)
         throw std::runtime_error("No model loaded; call loadModel() first");
 
     TextGenOptions options;
     options.maxTokens = maxTokens;
+    options.onToken = onToken;
 
     auto result = model->complete(context, prompt, options);
     return result.output.content;

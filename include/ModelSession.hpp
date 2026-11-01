@@ -11,7 +11,11 @@ namespace AIOne {
 	class ModelSession {
 	public:
 		bool loadModel(const std::string& path);
-		std::string generate(const std::string& prompt, unsigned int maxTokens = 128);
+		std::string generate(
+			const std::string& prompt,
+			unsigned int maxTokens = 128,
+			const TokenCallback& onToken = nullptr
+		);
 		void unloadModel();
 
 		bool isLoaded() const;
