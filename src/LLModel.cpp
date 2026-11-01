@@ -249,7 +249,9 @@ TextGenResult LLModel::complete(
     if (cacheMissIndex > 0)
         promptTokens.erase(promptTokens.begin(), promptTokens.begin() + cacheMissIndex);
 
+#ifdef AIONE_VERBOSE
     std::cout << std::to_string(cacheMissIndex) + " cached tokens, " + std::to_string(promptTokens.size()) + " tokens to be evaluated" << std::endl;
+#endif
 
     // init sampler with options
     llama_sampler_chain_params samplerParams = llama_sampler_chain_default_params();
