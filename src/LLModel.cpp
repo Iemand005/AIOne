@@ -3,6 +3,8 @@
 #include <llama-context.h>
 #include <common/chat.h>
 
+#include <chrono>
+
 #include "LlamaUtil.hpp"
 
 #include "LLModel.hpp"
@@ -270,6 +272,10 @@ TextGenResult LLModel::complete(
     llama_batch batch = {}; // init pointers with nullptr (see llama_batch_get_one), the `{}` is required
     impl->initBatch(batch, maxBatchSize, textContext->getSeqId());
 
+    auto promptEvalStart = std::chrono::steady_clock::now();
+
+    if (options.onInputEval) options.onInputEval(0.0f);
+
     for (size_t i = 0; i < promptTokens.size(); i += maxBatchSize)
     {
         size_t remainingTokens = promptTokens.size() - i;
@@ -298,7 +304,7 @@ TextGenResult LLModel::complete(
               onError("Failed to evaluate input tokens");
         }
 
-        if(options.onInputEval) options.onInputEval((float)i / promptTokens.size());
+        if(options.onInputEval) options.onInputEval((float)(i + batchSize) / promptTokens.size());
     }
 
     if (llama_model_has_encoder(impl->model.get()))
@@ -313,7 +319,13 @@ TextGenResult LLModel::complete(
 
     // context = messageContext->getContext()
 
+    auto promptEvalEnd = std::chrono::steady_clock::now();
+
+    if (options.onInputEval) options.onInputEval(1.0f);
+
     if (options.onGenerationStart) options.onGenerationStart();
+
+    auto generationStart = std::chrono::steady_clock::now();
     
     size_t tokensGenerated = 0;
     std::string output;
@@ -381,16 +393,31 @@ TextGenResult LLModel::complete(
     }
 
 
+    auto generationEnd = std::chrono::steady_clock::now();
+
     impl->freeBatch(batch);
     // llama_sampler_free(sampler.get()); important: do not free if the sampler has been added to a llama_sampler_chain (via llama_sampler_chain_add)
 
 
 
+    const double promptEvalMs = std::chrono::duration<double, std::milli>(promptEvalEnd - promptEvalStart).count();
+    const double generationMs = std::chrono::duration<double, std::milli>(generationEnd - generationStart).count();
+    const double promptTokensPerSecond = promptEvalMs > 0.0
+        ? static_cast<double>(promptTokens.size()) / (promptEvalMs / 1000.0)
+        : 0.0;
+    const double tokensPerSecond = generationMs > 0.0
+        ? static_cast<double>(tokensGenerated) / (generationMs / 1000.0)
+        : 0.0;
+
     TextGenResult result = {
         /*tokensEvaluated = */ promptTokens.size(),
         /*tokensGenerated = */ tokensGenerated,
         /*tokensCached    = */ cacheMissIndex,
-        /*output          = */ Message{Role::Assistant, output}
+        /*output          = */ Message{Role::Assistant, output},
+        /*promptEvalMs    = */ promptEvalMs,
+        /*generationMs    = */ generationMs,
+        /*promptTokensPerSecond = */ promptTokensPerSecond,
+        /*tokensPerSecond = */ tokensPerSecond
     };
 
     //if (options.onDone) // TODO: move ondone callback to here!

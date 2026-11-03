@@ -2,7 +2,7 @@
 
 namespace AIOne {
 
-bool ModelSession::loadModel(const std::string& path) {
+bool ModelSession::loadModel(const std::string& path, const ProgressCallback& onProgress) {
 
     std::printf("Loading model: %s\n", path.c_str());
     std::fflush(stdout);
@@ -16,6 +16,7 @@ bool ModelSession::loadModel(const std::string& path) {
         options.device = PreferredDevice::DGPU;
         options.offloadLayers = -1;
         options.useMmap = false;
+        options.onProgress = onProgress;
 
         model = factory.loadLLM(path, options);
         context = model->createContext();
@@ -30,20 +31,23 @@ bool ModelSession::loadModel(const std::string& path) {
     return true;
 }
 
-std::string ModelSession::generate(
+TextGenResult ModelSession::generate(
     const std::string& prompt,
     unsigned int maxTokens,
-    const TokenCallback& onToken
+    const GenerateCallbacks& callbacks
 ) {
     if (!model || !context)
         throw std::runtime_error("No model loaded; call loadModel() first");
 
     TextGenOptions options;
     options.maxTokens = maxTokens;
-    options.onToken = onToken;
+    options.onToken = callbacks.onToken;
+    options.onTokenReasoning = callbacks.onTokenReasoning;
+    options.onInputEval = callbacks.onInputEval;
+    options.onGenerationStart = callbacks.onGenerationStart;
+    options.onThinkStateChange = callbacks.onThinkStateChange;
 
-    auto result = model->complete(context, prompt, options);
-    return result.output.content;
+    return model->complete(context, prompt, options);
 }
 
 void ModelSession::unloadModel() {

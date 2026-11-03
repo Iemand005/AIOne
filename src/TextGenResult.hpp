@@ -9,4 +9,8 @@ struct TextGenResult
     size_t tokensGenerated;
     size_t tokensCached;
     Message output;
+    double promptEvalMs;
+    double generationMs;
+    double promptTokensPerSecond;
+    double tokensPerSecond;
 };
