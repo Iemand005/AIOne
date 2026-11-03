@@ -1,5 +1,6 @@
 #pragma once
 
+#ifndef AIONE_API
 #if defined(_WIN32)
   #ifdef AIONE_DYNAMIC
     #ifdef AIOneCore_EXPORTS
@@ -12,4 +13,5 @@
   #endif
 #else
   #define AIONE_API
+#endif
 #endif
