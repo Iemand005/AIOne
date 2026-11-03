@@ -36,8 +36,12 @@ public:
         runAsync([this, path, options, onDone]() { onDone(loadLLM(path, options)); });
     }
 
-    SDModelPtr loadSDM(const std::string path) {
-        return std::make_unique<SDModel>(path);
+    SDModelPtr loadSDM(const std::string path, SDModelOptions options) {
+        return std::make_unique<SDModel>(path, options, true);
+    }
+
+    void loadSDMAsync(const std::string path, SDModelOptions options = {}, LoadSDModelFinished onDone = nullptr) {
+        runAsync([this, path, options, onDone]() { onDone(loadSDM(path, options)); });
     }
 
     void convertSDModelAsync(std::string source, QuantTypes level, std::string destination, ProgressCallback callback, FinishedTCallback<bool> onDone = nullptr) {
