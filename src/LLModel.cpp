@@ -319,13 +319,12 @@ TextGenResult LLModel::complete(
 
     // context = messageContext->getContext()
 
-    auto promptEvalEnd = std::chrono::steady_clock::now();
-
     if (options.onInputEval) options.onInputEval(1.0f);
 
     if (options.onGenerationStart) options.onGenerationStart();
 
     auto generationStart = std::chrono::steady_clock::now();
+    bool firstGenerationDecode = true;
     
     size_t tokensGenerated = 0;
     std::string output;
@@ -345,6 +344,11 @@ TextGenResult LLModel::complete(
             // decode last batch (either input or the newly generated token)
             if (llama_decode(impl->context.get(), batch)) // TODO if it fails, it fucks up the context :<
             onError("Failed to evaluate input tokens");
+
+            if (firstGenerationDecode) {
+                generationStart = std::chrono::steady_clock::now();
+                firstGenerationDecode = false;
+            }
 
             pos += batch.n_tokens;
 
@@ -400,7 +404,7 @@ TextGenResult LLModel::complete(
 
 
 
-    const double promptEvalMs = std::chrono::duration<double, std::milli>(promptEvalEnd - promptEvalStart).count();
+    const double promptEvalMs = std::chrono::duration<double, std::milli>(generationStart - promptEvalStart).count();
     const double generationMs = std::chrono::duration<double, std::milli>(generationEnd - generationStart).count();
     const double promptTokensPerSecond = promptEvalMs > 0.0
         ? static_cast<double>(promptTokens.size()) / (promptEvalMs / 1000.0)
