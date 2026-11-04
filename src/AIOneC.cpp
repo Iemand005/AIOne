@@ -3,7 +3,10 @@
 #include "Chat.hpp"
 #include "ChatStorage.hpp"
 #include "Message.hpp"
+#include "ModelFactory.hpp"
 #include "ModelSession.hpp"
+
+#include <ggml-backend.h>
 
 #include <chrono>
 #include <cstdlib>
@@ -227,6 +230,52 @@ void aione_generate_result_free(aione_generate_result* result) {
     result->content = nullptr;
 }
 
+char* aione_format_chat_prompt_json(
+    aione_session* session,
+    const char* messages_json,
+    int add_generation_prompt
+) {
+    if (!session || !messages_json) {
+        setError("Invalid argument");
+        return nullptr;
+    }
+
+    try {
+        const nlohmann::json input = nlohmann::json::parse(messages_json);
+        std::vector<Message> messages;
+
+        for (const auto& item : input) {
+            Message message;
+            message.role = item.value("role", "user");
+            message.content = item.value("content", "");
+            messages.push_back(std::move(message));
+        }
+
+        std::string prompt;
+
+        if (add_generation_prompt) {
+            prompt = session->session.formatChatPrompt(messages, true);
+        } else {
+            if (messages.empty()) {
+                setError("No messages provided");
+                return nullptr;
+            }
+
+            Message draft = messages.back();
+            messages.pop_back();
+            prompt = session->session.formatChatDraftPrompt(messages, draft);
+        }
+
+        return duplicateString(prompt);
+    } catch (const std::exception& e) {
+        setError(e.what());
+    } catch (...) {
+        setError("Failed to format chat prompt");
+    }
+
+    return nullptr;
+}
+
 char* aione_chat_list_json(void) {
     try {
         std::lock_guard<std::mutex> lock(g_chatMutex);
@@ -310,10 +359,11 @@ char* aione_chat_load_json(const char* folder) {
     return nullptr;
 }
 
-char* aione_chat_append_json(
+char* aione_chat_append_with_parent_json(
     const char* folder,
     const char* role,
-    const char* content
+    const char* content,
+    unsigned long long parent_id
 ) {
     if (!folder || !isValidFolder(folder)) {
         setError("Invalid chat folder");
@@ -343,7 +393,12 @@ char* aione_chat_append_json(
         Chat chat;
         chat.setFolder(path);
         chat.setMessages(ChatStorage::loadMessages(folder));
-        chat.addMessage(roleValue, content ? content : "");
+
+        if (parent_id != 0) {
+            chat.addMessage(Message(roleValue, content ? content : "", parent_id));
+        } else {
+            chat.addMessage(roleValue, content ? content : "");
+        }
 
         return duplicateString(messageJson(chat.getLastMessage()).dump());
     } catch (const std::exception& e) {
@@ -352,6 +407,14 @@ char* aione_chat_append_json(
         setError("Failed to save chat message");
     }
     return nullptr;
+}
+
+char* aione_chat_append_json(
+    const char* folder,
+    const char* role,
+    const char* content
+) {
+    return aione_chat_append_with_parent_json(folder, role, content, 0);
 }
 
 int aione_chat_update_metadata(
@@ -414,6 +477,54 @@ int aione_chat_delete(const char* folder) {
         setError("Failed to delete chat");
     }
     return 0;
+}
+
+char* aione_system_info_json(void) {
+    try {
+        ModelFactory factory;
+        factory.loadBackends();
+        factory.initLlama();
+
+        nlohmann::json devices = nlohmann::json::array();
+
+        for (size_t i = 0; i < ggml_backend_dev_count(); ++i) {
+            ggml_backend_dev_t device = ggml_backend_dev_get(i);
+            if (!device) continue;
+
+            ggml_backend_dev_props props{};
+            ggml_backend_dev_get_props(device, &props);
+
+            const char* type = "unknown";
+            switch (props.type) {
+                case GGML_BACKEND_DEVICE_TYPE_CPU: type = "cpu"; break;
+                case GGML_BACKEND_DEVICE_TYPE_GPU: type = "gpu"; break;
+                case GGML_BACKEND_DEVICE_TYPE_IGPU: type = "igpu"; break;
+                case GGML_BACKEND_DEVICE_TYPE_ACCEL: type = "accelerator"; break;
+                case GGML_BACKEND_DEVICE_TYPE_META: type = "meta"; break;
+            }
+
+            devices.push_back({
+                {"index", i},
+                {"name", props.name ? props.name : ""},
+                {"description", props.description ? props.description : ""},
+                {"type", type},
+                {"memoryFree", props.memory_free},
+                {"memoryTotal", props.memory_total},
+                {"deviceId", props.device_id ? props.device_id : ""}
+            });
+        }
+
+        nlohmann::json result;
+        result["devices"] = std::move(devices);
+        result["systemInfo"] = factory.systemInfoStr();
+
+        return duplicateString(result.dump());
+    } catch (const std::exception& e) {
+        setError(e.what());
+    } catch (...) {
+        setError("Failed to read system information");
+    }
+    return nullptr;
 }
 
 void aione_string_free(char* value) {

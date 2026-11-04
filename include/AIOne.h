@@ -67,7 +67,15 @@ AIONE_API aione_generate_result aione_session_generate(
     const aione_generate_callbacks* callbacks
 );
 AIONE_API void aione_generate_result_free(aione_generate_result* result);
+AIONE_API char* aione_format_chat_prompt_json(
+    aione_session* session,
+    const char* messages_json,
+    int add_generation_prompt
+);
 AIONE_API const char* aione_last_error(void);
+
+/* Hardware information reported by the llama.cpp/ggml backends. */
+AIONE_API char* aione_system_info_json(void);
 
 /* Chat history storage, using the same on-disk format as the desktop app. */
 AIONE_API char* aione_chat_list_json(void);
@@ -81,6 +89,12 @@ AIONE_API char* aione_chat_append_json(
     const char* folder,
     const char* role,
     const char* content
+);
+AIONE_API char* aione_chat_append_with_parent_json(
+    const char* folder,
+    const char* role,
+    const char* content,
+    unsigned long long parent_id
 );
 AIONE_API int aione_chat_update_metadata(
     const char* folder,

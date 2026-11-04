@@ -50,6 +50,26 @@ TextGenResult ModelSession::generate(
     return model->complete(context, prompt, options);
 }
 
+std::string ModelSession::formatChatPrompt(
+    const std::vector<Message>& messages,
+    bool addGenerationPrompt
+) {
+    if (!model)
+        throw std::runtime_error("No model loaded; call loadModel() first");
+
+    return model->chatToPrompt(messages, addGenerationPrompt);
+}
+
+std::string ModelSession::formatChatDraftPrompt(
+    const std::vector<Message>& messages,
+    Message draft
+) {
+    if (!model)
+        throw std::runtime_error("No model loaded; call loadModel() first");
+
+    return model->chatToPrompt(messages, draft);
+}
+
 void ModelSession::unloadModel() {
     context.reset();
     model.reset();
