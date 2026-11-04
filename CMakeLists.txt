@@ -138,9 +138,7 @@ unset(GGML_VULKAN CACHE)
 
 if(AIONE_VULKAN)
     # set(VULKAN_SDK_PATH "C:/VulkanSDK/1.4.335.0")
-    set(CMAKE_PREFIX_PATH "${VULKAN_SDK_PATH};${CMAKE_PREFIX_PATH}" )
-    set(Vulkan_INCLUDE_DIR "${VULKAN_SDK_PATH}/Include" CACHE PATH "Vulkan include dir" FORCE)
-    set(Vulkan_LIBRARY "${VULKAN_SDK_PATH}/Lib/vulkan-1.lib" CACHE FILEPATH "Vulkan library" FORCE)
+
 
     set(LLAMA_VULKAN ON CACHE BOOL "Enable Vulkan for llama.cpp" FORCE)
     set(GGML_VULKAN ON CACHE BOOL "Enable Vulkan for ggml" FORCE)
@@ -218,6 +216,11 @@ if(AIONE_VULKAN AND WIN32)
 endif()
 
 if(AIONE_VULKAN)
+
+    set(CMAKE_PREFIX_PATH "${VULKAN_SDK_PATH};${CMAKE_PREFIX_PATH}" )
+    set(Vulkan_INCLUDE_DIR "${VULKAN_SDK_PATH}/Include" CACHE PATH "Vulkan include dir" FORCE)
+    set(Vulkan_LIBRARY "${VULKAN_SDK_PATH}/Lib/vulkan-1.lib" CACHE FILEPATH "Vulkan library" FORCE)
+
     find_package(Vulkan REQUIRED)
     if(Vulkan_FOUND)
         message(STATUS "Vulkan library found: ${Vulkan_LIBRARY}")
