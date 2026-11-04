@@ -1,0 +1,28 @@
+  llama-graph.cpp
+F:\AIOne\AIOneMetaProject\AIOne\external\llama.cpp\src\llama-context.cpp(2953,9): error C3861: 'ggml_backend_tensor_get_n': identifier not found [F:\AIOne\AIOneMetaProject\AIOneCLI\build\llama.cpp_
+build\src\llama.vcxproj]
+F:\AIOne\AIOneMetaProject\AIOne\external\llama.cpp\src\llama-context.cpp(3023,9): error C3861: 'ggml_backend_tensor_set_n': identifier not found [F:\AIOne\AIOneMetaProject\AIOneCLI\build\llama.cpp_
+build\src\llama.vcxproj]
+F:\AIOne\AIOneMetaProject\AIOne\external\llama.cpp\src\llama-context.cpp(3215,13): error C3861: 'ggml_backend_tensor_copy_n': identifier not found [F:\AIOne\AIOneMetaProject\AIOneCLI\build\llama.cp
+p_build\src\llama.vcxproj]
+F:\AIOne\AIOneMetaProject\AIOne\external\llama.cpp\src\llama-context.cpp(3314,21): error C3861: 'ggml_backend_tensor_copy_n': identifier not found [F:\AIOne\AIOneMetaProject\AIOneCLI\build\llama.cp
+p_build\src\llama.vcxproj]
+F:\AIOne\AIOneMetaProject\AIOne\external\llama.cpp\src\llama-context.cpp(3389,13): error C3861: 'ggml_backend_tensor_copy_n': identifier not found [F:\AIOne\AIOneMetaProject\AIOneCLI\build\llama.cp
+p_build\src\llama.vcxproj]
+F:\AIOne\AIOneMetaProject\AIOne\external\llama.cpp\src\llama-graph.cpp(3335,25): error C3861: 'ggml_top_k_mask': identifier not found [F:\AIOne\AIOneMetaProject\AIOneCLI\build\llama.cpp_build\src\l
+lama.vcxproj]
+F:\AIOne\AIOneMetaProject\AIOne\external\llama.cpp\src\models\qwen4exp.cpp(899,30): error C3861: 'ggml_top_k_mask': identifier not found [F:\AIOne\AIOneMetaProject\AIOneCLI\build\llama.cpp_build\sr
+c\llama.vcxproj]
+  (compiling source file 'CMakeFiles/llama.dir/Unity/unity_9_cxx.cxx')
+  
+F:\AIOne\AIOneMetaProject\AIOne\external\llama.cpp\src\models\rwkv7-base.cpp(70,64): warning C4305: 'argument': truncation from 'double' to 'float' [F:\AIOne\AIOneMetaProject\AIOneCLI\build\llama.c
+pp_build\src\llama.vcxproj]
+  (compiling source file 'CMakeFiles/llama.dir/Unity/unity_9_cxx.cxx')
+  
+F:\AIOne\AIOneMetaProject\AIOne\external\llama.cpp\src\models\rwkv7-base.cpp(94,47): warning C4305: 'argument': truncation from 'double' to 'float' [F:\AIOne\AIOneMetaProject\AIOneCLI\build\llama.c
+pp_build\src\llama.vcxproj]
+  (compiling source file 'CMakeFiles/llama.dir/Unity/unity_9_cxx.cxx')
+  
+F:\AIOne\AIOneMetaProject\AIOne\external\llama.cpp\src\models\glm5-next.cpp(984,34): error C3861: 'ggml_top_k_mask': identifier not found [F:\AIOne\AIOneMetaProject\AIOneCLI\build\llama.cpp_build\s
+rc\llama.vcxproj]
+  (compiling source file 'CMakeFiles/llama.dir/Unity/unity_3_cxx.cxx')

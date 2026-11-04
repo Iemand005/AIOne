@@ -35,6 +35,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+option(AIONE_PRELOAD_GGML "Preload GGML so llama's or SD's can be used (no effect when SD is disabled)" ON)
+option(AIONE_PRELOAD_GGML_LLAMA "Preload using llama.cpp's GGML, else uses stablediffusion.cpp's GGML" OFF)
+
 if(MSVC)
     # if(AIONE_MSVC_STATIC_RUNTIME)
     #     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -235,15 +238,39 @@ endif()
 
 # Add the submodules (build as DLLs)
 if(AIONE_GGML_SHARED)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 else()
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 endif()
 # Both subprojects bundle a ggml copy, but only one "ggml" target can exist.
-# Build llama.cpp first so its ggml is the shared one; stable-diffusion.cpp then
-# reuses it instead of adding its own. GGML_MAX_NAME must match the value SD's
+# Build one of the GGMLs first based on option so it's shared; the libs then
+# reuse it instead of adding their own. GGML_MAX_NAME must match the value SD's
 # CMake forces, or the two subprojects disagree on struct layouts.
 add_definitions(-DGGML_MAX_NAME=160)
+
+if(AIONE_PRELOAD_GGML AND AIONE_ENABLE_STABLE_DIFFUSION)
+    # "INSANE CMAKE HACK" as gemini puts it
+    macro(add_library target)
+        if("${target}" STREQUAL "ggml" AND "${ARGV1}" STREQUAL "ALIAS")
+            message(STATUS "Intercepted and suppressed: add_library(ggml ALIAS ...) to prevent collision")
+        else()
+            _add_library(${ARGV})
+        endif()
+    endmacro()
+
+    set(LLAMA_USE_SYSTEM_GGML ON CACHE BOOL "" FORCE)
+    set(SD_USE_SYSTEM_GGML ON CACHE BOOL "" FORCE)
+
+    if (AIONE_PRELOAD_GGML_LLAMA)
+        set(PRELOAD_GGML_DIR "${LLAMA_CPP_DIR}/ggml")
+    else()
+        set(PRELOAD_GGML_DIR "${STABLE_DIFFUSION_CPP_DIR}/ggml")
+    endif()
+
+    include(FetchContent)
+    FetchContent_Declare(ggml SOURCE_DIR "${PRELOAD_GGML_DIR}" OVERRIDE_FIND_PACKAGE)
+    FetchContent_MakeAvailable(ggml)
+endif()
 
 add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
 
