@@ -69,6 +69,28 @@ AIONE_API aione_generate_result aione_session_generate(
 AIONE_API void aione_generate_result_free(aione_generate_result* result);
 AIONE_API const char* aione_last_error(void);
 
+/* Chat history storage, using the same on-disk format as the desktop app. */
+AIONE_API char* aione_chat_list_json(void);
+AIONE_API char* aione_chat_create_json(
+    const char* title,
+    const char* model,
+    const char* system_prompt
+);
+AIONE_API char* aione_chat_load_json(const char* folder);
+AIONE_API char* aione_chat_append_json(
+    const char* folder,
+    const char* role,
+    const char* content
+);
+AIONE_API int aione_chat_update_metadata(
+    const char* folder,
+    const char* title,
+    const char* model,
+    const char* system_prompt
+);
+AIONE_API int aione_chat_delete(const char* folder);
+AIONE_API void aione_string_free(char* value);
+
 #ifdef __cplusplus
 }
 #endif

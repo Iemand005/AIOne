@@ -1,11 +1,19 @@
 #include "AIOne.h"
 
+#include "Chat.hpp"
+#include "ChatStorage.hpp"
+#include "Message.hpp"
 #include "ModelSession.hpp"
 
+#include <chrono>
 #include <cstdlib>
 #include <cstring>
 #include <exception>
+#include <filesystem>
+#include <mutex>
 #include <string>
+
+#include <nlohmann/json.hpp>
 
 struct aione_session {
     AIOne::ModelSession session;
@@ -25,6 +33,46 @@ char* duplicateString(const std::string& value) {
         std::memcpy(buffer, value.c_str(), value.size() + 1);
     }
     return buffer;
+}
+
+std::mutex g_chatMutex;
+
+bool isValidFolder(const std::string& folder) {
+    if (folder.empty() || folder == "." || folder == "..") return false;
+    return folder.find('/') == std::string::npos &&
+           folder.find('\\') == std::string::npos &&
+           folder.find(':') == std::string::npos;
+}
+
+std::string chatPath(const std::string& folder) {
+    return ChatStorage::rootPath() + "/" + folder;
+}
+
+int64_t nowMillis() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+}
+
+nlohmann::json messageJson(const Message& message) {
+    return {
+        {"id", message.id},
+        {"parentId", message.parentId},
+        {"role", message.role},
+        {"content", message.content},
+        {"creationTime", message.timestamps.creationTime},
+        {"finishTime", message.timestamps.modificationTime}
+    };
+}
+
+nlohmann::json metadataJson(const ChatMetadata& meta) {
+    return {
+        {"folder", meta.folder},
+        {"title", meta.title},
+        {"model", meta.model},
+        {"systemPrompt", meta.systemPrompt},
+        {"created", meta.created},
+        {"updated", meta.updated}
+    };
 }
 
 AIOne::GenerateCallbacks makeCallbacks(const aione_generate_callbacks* callbacks) {
@@ -177,6 +225,199 @@ void aione_generate_result_free(aione_generate_result* result) {
     if (!result) return;
     std::free(result->content);
     result->content = nullptr;
+}
+
+char* aione_chat_list_json(void) {
+    try {
+        std::lock_guard<std::mutex> lock(g_chatMutex);
+        ChatStorage::init();
+
+        nlohmann::json result = nlohmann::json::array();
+        for (const auto& meta : ChatStorage::scan()) {
+            result.push_back(metadataJson(meta));
+        }
+
+        return duplicateString(result.dump());
+    } catch (const std::exception& e) {
+        setError(e.what());
+    } catch (...) {
+        setError("Failed to list chats");
+    }
+    return nullptr;
+}
+
+char* aione_chat_create_json(
+    const char* title,
+    const char* model,
+    const char* system_prompt
+) {
+    try {
+        std::lock_guard<std::mutex> lock(g_chatMutex);
+        ChatStorage::init();
+
+        ChatMetadata meta;
+        meta.title = (title && *title) ? title : "New chat";
+        meta.model = model ? model : "";
+        meta.systemPrompt = system_prompt ? system_prompt : "";
+
+        const std::string folder = ChatStorage::createChat(meta);
+
+        if (!meta.systemPrompt.empty()) {
+            Chat chat(meta.systemPrompt);
+            chat.setFolder(chatPath(folder));
+            auto messages = chat.getMessages();
+            if (!messages.empty()) chat.saveMessage(messages[0]);
+        }
+
+        return duplicateString(metadataJson(ChatStorage::loadMetadata(folder)).dump());
+    } catch (const std::exception& e) {
+        setError(e.what());
+    } catch (...) {
+        setError("Failed to create chat");
+    }
+    return nullptr;
+}
+
+char* aione_chat_load_json(const char* folder) {
+    if (!folder || !isValidFolder(folder)) {
+        setError("Invalid chat folder");
+        return nullptr;
+    }
+
+    try {
+        std::lock_guard<std::mutex> lock(g_chatMutex);
+        ChatStorage::init();
+
+        const ChatMetadata meta = ChatStorage::loadMetadata(folder);
+        if (meta.folder.empty()) {
+            setError("Chat not found");
+            return nullptr;
+        }
+
+        nlohmann::json result = metadataJson(meta);
+        nlohmann::json messages = nlohmann::json::array();
+        for (const auto& message : ChatStorage::loadMessages(folder)) {
+            messages.push_back(messageJson(message));
+        }
+        result["messages"] = std::move(messages);
+
+        return duplicateString(result.dump());
+    } catch (const std::exception& e) {
+        setError(e.what());
+    } catch (...) {
+        setError("Failed to load chat");
+    }
+    return nullptr;
+}
+
+char* aione_chat_append_json(
+    const char* folder,
+    const char* role,
+    const char* content
+) {
+    if (!folder || !isValidFolder(folder)) {
+        setError("Invalid chat folder");
+        return nullptr;
+    }
+    if (!role) {
+        setError("Invalid role");
+        return nullptr;
+    }
+
+    const std::string roleValue(role);
+    if (roleValue != "system" && roleValue != "user" && roleValue != "assistant") {
+        setError("Invalid role");
+        return nullptr;
+    }
+
+    try {
+        std::lock_guard<std::mutex> lock(g_chatMutex);
+        ChatStorage::init();
+
+        const std::string path = chatPath(folder);
+        if (!std::filesystem::is_directory(path)) {
+            setError("Chat not found");
+            return nullptr;
+        }
+
+        Chat chat;
+        chat.setFolder(path);
+        chat.setMessages(ChatStorage::loadMessages(folder));
+        chat.addMessage(roleValue, content ? content : "");
+
+        return duplicateString(messageJson(chat.getLastMessage()).dump());
+    } catch (const std::exception& e) {
+        setError(e.what());
+    } catch (...) {
+        setError("Failed to save chat message");
+    }
+    return nullptr;
+}
+
+int aione_chat_update_metadata(
+    const char* folder,
+    const char* title,
+    const char* model,
+    const char* system_prompt
+) {
+    if (!folder || !isValidFolder(folder)) {
+        setError("Invalid chat folder");
+        return 0;
+    }
+
+    try {
+        std::lock_guard<std::mutex> lock(g_chatMutex);
+        ChatStorage::init();
+
+        ChatMetadata meta = ChatStorage::loadMetadata(folder);
+        if (meta.folder.empty()) {
+            setError("Chat not found");
+            return 0;
+        }
+
+        if (title) meta.title = title;
+        if (model) meta.model = model;
+        if (system_prompt) meta.systemPrompt = system_prompt;
+        meta.updated = nowMillis();
+
+        ChatStorage::saveMetadata(folder, meta);
+        return 1;
+    } catch (const std::exception& e) {
+        setError(e.what());
+    } catch (...) {
+        setError("Failed to update chat metadata");
+    }
+    return 0;
+}
+
+int aione_chat_delete(const char* folder) {
+    if (!folder || !isValidFolder(folder)) {
+        setError("Invalid chat folder");
+        return 0;
+    }
+
+    try {
+        std::lock_guard<std::mutex> lock(g_chatMutex);
+        ChatStorage::init();
+
+        const std::filesystem::path path = chatPath(folder);
+        if (!std::filesystem::is_directory(path)) {
+            setError("Chat not found");
+            return 0;
+        }
+
+        std::filesystem::remove_all(path);
+        return 1;
+    } catch (const std::exception& e) {
+        setError(e.what());
+    } catch (...) {
+        setError("Failed to delete chat");
+    }
+    return 0;
+}
+
+void aione_string_free(char* value) {
+    std::free(value);
 }
 
 const char* aione_last_error(void) {
