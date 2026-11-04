@@ -114,11 +114,8 @@ size_t TextContext::addCache(const std::vector<llama_token> &tokens) {
  * encoding/decoding from that index forward.
  */
 void TextContext::addCache(const std::vector<llama_token> &tokens, size_t cacheMissIndex) {
-    // truncate cached context starting from `cacheMissIndex`
-    // (if it's after the cached context size, skip truncation because whole cached prompt matched)
-    if (cacheMissIndex < impl->cache.size()) {
-        llama_memory_seq_rm(llama_get_memory(impl->context), impl->seqId, cacheMissIndex, -1);
-    }
+    // Drop generated tokens too, including when the prompt extends the full cached prompt.
+    llama_memory_seq_rm(llama_get_memory(impl->context), impl->seqId, cacheMissIndex, -1);
 
     // copy only new tokens into the cache
     impl->cache.resize(tokens.size());
