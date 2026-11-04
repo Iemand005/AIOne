@@ -174,16 +174,36 @@ if(AIONE_VULKAN AND WIN32)
         set(VULKAN_SDK_PATH "$ENV{VULKAN_SDK}")
         message(STATUS "Found Vulkan SDK from environment: ${VULKAN_SDK_PATH}")
     else()
-        if(EXISTS "C:/VulkanSDK/1.4.335.0")
-            set(VULKAN_SDK_PATH "C:/VulkanSDK/1.4.335.0")
-        elseif(EXISTS "C:/VulkanSDK/1.4.250.1")
-            set(VULKAN_SDK_PATH "C:/VulkanSDK/1.4.250.1")
-        elseif(EXISTS "C:/VulkanSDK")
+        # 1. Zoek naar alle submappen in C:/VulkanSDK
+        file(GLOB vulkan_dirs RELATIVE "C:/VulkanSDK" "C:/VulkanSDK/*")
+        
+        set(newest_version "0.0.0.0")
+        set(VULKAN_SDK_PATH "")
+
+        # 2. Loop door de mappen en vergelijk de versienummers
+        foreach(dir ${vulkan_dirs})
+            # Controleer of de mapnaam matcht met een versiestructuur (bijv. 1.4.363.0)
+            if(dir MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$")
+                if(dir VERSION_GREATER newest_version)
+                    set(newest_version ${dir})
+                    set(VULKAN_SDK_PATH "C:/VulkanSDK/${dir}")
+                endif()
+            endif()
+        endforeach()
+
+        # 3. Fallback als er geen specifieke versiemappen zijn gevonden, maar de hoofdmap wel bestaat
+        if(NOT VULKAN_SDK_PATH AND EXISTS "C:/VulkanSDK")
             set(VULKAN_SDK_PATH "C:/VulkanSDK")
+        endif()
+
+        # 4. Resultaat controleren
+        if(VULKAN_SDK_PATH)
+            message(STATUS "Automatically selected newest Vulkan SDK: ${VULKAN_SDK_PATH} (Version: ${newest_version})")
         else()
             message(WARNING "Vulkan SDK not found. Please install it or set VULKAN_SDK environment variable")
         endif()
     endif()
+
 
     if(VULKAN_SDK_PATH AND EXISTS "${VULKAN_SDK_PATH}")
         message(STATUS "Using Vulkan SDK at: ${VULKAN_SDK_PATH}")
