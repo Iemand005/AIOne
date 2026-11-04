@@ -35,6 +35,7 @@ struct TextGenOptions : TextGenOptionsBase
 
     TokenReasoningCallback onTokenReasoning;
     ThinkStateChangedCallback onThinkStateChange;
+    std::function<bool()> shouldStop;
 
     std::string systemPrompt = "";
 };

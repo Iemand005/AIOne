@@ -46,6 +46,7 @@ TextGenResult ModelSession::generate(
     options.onInputEval = callbacks.onInputEval;
     options.onGenerationStart = callbacks.onGenerationStart;
     options.onThinkStateChange = callbacks.onThinkStateChange;
+    options.shouldStop = callbacks.shouldStop;
 
     return model->complete(context, prompt, options);
 }

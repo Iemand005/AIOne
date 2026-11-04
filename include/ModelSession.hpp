@@ -17,6 +17,7 @@ namespace AIOne {
 		ProgressCallback onInputEval = nullptr;
 		NotifyCallback onGenerationStart = nullptr;
 		ThinkStateChangedCallback onThinkStateChange = nullptr;
+		std::function<bool()> shouldStop;
 	};
 
 	class ModelSession {

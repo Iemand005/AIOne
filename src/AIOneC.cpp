@@ -119,6 +119,13 @@ AIOne::GenerateCallbacks makeCallbacks(const aione_generate_callbacks* callbacks
         };
     }
 
+    if (callbacks->should_stop) {
+        const aione_should_stop_callback callback = callbacks->should_stop;
+        result.shouldStop = [callback, userData]() {
+            return callback(userData) != 0;
+        };
+    }
+
     return result;
 }
 

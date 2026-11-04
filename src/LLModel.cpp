@@ -337,7 +337,8 @@ TextGenResult LLModel::complete(
         size_t maxPos = promptTokens.size() + maxAdditionalTokens;
         output.reserve(156); // why 156? I dunno, it's yummi :3 yumymmymymyyyyyyyyy
 
-        while (pos + batch.n_tokens < maxPos)
+        while (pos + batch.n_tokens < maxPos &&
+               !(options.shouldStop && options.shouldStop()))
         {
             bool isThinkTag = false;
 

@@ -28,6 +28,7 @@ typedef void (*aione_token_callback)(const char* token, void* user_data);
 typedef void (*aione_token_reasoning_callback)(const char* token, int thinking, void* user_data);
 typedef void (*aione_generation_start_callback)(void* user_data);
 typedef void (*aione_think_state_callback)(int thinking, void* user_data);
+typedef int (*aione_should_stop_callback)(void* user_data);
 
 typedef struct aione_generate_callbacks {
     aione_token_callback on_token;
@@ -35,6 +36,7 @@ typedef struct aione_generate_callbacks {
     aione_progress_callback on_input_eval;
     aione_generation_start_callback on_generation_start;
     aione_think_state_callback on_think_state_change;
+    aione_should_stop_callback should_stop;
     void* user_data;
 } aione_generate_callbacks;
 
