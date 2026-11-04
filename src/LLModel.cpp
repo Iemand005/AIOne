@@ -245,6 +245,11 @@ TextGenResult LLModel::complete(
     llama_token thinkStartToken = getToken("<think>");
     llama_token thinkEndToken = getToken("</think>");
 
+    // Re-evaluate the last matching prompt token to restore logits before sampling.
+    if (cacheMissIndex > 0) {
+        --cacheMissIndex;
+    }
+
     // cache prompt and keep only the ones that were not already in the cache
     textContext->addCache(promptTokens, cacheMissIndex);
     
