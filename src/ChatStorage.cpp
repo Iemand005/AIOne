@@ -10,6 +10,7 @@
 #include <ctime>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <map>
 
 namespace fs = std::filesystem;
@@ -155,9 +156,26 @@ std::vector<Message> ChatStorage::loadMessages(const std::string& folder) {
     // broken entries would otherwise be orphaned from the active path. Re-parent
     // it to the last loaded message that precedes it in the file.
     uint64_t lastId = 0;
-    for (auto& msg : messages) {
-        if (msg.parentId != 0 && !loadedIds.count(msg.parentId))
-            msg.parentId = lastId;
+    for (size_t i = 0; i < messages.size(); ++i) {
+        auto& msg = messages[i];
+        if (msg.parentId != 0 && !loadedIds.count(msg.parentId)) {
+            const double roundedParentId = static_cast<double>(msg.parentId);
+            uint64_t closestId = 0;
+            uint64_t closestDistance = std::numeric_limits<uint64_t>::max();
+            for (size_t j = 0; j < i; ++j) {
+                const uint64_t candidateId = messages[j].id;
+                if (static_cast<double>(candidateId) != roundedParentId) continue;
+
+                const uint64_t distance = candidateId > msg.parentId
+                    ? candidateId - msg.parentId
+                    : msg.parentId - candidateId;
+                if (distance < closestDistance) {
+                    closestId = candidateId;
+                    closestDistance = distance;
+                }
+            }
+            msg.parentId = closestId != 0 ? closestId : lastId;
+        }
         lastId = msg.id;
     }
 
