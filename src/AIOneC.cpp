@@ -58,8 +58,8 @@ int64_t nowMillis() {
 
 nlohmann::json messageJson(const Message& message) {
     return {
-        {"id", message.id},
-        {"parentId", message.parentId},
+        {"id", std::to_string(message.id)},
+        {"parentId", std::to_string(message.parentId)},
         {"role", message.role},
         {"content", message.content},
         {"creationTime", message.timestamps.creationTime},
@@ -357,7 +357,7 @@ char* aione_chat_load_json(const char* folder) {
         chat.setMessages(loadedMessages);
         nlohmann::json activePath = nlohmann::json::array();
         for (const auto& message : chat.getActivePath()) {
-            activePath.push_back(message.id);
+            activePath.push_back(std::to_string(message.id));
         }
         for (const auto& message : loadedMessages) {
             messages.push_back(messageJson(message));
