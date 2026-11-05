@@ -35,7 +35,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-option(AIONE_PRELOAD_GGML "Use the `external/ggml` version of GGML instead of llama.cpp's" OFF)
+option(AIONE_PRELOAD_GGML "Use the `external/ggml` version of GGML instead of llama.cpp's" ON)
 
 if(MSVC)
     # if(AIONE_MSVC_STATIC_RUNTIME)
@@ -261,7 +261,7 @@ if(AIONE_PRELOAD_GGML)
     set(SD_USE_SYSTEM_GGML ON CACHE BOOL "" FORCE)
 
     include(FetchContent)
-    FetchContent_Declare(ggml SOURCE_DIR "${THIRD_PARTY_DIR}/sd.cpp-ggml" OVERRIDE_FIND_PACKAGE)
+    FetchContent_Declare(ggml SOURCE_DIR "${THIRD_PARTY_DIR}/ggml" OVERRIDE_FIND_PACKAGE)
     FetchContent_MakeAvailable(ggml)
 endif()
 

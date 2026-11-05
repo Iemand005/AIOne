@@ -6,3 +6,6 @@
 	path = external/stable-diffusion.cpp
 	url = https://github.com/Iemand005/stable-diffusion.cpp
 	update = none
+[submodule "external/ggml"]
+	path = external/ggml
+	url = https://github.com/Iemand005/ggml
