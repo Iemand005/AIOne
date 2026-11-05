@@ -352,10 +352,18 @@ char* aione_chat_load_json(const char* folder) {
 
         nlohmann::json result = metadataJson(meta);
         nlohmann::json messages = nlohmann::json::array();
-        for (const auto& message : ChatStorage::loadMessages(folder)) {
+        const auto loadedMessages = ChatStorage::loadMessages(folder);
+        Chat chat;
+        chat.setMessages(loadedMessages);
+        nlohmann::json activePath = nlohmann::json::array();
+        for (const auto& message : chat.getActivePath()) {
+            activePath.push_back(message.id);
+        }
+        for (const auto& message : loadedMessages) {
             messages.push_back(messageJson(message));
         }
         result["messages"] = std::move(messages);
+        result["activePath"] = std::move(activePath);
 
         return duplicateString(result.dump());
     } catch (const std::exception& e) {
