@@ -253,16 +253,16 @@ set(LLAMA_ALL_WARNINGS OFF CACHE BOOL "" FORCE)
 
 set(SD_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 if(AIONE_SD_SHARED)
-set(SD_BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+    set(SD_BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 else()
-set(SD_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+    set(SD_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 endif()
 
 # Add the submodules (build as DLLs)
 if(AIONE_GGML_SHARED)
-set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+    set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 else()
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 endif()
 # Both subprojects bundle a ggml copy, but only one "ggml" target can exist.
 # Build one of the GGMLs first based on option so it's shared; the libs then
