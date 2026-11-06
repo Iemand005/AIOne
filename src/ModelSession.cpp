@@ -45,21 +45,25 @@ TextGenResult ModelSession::generate(
     unsigned int maxTokens,
     const GenerateCallbacks& callbacks
 ) {
-    return generateWithTemperature(prompt, maxTokens, 0.8f, callbacks);
+    GenerateOptions options;
+    options.maxTokens = maxTokens;
+    return generateWithOptions(prompt, options, callbacks);
 }
 
-TextGenResult ModelSession::generateWithTemperature(
+TextGenResult ModelSession::generateWithOptions(
     const std::string& prompt,
-    unsigned int maxTokens,
-    float temperature,
+    const GenerateOptions& generateOptions,
     const GenerateCallbacks& callbacks
 ) {
     if (!model || !context)
         throw std::runtime_error("No model loaded; call loadModel() first");
 
     TextGenOptions options;
-    options.maxTokens = maxTokens;
-    options.temperature = temperature;
+    options.maxTokens = generateOptions.maxTokens;
+    options.minP = generateOptions.minP;
+    options.topK = generateOptions.topK;
+    options.temperature = generateOptions.temperature;
+    options.seed = generateOptions.seed;
     options.onToken = callbacks.onToken;
     options.onTokenReasoning = callbacks.onTokenReasoning;
     options.onInputEval = callbacks.onInputEval;

@@ -8,8 +8,11 @@
 #include "LLModel.hpp"
 #include "Message.hpp"
 #include "ModelFactory.hpp"
+#include "TextGenOptions.hpp"
 
 namespace AIOne {
+
+	using GenerateOptions = TextGenOptionsBase;
 
 	struct GenerateCallbacks {
 		TokenCallback onToken = nullptr;
@@ -36,10 +39,9 @@ namespace AIOne {
 			unsigned int maxTokens = 128,
 			const GenerateCallbacks& callbacks = {}
 		);
-		TextGenResult generateWithTemperature(
+		TextGenResult generateWithOptions(
 			const std::string& prompt,
-			unsigned int maxTokens,
-			float temperature,
+			const GenerateOptions& options,
 			const GenerateCallbacks& callbacks = {}
 		);
 		std::string formatChatPrompt(

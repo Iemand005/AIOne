@@ -78,6 +78,16 @@ nlohmann::json metadataJson(const ChatMetadata& meta) {
     };
 }
 
+AIOne::GenerateOptions makeGenerateOptions(const aione_generate_options& options) {
+    AIOne::GenerateOptions result;
+    result.maxTokens = options.max_tokens;
+    result.minP = options.min_p;
+    result.topK = static_cast<short>(options.top_k);
+    result.temperature = options.temperature;
+    result.seed = options.seed;
+    return result;
+}
+
 AIOne::GenerateCallbacks makeCallbacks(const aione_generate_callbacks* callbacks) {
     AIOne::GenerateCallbacks result;
     if (!callbacks) return result;
@@ -197,22 +207,20 @@ int aione_session_is_loaded(const aione_session* session) {
 aione_generate_result aione_session_generate(
     aione_session* session,
     const char* prompt,
-    unsigned int max_tokens,
-    float temperature,
+    const aione_generate_options* options,
     const aione_generate_callbacks* callbacks
 ) {
     aione_generate_result result{};
 
-    if (!session || !prompt) {
+    if (!session || !prompt || !options) {
         setError("Invalid argument");
         return result;
     }
 
     try {
-        const TextGenResult generated = session->session.generateWithTemperature(
+        const TextGenResult generated = session->session.generateWithOptions(
             prompt,
-            max_tokens,
-            temperature,
+            makeGenerateOptions(*options),
             makeCallbacks(callbacks)
         );
 
