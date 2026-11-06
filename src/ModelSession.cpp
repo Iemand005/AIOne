@@ -3,6 +3,14 @@
 namespace AIOne {
 
 bool ModelSession::loadModel(const std::string& path, const ProgressCallback& onProgress) {
+    return loadModelWithOptions(path, false, onProgress);
+}
+
+bool ModelSession::loadModelWithOptions(
+    const std::string& path,
+    bool noHost,
+    const ProgressCallback& onProgress
+) {
 
     std::printf("Loading model: %s\n", path.c_str());
     std::fflush(stdout);
@@ -16,6 +24,7 @@ bool ModelSession::loadModel(const std::string& path, const ProgressCallback& on
         options.device = PreferredDevice::DGPU;
         options.offloadLayers = -1;
         options.useMmap = false;
+        options.noHost = noHost;
         options.onProgress = onProgress;
 
         model = factory.loadLLM(path, options);
@@ -36,11 +45,21 @@ TextGenResult ModelSession::generate(
     unsigned int maxTokens,
     const GenerateCallbacks& callbacks
 ) {
+    return generateWithTemperature(prompt, maxTokens, 0.8f, callbacks);
+}
+
+TextGenResult ModelSession::generateWithTemperature(
+    const std::string& prompt,
+    unsigned int maxTokens,
+    float temperature,
+    const GenerateCallbacks& callbacks
+) {
     if (!model || !context)
         throw std::runtime_error("No model loaded; call loadModel() first");
 
     TextGenOptions options;
     options.maxTokens = maxTokens;
+    options.temperature = temperature;
     options.onToken = callbacks.onToken;
     options.onTokenReasoning = callbacks.onTokenReasoning;
     options.onInputEval = callbacks.onInputEval;

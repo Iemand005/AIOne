@@ -26,9 +26,20 @@ namespace AIOne {
 			const std::string& path,
 			const ProgressCallback& onProgress = nullptr
 		);
+		bool loadModelWithOptions(
+			const std::string& path,
+			bool noHost,
+			const ProgressCallback& onProgress = nullptr
+		);
 		TextGenResult generate(
 			const std::string& prompt,
 			unsigned int maxTokens = 128,
+			const GenerateCallbacks& callbacks = {}
+		);
+		TextGenResult generateWithTemperature(
+			const std::string& prompt,
+			unsigned int maxTokens,
+			float temperature,
 			const GenerateCallbacks& callbacks = {}
 		);
 		std::string formatChatPrompt(

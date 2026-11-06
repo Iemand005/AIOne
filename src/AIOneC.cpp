@@ -152,7 +152,8 @@ int aione_session_load_model(
     aione_session* session,
     const char* path,
     aione_progress_callback on_progress,
-    void* user_data
+    void* user_data,
+    int no_host
 ) {
     if (!session || !path) {
         setError("Invalid argument");
@@ -167,7 +168,7 @@ int aione_session_load_model(
             };
         }
 
-        return session->session.loadModel(path, progress) ? 1 : 0;
+        return session->session.loadModelWithOptions(path, no_host != 0, progress) ? 1 : 0;
     } catch (const std::exception& e) {
         setError(e.what());
     } catch (...) {
@@ -197,6 +198,7 @@ aione_generate_result aione_session_generate(
     aione_session* session,
     const char* prompt,
     unsigned int max_tokens,
+    float temperature,
     const aione_generate_callbacks* callbacks
 ) {
     aione_generate_result result{};
@@ -207,9 +209,10 @@ aione_generate_result aione_session_generate(
     }
 
     try {
-        const TextGenResult generated = session->session.generate(
+        const TextGenResult generated = session->session.generateWithTemperature(
             prompt,
             max_tokens,
+            temperature,
             makeCallbacks(callbacks)
         );
 

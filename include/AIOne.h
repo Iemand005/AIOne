@@ -58,7 +58,8 @@ AIONE_API int aione_session_load_model(
     aione_session* session,
     const char* path,
     aione_progress_callback on_progress,
-    void* user_data
+    void* user_data,
+    int no_host
 );
 AIONE_API void aione_session_unload_model(aione_session* session);
 AIONE_API int aione_session_is_loaded(const aione_session* session);
@@ -66,6 +67,7 @@ AIONE_API aione_generate_result aione_session_generate(
     aione_session* session,
     const char* prompt,
     unsigned int max_tokens,
+    float temperature,
     const aione_generate_callbacks* callbacks
 );
 AIONE_API void aione_generate_result_free(aione_generate_result* result);
