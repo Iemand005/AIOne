@@ -14,6 +14,11 @@ namespace AIOne {
 
 	using GenerateOptions = TextGenOptionsBase;
 
+	struct LoadOptions {
+		bool noHost = false;
+		uint32_t contextLength = 4096;
+	};
+
 	struct GenerateCallbacks {
 		TokenCallback onToken = nullptr;
 		TokenReasoningCallback onTokenReasoning = nullptr;
@@ -31,7 +36,7 @@ namespace AIOne {
 		);
 		bool loadModelWithOptions(
 			const std::string& path,
-			bool noHost,
+			const LoadOptions& options,
 			const ProgressCallback& onProgress = nullptr
 		);
 		TextGenResult generate(

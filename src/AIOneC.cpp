@@ -78,6 +78,13 @@ nlohmann::json metadataJson(const ChatMetadata& meta) {
     };
 }
 
+AIOne::LoadOptions makeLoadOptions(const aione_load_model_options& options) {
+    AIOne::LoadOptions result;
+    result.noHost = options.no_host != 0;
+    result.contextLength = options.context_length;
+    return result;
+}
+
 AIOne::GenerateOptions makeGenerateOptions(const aione_generate_options& options) {
     AIOne::GenerateOptions result;
     result.maxTokens = options.max_tokens;
@@ -161,11 +168,11 @@ void aione_session_destroy(aione_session* session) {
 int aione_session_load_model(
     aione_session* session,
     const char* path,
+    const aione_load_model_options* options,
     aione_progress_callback on_progress,
-    void* user_data,
-    int no_host
+    void* user_data
 ) {
-    if (!session || !path) {
+    if (!session || !path || !options) {
         setError("Invalid argument");
         return 0;
     }
@@ -178,7 +185,7 @@ int aione_session_load_model(
             };
         }
 
-        return session->session.loadModelWithOptions(path, no_host != 0, progress) ? 1 : 0;
+        return session->session.loadModelWithOptions(path, makeLoadOptions(*options), progress) ? 1 : 0;
     } catch (const std::exception& e) {
         setError(e.what());
     } catch (...) {

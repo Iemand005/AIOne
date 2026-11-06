@@ -3,12 +3,12 @@
 namespace AIOne {
 
 bool ModelSession::loadModel(const std::string& path, const ProgressCallback& onProgress) {
-    return loadModelWithOptions(path, false, onProgress);
+    return loadModelWithOptions(path, {}, onProgress);
 }
 
 bool ModelSession::loadModelWithOptions(
     const std::string& path,
-    bool noHost,
+    const LoadOptions& loadOptions,
     const ProgressCallback& onProgress
 ) {
 
@@ -24,7 +24,8 @@ bool ModelSession::loadModelWithOptions(
         options.device = PreferredDevice::DGPU;
         options.offloadLayers = -1;
         options.useMmap = false;
-        options.noHost = noHost;
+        options.noHost = loadOptions.noHost;
+        options.contextLength = loadOptions.contextLength;
         options.onProgress = onProgress;
 
         model = factory.loadLLM(path, options);
