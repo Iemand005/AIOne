@@ -75,11 +75,8 @@ struct Impl;
 
 public:
     SDModel();
-    SDModel(std::string path, bool load = true)  ;
-    SDModel(std::string path, SDModelOptions options, bool load = true) : SDModel(path) {
-        this->options = options;
-        if (load) loadModel();
-    }
+    SDModel(std::string path, bool load = true);
+    SDModel(std::string path, SDModelOptions options, bool load = true);
 
     ~SDModel();
 
@@ -141,6 +138,10 @@ public:
     }
 
     SDImage generateImage(const std::string positive, const std::string negative = "", SDImageOptions options = SDImageOptions{}) ;
+
+private:
+    static void sdCppLogger(enum sd_log_level_t level, const char* text, void* data);
+    static void initSdCpp();
 };
 
 typedef std::unique_ptr<SDModel> SDModelPtr;

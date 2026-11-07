@@ -248,14 +248,21 @@ endif()
 add_definitions(-DGGML_MAX_NAME=160)
 
 if(AIONE_PRELOAD_GGML)
-    # "INSANE CMAKE HACK" as gemini puts it
-    macro(add_library target)
-        if("${target}" STREQUAL "ggml" AND "${ARGV1}" STREQUAL "ALIAS")
-            message(STATUS "Intercepted and suppressed: add_library(ggml ALIAS ...) to prevent collision")
-        else()
-            _add_library(${ARGV})
-        endif()
-    endmacro()
+    # need this guard cuz add_subdirectory from AIOneMetaProject makes it import multiple times
+    # which fucks up the macro and causes recursion, so only define macro once per run
+    get_property(_add_library_guarded GLOBAL PROPERTY __ADD_LIBRARY_GUARDED)
+    if(NOT _add_library_guarded)
+        set_property(GLOBAL PROPERTY __ADD_LIBRARY_GUARDED TRUE)
+
+        # "INSANE CMAKE HACK" as gemini puts it
+        macro(add_library target)
+            if("${target}" STREQUAL "ggml" AND "${ARGV1}" STREQUAL "ALIAS")
+                message(STATUS "Intercepted and suppressed: add_library(ggml ALIAS ...) to prevent collision")
+            else()
+                _add_library(${ARGV})
+            endif()
+        endmacro()
+    endif()
 
     set(LLAMA_USE_SYSTEM_GGML ON CACHE BOOL "" FORCE)
     set(SD_USE_SYSTEM_GGML ON CACHE BOOL "" FORCE)
@@ -330,7 +337,7 @@ if(AIONE_ENABLE_OPENAI)
 endif()
 
 if(AIONE_ENABLE_STABLE_DIFFUSION)
-    target_compile_definitions(AIOneCore PRIVATE AIONE_ENABLE_STABLE_DIFFUSION)
+    target_compile_definitions(AIOneCore PUBLIC AIONE_ENABLE_STABLE_DIFFUSION)
 endif()
 
 if(AIONE_BUILD_SHARED_LIBS)
