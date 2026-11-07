@@ -78,6 +78,23 @@ nlohmann::json metadataJson(const ChatMetadata& meta) {
     };
 }
 
+AIOne::LoadOptions makeLoadOptions(const aione_load_model_options& options) {
+    AIOne::LoadOptions result;
+    result.noHost = options.no_host != 0;
+    result.contextLength = options.context_length;
+    return result;
+}
+
+AIOne::GenerateOptions makeGenerateOptions(const aione_generate_options& options) {
+    AIOne::GenerateOptions result;
+    result.maxTokens = options.max_tokens;
+    result.minP = options.min_p;
+    result.topK = static_cast<short>(options.top_k);
+    result.temperature = options.temperature;
+    result.seed = options.seed;
+    return result;
+}
+
 AIOne::GenerateCallbacks makeCallbacks(const aione_generate_callbacks* callbacks) {
     AIOne::GenerateCallbacks result;
     if (!callbacks) return result;
@@ -151,10 +168,11 @@ void aione_session_destroy(aione_session* session) {
 int aione_session_load_model(
     aione_session* session,
     const char* path,
+    const aione_load_model_options* options,
     aione_progress_callback on_progress,
     void* user_data
 ) {
-    if (!session || !path) {
+    if (!session || !path || !options) {
         setError("Invalid argument");
         return 0;
     }
@@ -167,7 +185,7 @@ int aione_session_load_model(
             };
         }
 
-        return session->session.loadModel(path, progress) ? 1 : 0;
+        return session->session.loadModelWithOptions(path, makeLoadOptions(*options), progress) ? 1 : 0;
     } catch (const std::exception& e) {
         setError(e.what());
     } catch (...) {
@@ -196,20 +214,20 @@ int aione_session_is_loaded(const aione_session* session) {
 aione_generate_result aione_session_generate(
     aione_session* session,
     const char* prompt,
-    unsigned int max_tokens,
+    const aione_generate_options* options,
     const aione_generate_callbacks* callbacks
 ) {
     aione_generate_result result{};
 
-    if (!session || !prompt) {
+    if (!session || !prompt || !options) {
         setError("Invalid argument");
         return result;
     }
 
     try {
-        const TextGenResult generated = session->session.generate(
+        const TextGenResult generated = session->session.generateWithOptions(
             prompt,
-            max_tokens,
+            makeGenerateOptions(*options),
             makeCallbacks(callbacks)
         );
 

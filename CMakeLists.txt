@@ -139,10 +139,8 @@ unset(LLAMA_VULKAN CACHE)
 unset(GGML_VULKAN CACHE)
 
 if(AIONE_VULKAN)
-    set(VULKAN_SDK_PATH "C:/VulkanSDK/1.4.335.0")
+    # set(VULKAN_SDK_PATH "C:/VulkanSDK/1.4.335.0")
     set(CMAKE_PREFIX_PATH "${VULKAN_SDK_PATH};${CMAKE_PREFIX_PATH}" )
-    set(Vulkan_INCLUDE_DIR "${VULKAN_SDK_PATH}/Include" CACHE PATH "Vulkan include dir" FORCE)
-    set(Vulkan_LIBRARY "${VULKAN_SDK_PATH}/Lib/vulkan-1.lib" CACHE FILEPATH "Vulkan library" FORCE)
 
     set(LLAMA_VULKAN ON CACHE BOOL "Enable Vulkan for llama.cpp" FORCE)
     set(GGML_VULKAN ON CACHE BOOL "Enable Vulkan for ggml" FORCE)
@@ -170,22 +168,42 @@ if(AIONE_VULKAN)
     set(GGML_VULKAN_SHADER_DEBUG_INFO OFF CACHE BOOL "" FORCE)
 endif()
 
+if(VULKAN_SDK_PATH)
+    set(Vulkan_ROOT "${VULKAN_SDK_PATH}")
+    list(APPEND CMAKE_PREFIX_PATH "${VULKAN_SDK_PATH}")
+endif()
+
 if(AIONE_VULKAN AND WIN32)
-    # Try multiple possible Vulkan SDK locations
     if(DEFINED ENV{VULKAN_SDK})
         set(VULKAN_SDK_PATH "$ENV{VULKAN_SDK}")
         message(STATUS "Found Vulkan SDK from environment: ${VULKAN_SDK_PATH}")
     else()
-        if(EXISTS "C:/VulkanSDK/1.4.335.0")
-            set(VULKAN_SDK_PATH "C:/VulkanSDK/1.4.335.0")
-        elseif(EXISTS "C:/VulkanSDK/1.4.250.1")
-            set(VULKAN_SDK_PATH "C:/VulkanSDK/1.4.250.1")
-        elseif(EXISTS "C:/VulkanSDK")
+        file(GLOB vulkan_dirs RELATIVE "C:/VulkanSDK" "C:/VulkanSDK/*")
+        
+        set(newest_version "0.0.0.0")
+        set(VULKAN_SDK_PATH "")
+
+        foreach(dir ${vulkan_dirs})
+            # Controleer of de mapnaam matcht met een versiestructuur (bijv. 1.4.363.0)
+            if(dir MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$")
+                if(dir VERSION_GREATER newest_version)
+                    set(newest_version ${dir})
+                    set(VULKAN_SDK_PATH "C:/VulkanSDK/${dir}")
+                endif()
+            endif()
+        endforeach()
+
+        if(NOT VULKAN_SDK_PATH AND EXISTS "C:/VulkanSDK")
             set(VULKAN_SDK_PATH "C:/VulkanSDK")
+        endif()
+
+        if(VULKAN_SDK_PATH)
+            message(STATUS "Automatically selected newest Vulkan SDK: ${VULKAN_SDK_PATH} (Version: ${newest_version})")
         else()
             message(WARNING "Vulkan SDK not found. Please install it or set VULKAN_SDK environment variable")
         endif()
     endif()
+
 
     if(VULKAN_SDK_PATH AND EXISTS "${VULKAN_SDK_PATH}")
         message(STATUS "Using Vulkan SDK at: ${VULKAN_SDK_PATH}")
@@ -195,6 +213,11 @@ if(AIONE_VULKAN AND WIN32)
 endif()
 
 if(AIONE_VULKAN)
+
+    
+    set(Vulkan_INCLUDE_DIR "${VULKAN_SDK_PATH}/Include" CACHE PATH "Vulkan include dir" FORCE)
+    set(Vulkan_LIBRARY "${VULKAN_SDK_PATH}/Lib/vulkan-1.lib" CACHE FILEPATH "Vulkan library" FORCE)
+
     find_package(Vulkan REQUIRED)
     if(Vulkan_FOUND)
         message(STATUS "Vulkan library found: ${Vulkan_LIBRARY}")
@@ -230,16 +253,16 @@ set(LLAMA_ALL_WARNINGS OFF CACHE BOOL "" FORCE)
 
 set(SD_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 if(AIONE_SD_SHARED)
-set(SD_BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+    set(SD_BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 else()
-set(SD_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+    set(SD_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 endif()
 
 # Add the submodules (build as DLLs)
 if(AIONE_GGML_SHARED)
-set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+    set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 else()
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 endif()
 # Both subprojects bundle a ggml copy, but only one "ggml" target can exist.
 # Build one of the GGMLs first based on option so it's shared; the libs then

@@ -40,6 +40,19 @@ typedef struct aione_generate_callbacks {
     void* user_data;
 } aione_generate_callbacks;
 
+typedef struct aione_load_model_options {
+    int no_host;
+    unsigned int context_length;
+} aione_load_model_options;
+
+typedef struct aione_generate_options {
+    unsigned int max_tokens;
+    float min_p;
+    int top_k;
+    float temperature;
+    unsigned int seed;
+} aione_generate_options;
+
 typedef struct aione_generate_result {
     char* content;
     unsigned long long tokens_evaluated;
@@ -57,6 +70,7 @@ AIONE_API void aione_session_destroy(aione_session* session);
 AIONE_API int aione_session_load_model(
     aione_session* session,
     const char* path,
+    const aione_load_model_options* options,
     aione_progress_callback on_progress,
     void* user_data
 );
@@ -65,7 +79,7 @@ AIONE_API int aione_session_is_loaded(const aione_session* session);
 AIONE_API aione_generate_result aione_session_generate(
     aione_session* session,
     const char* prompt,
-    unsigned int max_tokens,
+    const aione_generate_options* options,
     const aione_generate_callbacks* callbacks
 );
 AIONE_API void aione_generate_result_free(aione_generate_result* result);
