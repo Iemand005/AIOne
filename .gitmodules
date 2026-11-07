@@ -8,4 +8,5 @@
 	update = none
 [submodule "external/ggml"]
 	path = external/ggml
-	url = https://github.com/Iemand005/ggml
+	url = https://github.com/SmolFlexan/ggml
+	branch = sd.cpp

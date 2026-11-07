@@ -18,7 +18,7 @@ option(AIONE_WEBGPU "Enable WebGPU support (only for emscripten)" OFF)
 option(AIONE_MSVC_STATIC_RUNTIME "Use static MSVC runtime (/MT,/MTd) for AIOneCore" OFF)
 option(AIONE_BUILD_SHARED_LIBS "Build AIOneCore as a shared library (DLL)" OFF)
 option(AIONE_DEPS_SHARED "Build llama.cpp and stable-diffusion.cpp as shared libraries" OFF)
-option(AIONE_UWP "Enable UWP support (Disables mmap)" ON)
+option(AIONE_UWP "Enable UWP support (Disables mmap)" OFF)
 option(AIONE_ENABLE_OPENAI "Enable OpenAI/HTTPS provider and remote API support" OFF)
 option(AIONE_ENABLE_STABLE_DIFFUSION "Enable stable-diffusion.cpp image generation support" OFF)
 option(AIONE_VERBOSE "Enable verbose logging from AIOne and llama.cpp" OFF)
@@ -56,8 +56,10 @@ if(MSVC)
         # add_compile_options(/ZW)
         # Ensure platform.winmd is found for C++/CX builds
         if(DEFINED ENV{WindowsSdkDir} AND CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION)
-            add_compile_options(/AI"$ENV{WindowsSdkDir}UnionMetadata\\${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}")
-            add_compile_options(/AI"$ENV{WindowsSdkDir}References\\${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}")
+            add_compile_options(
+                "$<$<COMPILE_LANGUAGE:C,CXX>:/AI\"$ENV{WindowsSdkDir}UnionMetadata\\${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}\">"
+                "$<$<COMPILE_LANGUAGE:C,CXX>:/AI\"$ENV{WindowsSdkDir}References\\${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}\">"
+            )
         endif()
     endif()
 else()
@@ -271,14 +273,21 @@ endif()
 add_definitions(-DGGML_MAX_NAME=160)
 
 if(AIONE_PRELOAD_GGML)
-    # "INSANE CMAKE HACK" as gemini puts it
-    macro(add_library target)
-        if("${target}" STREQUAL "ggml" AND "${ARGV1}" STREQUAL "ALIAS")
-            message(STATUS "Intercepted and suppressed: add_library(ggml ALIAS ...) to prevent collision")
-        else()
-            _add_library(${ARGV})
-        endif()
-    endmacro()
+    # need this guard cuz add_subdirectory from AIOneMetaProject makes it import multiple times
+    # which fucks up the macro and causes recursion, so only define macro once per run
+    get_property(_add_library_guarded GLOBAL PROPERTY __ADD_LIBRARY_GUARDED)
+    if(NOT _add_library_guarded)
+        set_property(GLOBAL PROPERTY __ADD_LIBRARY_GUARDED TRUE)
+
+        # "INSANE CMAKE HACK" as gemini puts it
+        macro(add_library target)
+            if("${target}" STREQUAL "ggml" AND "${ARGV1}" STREQUAL "ALIAS")
+                message(STATUS "Intercepted and suppressed: add_library(ggml ALIAS ...) to prevent collision")
+            else()
+                _add_library(${ARGV})
+            endif()
+        endmacro()
+    endif()
 
     set(LLAMA_USE_SYSTEM_GGML ON CACHE BOOL "" FORCE)
     set(SD_USE_SYSTEM_GGML ON CACHE BOOL "" FORCE)
@@ -353,7 +362,7 @@ if(AIONE_ENABLE_OPENAI)
 endif()
 
 if(AIONE_ENABLE_STABLE_DIFFUSION)
-    target_compile_definitions(AIOneCore PRIVATE AIONE_ENABLE_STABLE_DIFFUSION)
+    target_compile_definitions(AIOneCore PUBLIC AIONE_ENABLE_STABLE_DIFFUSION)
 endif()
 
 if(AIONE_BUILD_SHARED_LIBS)

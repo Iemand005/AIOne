@@ -14,12 +14,14 @@ struct SDModelOptions : ModelOptions {
   bool keepVaeOnCpu = false;
 
   bool useMmap = false;
+  std::string backend = "";
 
   std::string vaePath = "";
   std::string taePath = "";
 
   std::string clipGPath = "";
   std::string clipLPath = "";
+  std::string t5xxlPath = "";
 
   ProgressCallback onProgress = nullptr;
 };
