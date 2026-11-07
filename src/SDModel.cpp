@@ -68,8 +68,9 @@ SDModel::SDModel(std::string path, bool load) : modelPath(path) {
     if (load) loadModel();
 }
 
-SDModel::SDModel(std::string path, SDModelOptions options, bool load) : SDModel(path, load) {
+SDModel::SDModel(std::string path, SDModelOptions options, bool load) : SDModel(path, false) {
     this->options = options;
+    if (load) loadModel();
 }
 
 
@@ -133,6 +134,7 @@ bool SDModel::saveImageAsPNG(const SDImage& imageo, const std::string& filename)
         params.diffusion_model_path = path.c_str();
         params.clip_l_path = options.clipLPath.c_str();
         params.clip_g_path = options.clipGPath.c_str();
+        params.t5xxl_path = options.t5xxlPath.c_str();
 
         // params.keep_clip_on_cpu = options.keepClipOnCpu; // TODO removed by sd.cpp, find alt?
         // params.keep_control_net_on_cpu = options.keepControlNetOnCpu; // TODO removed by sd.cpp, find alt?
@@ -142,7 +144,6 @@ bool SDModel::saveImageAsPNG(const SDImage& imageo, const std::string& filename)
         // params.vae_decode_only = options.vaeDecodeOnly; // TODO removed by sd.cpp, find alt?
 
         // params.clip_vision_path = "";
-        // params.t5xxl_path = "";
         // params.llm_path = "";
         // params.llm_vision_path = "";
         // params.high_noise_diffusion_model_path = "";
@@ -180,7 +181,6 @@ bool SDModel::saveImageAsPNG(const SDImage& imageo, const std::string& filename)
             std::cerr << "Failed to load model: " << path << std::endl;
             return false;
         }
-        std::cout << "aaaaaawd" << std::endl;
 
         return true;
     }
@@ -294,9 +294,9 @@ bool SDModel::saveImageAsPNG(const SDImage& imageo, const std::string& filename)
 
         sd_image_generation_result_t *results = nullptr;
         bool genSuccess = generate_image(impl->ctx, &img_gen_params, &results);
-        auto num_results = results->count;
+        int num_results;
         
-        if (!genSuccess || !num_results || results->items == nullptr) {
+        if (!genSuccess || !(num_results = results->count) || results->items == nullptr) {
             std::cerr << "Image generation failed or returned empty result" << std::endl;
             return {};
         }

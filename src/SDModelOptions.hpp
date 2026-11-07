@@ -20,6 +20,7 @@ struct SDModelOptions : ModelOptions {
 
   std::string clipGPath = "";
   std::string clipLPath = "";
+  std::string t5xxlPath = "";
 
   ProgressCallback onProgress = nullptr;
 };
