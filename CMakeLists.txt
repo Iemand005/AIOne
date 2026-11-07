@@ -18,7 +18,7 @@ option(AIONE_WEBGPU "Enable WebGPU support (only for emscripten)" OFF)
 option(AIONE_MSVC_STATIC_RUNTIME "Use static MSVC runtime (/MT,/MTd) for AIOneCore" OFF)
 option(AIONE_BUILD_SHARED_LIBS "Build AIOneCore as a shared library (DLL)" OFF)
 option(AIONE_DEPS_SHARED "Build llama.cpp and stable-diffusion.cpp as shared libraries" OFF)
-option(AIONE_UWP "Enable UWP support (Disables mmap)" ON)
+option(AIONE_UWP "Enable UWP support (Disables mmap)" OFF)
 option(AIONE_ENABLE_OPENAI "Enable OpenAI/HTTPS provider and remote API support" OFF)
 option(AIONE_ENABLE_STABLE_DIFFUSION "Enable stable-diffusion.cpp image generation support" OFF)
 option(AIONE_VERBOSE "Enable verbose logging from AIOne and llama.cpp" OFF)
@@ -56,8 +56,10 @@ if(MSVC)
         # add_compile_options(/ZW)
         # Ensure platform.winmd is found for C++/CX builds
         if(DEFINED ENV{WindowsSdkDir} AND CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION)
-            add_compile_options(/AI"$ENV{WindowsSdkDir}UnionMetadata\\${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}")
-            add_compile_options(/AI"$ENV{WindowsSdkDir}References\\${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}")
+            add_compile_options(
+                "$<$<COMPILE_LANGUAGE:C,CXX>:/AI\"$ENV{WindowsSdkDir}UnionMetadata\\${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}\">"
+                "$<$<COMPILE_LANGUAGE:C,CXX>:/AI\"$ENV{WindowsSdkDir}References\\${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}\">"
+            )
         endif()
     endif()
 else()

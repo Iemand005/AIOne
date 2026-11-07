@@ -91,17 +91,21 @@ void SDModel::freeContext(){
 bool SDModel::saveImageAsPNG(const SDImage& imageo, const std::string& filename) {
     sd_image_t image = impl->fromSDImage(imageo);
         if (!image.data || image.width == 0 || image.height == 0) {
-                std::cerr << "Invalid image data" << std::endl;
+            std::cerr << "Invalid image data" << std::endl;
             return false;
         }
 
         int success = stbi_write_png(filename.c_str(), image.width, image.height, image.channel, image.data, image.width * image.channel);
 
         if (success) {
+#ifdef AIONE_VERBOSE
             std::cout << "Saved image to: " << filename << std::endl;
+#endif
             return true;
         } else {
+#ifdef AIONE_VERBOSE
             std::cerr << "Failed to save image: " << filename << std::endl;
+#endif
             return false;
         }
     }
@@ -319,7 +323,7 @@ bool SDModel::saveImageAsPNG(const SDImage& imageo, const std::string& filename)
         safeCopy.channel = lastResult.channel;
         safeCopy.data = lastResult.data.data();  // Point to our safe buffer
         // std::chars_format
-        this->saveImageAsPNG(impl->toSDImage(safeCopy), positive +""+ std::to_string(img_gen_params.seed) + "rawr.png");
+        // this->saveImageAsPNG(impl->toSDImage(safeCopy), positive +""+ std::to_string(img_gen_params.seed) + "rawr.png");
         
         return impl->toSDImage(safeCopy);
     }
