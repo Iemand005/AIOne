@@ -197,7 +197,7 @@ bool SDModel::saveImageAsPNG(const SDImage& imageo, const std::string& filename)
         sd_set_progress_callback([](int step, int steps, float time, void *data){
             auto model = (SDModel *)data;
             auto onProgress = model->progressCallback();
-            if (onProgress) onProgress((float)step / (float)steps);
+            if (onProgress) onProgress((float)step / (float)steps, step, steps);
             else model->clearProgressCallback();
         }, this);
     }

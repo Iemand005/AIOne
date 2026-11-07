@@ -117,7 +117,7 @@ AIOne::GenerateCallbacks makeCallbacks(const aione_generate_callbacks* callbacks
 
     if (callbacks->on_input_eval) {
         const aione_progress_callback callback = callbacks->on_input_eval;
-        result.onInputEval = [callback, userData](const float progress) {
+        result.onInputEval = [callback, userData](const float progress, const int step, const int steps) {
             callback(progress, userData);
         };
     }
@@ -180,7 +180,7 @@ int aione_session_load_model(
     try {
         ProgressCallback progress;
         if (on_progress) {
-            progress = [on_progress, user_data](const float value) {
+            progress = [on_progress, user_data](const float value, const int step, const int steps) {
                 on_progress(value, user_data);
             };
         }

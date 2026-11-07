@@ -3,7 +3,7 @@
 #include <functional>
 #include <memory>
 
-typedef std::function<void(const float progress)> ProgressCallback;
+typedef std::function<void(const float progress, const int step, const int steps)> ProgressCallback;
 typedef std::shared_ptr<ProgressCallback> ProgressCallbackPtr;
 
 template<typename T>

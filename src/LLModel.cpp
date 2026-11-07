@@ -172,7 +172,7 @@ LLModel::LLModel(const std::string path, const LLModelOptions &options) : impl(s
         modelParams.progress_callback = [](float progress, void *data){
             auto model = (LLModel *)data;
             auto onProgress = model->progressCallback();
-            if (onProgress) onProgress(progress);
+            if (onProgress) onProgress(progress, 0, 0);
             return true;
         };
     }
@@ -280,7 +280,7 @@ TextGenResult LLModel::complete(
 
     auto promptEvalStart = std::chrono::steady_clock::now();
 
-    if (options.onInputEval) options.onInputEval(0.0f);
+    if (options.onInputEval) options.onInputEval(0.0f, 0, promptTokens.size());
 
     for (size_t i = 0; i < promptTokens.size(); i += maxBatchSize)
     {
@@ -310,7 +310,10 @@ TextGenResult LLModel::complete(
               onError("Failed to evaluate input tokens");
         }
 
-        if(options.onInputEval) options.onInputEval((float)(i + batchSize) / promptTokens.size());
+        if(options.onInputEval) {
+            int step = i + batchSize;
+            options.onInputEval((float)step / promptTokens.size(), step, promptTokens.size());
+        }
     }
 
     if (llama_model_has_encoder(impl->model.get()))
@@ -325,7 +328,7 @@ TextGenResult LLModel::complete(
 
     // context = messageContext->getContext()
 
-    if (options.onInputEval) options.onInputEval(1.0f);
+    if (options.onInputEval) options.onInputEval(1.0f, promptTokens.size(), promptTokens.size());
 
     if (options.onGenerationStart) options.onGenerationStart();
 
