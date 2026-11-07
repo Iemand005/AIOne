@@ -14,6 +14,7 @@ struct SDModelOptions : ModelOptions {
   bool keepVaeOnCpu = false;
 
   bool useMmap = false;
+  std::string backend = "";
 
   std::string vaePath = "";
   std::string taePath = "";

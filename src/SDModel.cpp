@@ -135,6 +135,7 @@ bool SDModel::saveImageAsPNG(const SDImage& imageo, const std::string& filename)
         params.clip_l_path = options.clipLPath.c_str();
         params.clip_g_path = options.clipGPath.c_str();
         params.t5xxl_path = options.t5xxlPath.c_str();
+        params.backend = options.backend.c_str();
 
         // params.keep_clip_on_cpu = options.keepClipOnCpu; // TODO removed by sd.cpp, find alt?
         // params.keep_control_net_on_cpu = options.keepControlNetOnCpu; // TODO removed by sd.cpp, find alt?
