@@ -14,6 +14,7 @@
 #include <cstring>
 #include <exception>
 #include <filesystem>
+#include <memory>
 #include <mutex>
 #include <string>
 
