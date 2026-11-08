@@ -1,4 +1,5 @@
 #include "TTSModel.hpp"
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -54,6 +55,12 @@ bool TTSModel::loadModel(const std::string& path, TTSModelOptions options) {
         return true;
     }
 
+#ifdef __EMSCRIPTEN__
+    const int threadCount = std::min<int>(options.threadCount, 2);
+#else
+    const int threadCount = options.threadCount;
+#endif
+
     // getBackend() is used by mmproj loading, so resolve ANY to an available device.
     selectDevice(options.device);
 
@@ -66,8 +73,8 @@ bool TTSModel::loadModel(const std::string& path, TTSModelOptions options) {
 #endif
     params.devices = devices;
     params.flash_attn_type = (options.flashAttention ? LLAMA_FLASH_ATTN_TYPE_ENABLED : LLAMA_FLASH_ATTN_TYPE_DISABLED);
-    params.cpuparams.n_threads = options.threadCount;
-    params.cpuparams_batch.n_threads = options.threadCount;
+    params.cpuparams.n_threads = threadCount;
+    params.cpuparams_batch.n_threads = threadCount;
     params.embedding = true; // required to pass hidden states to audio gen helper
 
     postprocess_cpu_params(params.cpuparams);
@@ -102,13 +109,19 @@ bool TTSModel::loadMmproj(const std::string& path, ModelOptions options) {
         return false;
     }
 
+#ifdef __EMSCRIPTEN__
+    const int threadCount = std::min<int>(options.threadCount, 2);
+#else
+    const int threadCount = options.threadCount;
+#endif
+
     mtmd_context_params mtmdParams = mtmd_context_params_default();
     mtmdParams.device = getBackend();
 
     enum ggml_backend_dev_type deviceType = ggml_backend_dev_type(mtmdParams.device);
     mtmdParams.use_gpu = (deviceType == GGML_BACKEND_DEVICE_TYPE_GPU || deviceType == GGML_BACKEND_DEVICE_TYPE_IGPU);
     mtmdParams.flash_attn_type = (options.flashAttention ? LLAMA_FLASH_ATTN_TYPE_ENABLED : LLAMA_FLASH_ATTN_TYPE_DISABLED);
-    mtmdParams.n_threads = options.threadCount;
+    mtmdParams.n_threads = threadCount;
     
     mctx = mtmd::context_ptr(mtmd_init_from_file(path.c_str(), model, mtmdParams));
     if (!mctx) {
