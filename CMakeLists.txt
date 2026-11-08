@@ -300,6 +300,7 @@ endif()
 
 if (AIONE_ENABLE_TTS)
     set(LLAMA_BUILD_MTMD ON CACHE BOOL "" FORCE)
+    set(MTMD_VIDEO OFF CACHE BOOL "" FORCE) # don't need video support for mtmd
 endif()
 
 add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
@@ -368,6 +369,10 @@ endif()
 
 if(AIONE_ENABLE_STABLE_DIFFUSION)
     target_compile_definitions(AIOneCore PUBLIC AIONE_ENABLE_STABLE_DIFFUSION)
+endif()
+
+if(AIONE_ENABLE_TTS)
+    target_compile_definitions(AIOneCore PUBLIC AIONE_ENABLE_TTS)
 endif()
 
 if(AIONE_BUILD_SHARED_LIBS)
