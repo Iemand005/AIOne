@@ -10,6 +10,9 @@
 
 #include "SDModel.hpp"
 
+static void sdCppLogger(enum sd_log_level_t level, const char* text, void* data);
+static void initSdCpp();
+
 struct SDModel::Impl {
     sd_ctx_t* ctx = nullptr;
 
@@ -328,13 +331,13 @@ bool SDModel::saveImageAsPNG(const SDImage& imageo, const std::string& filename)
         return impl->toSDImage(safeCopy);
     }
 
-    void SDModel::initSdCpp() {
+    static void initSdCpp() {
 #ifdef AIONE_VERBOSE
         sd_set_log_callback(sdCppLogger, nullptr);
 #endif
     }
 
-    void SDModel::sdCppLogger(enum sd_log_level_t level, const char* text, void* data) {
+    static void sdCppLogger(enum sd_log_level_t level, const char* text, void* data) {
 #ifdef AIONE_VERBOSE
         if (level == sd_log_level_t::SD_LOG_ERROR) {
             std::cerr << "[sd.cpp] " << text;

@@ -138,10 +138,6 @@ public:
     }
 
     SDImage generateImage(const std::string positive, const std::string negative = "", SDImageOptions options = SDImageOptions{}) ;
-
-private:
-    static void sdCppLogger(enum sd_log_level_t level, const char* text, void* data);
-    static void initSdCpp();
 };
 
 typedef std::unique_ptr<SDModel> SDModelPtr;
