@@ -10,6 +10,7 @@
 #include <string>
 #include <iostream>
 #include <llama.h>
+#include <llama-model.h>
 #include <common.h>
 
 #ifdef AIONE_ENABLE_TTS
@@ -49,6 +50,7 @@ private:
 
     bool loaded = false;
     bool loadedMmproj = false;
+    common_init_result_ptr llamaInit;
     llama_model* model;
     llama_context* ctx;
     common_sampler* sampler;

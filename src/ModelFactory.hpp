@@ -66,6 +66,8 @@ public:
 
 
     TTSModelPtr loadTTSM(const std::string path, TTSModelOptions options, const std::string mmprojPath, ModelOptions mmprojOptions) {
+        initLlama();
+        initCommon();
         return std::make_unique<TTSModel>(path, options, mmprojPath, mmprojOptions, true);
     }
 

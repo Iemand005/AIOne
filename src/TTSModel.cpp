@@ -11,6 +11,7 @@
 
 #ifdef AIONE_ENABLE_TTS
 #include <llama.h>
+#include <llama-model.h>
 #include <common.h>
 #include <sampling.h>
 #include <chat.h>
@@ -63,10 +64,14 @@ bool TTSModel::loadModel(const std::string& path, TTSModelOptions options) {
     params.model.path = path;
     params.devices = devices;
     params.flash_attn_type = (options.flashAttention ? LLAMA_FLASH_ATTN_TYPE_ENABLED : LLAMA_FLASH_ATTN_TYPE_DISABLED);
-    //params.n_threads = options.threadCount; // doesn't exist?
+    params.cpuparams.n_threads = options.threadCount;
+    params.cpuparams_batch.n_threads = options.threadCount;
     params.embedding = true; // required to pass hidden states to audio gen helper
 
-    common_init_result_ptr llamaInit = common_init_from_params(params);
+    postprocess_cpu_params(params.cpuparams);
+    postprocess_cpu_params(params.cpuparams_batch, &params.cpuparams);
+
+    llamaInit = common_init_from_params(params);
     model = llamaInit->model();
     if (!model) {
         std::cerr << "Failed to initialize TTS model" << std::endl;
@@ -162,6 +167,7 @@ TTSSynthesisResult TTSModel::synthesize(const std::string& prompt, TTSSynthesisO
     }
 
     // put prompt through the tts chat template if the model has one (e.g. LFM3-Audio)
+    std::cout << model->arch << std::endl;
     common_chat_templates_ptr templates = common_chat_templates_init(model, "");
     std::string modelPrompt = common_chat_get_tts_prompt(templates.get(), prompt, options.lang, options.voice.referenceFile.empty() ? options.voice.builtInName : "");
     if (modelPrompt.empty()) {
@@ -262,9 +268,9 @@ TTSSynthesisResult TTSModel::synthesize(const std::string& prompt, TTSSynthesisO
     result.audio.type = actualOutputType;
     result.audio.data.assign(wav, wav + wavLen);
 
-    result.promptEvalMs = (promptStartTime - promptStopTime) / 1e6;
-    result.generationMs = (genStartTime - genStopTime) / 1e6;
-    result.conversionMs = (audioStartTime - audioStopTime) / 1e6;
+    result.promptEvalMs = (promptStopTime - promptStartTime) / 1e6;
+    result.generationMs = (genStopTime - genStartTime) / 1e6;
+    result.conversionMs = (audioStopTime - audioStartTime) / 1e6;
     return result;
 }
 
@@ -284,19 +290,13 @@ bool TTSModel::saveAudioAsWAV(const TTSAudio& audio, const std::string& filename
 }
 
 TTSModel::~TTSModel() {
-    if (sampler != nullptr) {
-        common_sampler_free(sampler);
-    }
-
-    if (ctx != nullptr) {
-        llama_free(ctx);
-    }
-
-    if (model != nullptr) {
-        llama_model_free(model);
-    }
-
+    mctx.reset();
+    sampler = nullptr;
+    ctx = nullptr;
+    model = nullptr;
+    llamaInit.reset();
     loaded = false;
+    loadedMmproj = false;
 }
 
 #else // !AIONE_ENABLE_TTS
@@ -328,18 +328,22 @@ TTSModel::TTSModel(const std::string& path, TTSModelOptions options, const std::
 
 bool TTSModel::loadModel() {
     throwMtmdDisabled();
+    return false;
 }
 
 bool TTSModel::loadModel(const std::string& path, TTSModelOptions options) {
     throwMtmdDisabled();
+    return false;
 }
 
 bool TTSModel::loadMmproj() {
     throwMtmdDisabled();
+    return false;
 }
 
 bool TTSModel::loadMmproj(const std::string& path, ModelOptions options) {
     throwMtmdDisabled();
+    return false;
 }
 
 std::vector<std::string> TTSModel::getVoices() {
@@ -348,10 +352,12 @@ std::vector<std::string> TTSModel::getVoices() {
 
 TTSSynthesisResult TTSModel::synthesize(const std::string& prompt, TTSSynthesisOptions options) {
     throwMtmdDisabled();
+    return {};
 }
 
 bool TTSModel::saveAudioAsWAV(const TTSAudio& audio, const std::string& filename) {
     throwMtmdDisabled();
+    return false;
 }
 
 TTSModel::~TTSModel() {}
