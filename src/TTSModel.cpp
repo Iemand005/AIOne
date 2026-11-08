@@ -62,6 +62,9 @@ bool TTSModel::loadModel(const std::string& path, TTSModelOptions options) {
     // load model
     common_params params;
     params.model.path = path;
+#ifdef __EMSCRIPTEN__
+    params.load_mode = LLAMA_LOAD_MODE_NONE;
+#endif
     params.devices = devices;
     params.flash_attn_type = (options.flashAttention ? LLAMA_FLASH_ATTN_TYPE_ENABLED : LLAMA_FLASH_ATTN_TYPE_DISABLED);
     params.cpuparams.n_threads = options.threadCount;
