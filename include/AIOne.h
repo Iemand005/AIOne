@@ -138,11 +138,19 @@ typedef enum aione_tts_device {
 } aione_tts_device;
 
 typedef void (*aione_tts_frame_callback)(int frame_index, void* user_data);
+typedef void (*aione_tts_load_progress_callback)(int stage, float progress, void* user_data);
+
+typedef enum aione_tts_load_stage {
+    AIONE_TTS_LOAD_STAGE_BACKBONE = 0,
+    AIONE_TTS_LOAD_STAGE_MMPROJ = 1
+} aione_tts_load_stage;
 
 typedef struct aione_tts_load_options {
     int thread_count;
     int flash_attention;
     int device; /* aione_tts_device */
+    aione_tts_load_progress_callback on_progress;
+    void* user_data;
 } aione_tts_load_options;
 
 typedef struct aione_tts_voice {

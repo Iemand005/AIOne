@@ -172,6 +172,17 @@ TTSModelOptions makeTtsModelOptions(const aione_tts_load_options* options) {
     }
     result.flashAttention = options->flash_attention != 0;
     result.device = makeTtsDevice(options->device);
+    if (options->on_progress) {
+        const auto callback = options->on_progress;
+        const auto userData = options->user_data;
+        auto lastPercent = std::make_shared<int>(-1);
+        result.onProgress = [callback, userData, lastPercent](float progress, int, int) {
+            const int percent = static_cast<int>(progress * 100.0f);
+            if (percent == *lastPercent) return;
+            *lastPercent = percent;
+            callback(AIONE_TTS_LOAD_STAGE_BACKBONE, progress, userData);
+        };
+    }
     return result;
 }
 
@@ -183,6 +194,17 @@ ModelOptions makeTtsMmprojOptions(const aione_tts_load_options* options) {
         result.threadCount = static_cast<short>(options->thread_count);
     }
     result.flashAttention = options->flash_attention != 0;
+    if (options->on_progress) {
+        const auto callback = options->on_progress;
+        const auto userData = options->user_data;
+        auto lastPercent = std::make_shared<int>(-1);
+        result.onProgress = [callback, userData, lastPercent](float progress, int, int) {
+            const int percent = static_cast<int>(progress * 100.0f);
+            if (percent == *lastPercent) return;
+            *lastPercent = percent;
+            callback(AIONE_TTS_LOAD_STAGE_MMPROJ, progress, userData);
+        };
+    }
     return result;
 }
 

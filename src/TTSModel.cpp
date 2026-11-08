@@ -79,6 +79,13 @@ bool TTSModel::loadModel(const std::string& path, TTSModelOptions options) {
     params.cpuparams.n_threads = threadCount;
     params.cpuparams_batch.n_threads = threadCount;
     params.embedding = true; // required to pass hidden states to audio gen helper
+    if (options.onProgress) {
+        params.load_progress_callback = [](float progress, void* userData) {
+            (*static_cast<ProgressCallback*>(userData))(progress, 0, 0);
+            return true;
+        };
+        params.load_progress_callback_user_data = &options.onProgress;
+    }
 
     postprocess_cpu_params(params.cpuparams);
     postprocess_cpu_params(params.cpuparams_batch, &params.cpuparams);
@@ -125,6 +132,13 @@ bool TTSModel::loadMmproj(const std::string& path, ModelOptions options) {
     mtmdParams.use_gpu = (deviceType == GGML_BACKEND_DEVICE_TYPE_GPU || deviceType == GGML_BACKEND_DEVICE_TYPE_IGPU);
     mtmdParams.flash_attn_type = (options.flashAttention ? LLAMA_FLASH_ATTN_TYPE_ENABLED : LLAMA_FLASH_ATTN_TYPE_DISABLED);
     mtmdParams.n_threads = threadCount;
+    if (options.onProgress) {
+        mtmdParams.progress_callback = [](float progress, void* userData) {
+            (*static_cast<ProgressCallback*>(userData))(progress, 0, 0);
+            return true;
+        };
+        mtmdParams.progress_callback_user_data = &options.onProgress;
+    }
     
     mctx = mtmd::context_ptr(mtmd_init_from_file(path.c_str(), model, mtmdParams));
     if (!mctx) {
