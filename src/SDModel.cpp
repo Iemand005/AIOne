@@ -407,7 +407,4 @@ SDImage SDModel::generateImage(const std::string, const std::string, SDImageOpti
     return {};
 }
 
-void SDModel::initSdCpp() {}
-void SDModel::sdCppLogger(enum sd_log_level_t level, const char* text, void* data) {}
-
 #endif // AIONE_ENABLE_STABLE_DIFFUSION
