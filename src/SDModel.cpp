@@ -358,6 +358,12 @@ SDModel::SDModel() : impl(std::make_unique<Impl>()) {}
 
 SDModel::SDModel(std::string path, bool load) : modelPath(path), impl(std::make_unique<Impl>()) {}
 
+SDModel::SDModel(std::string path, SDModelOptions options, bool load) : SDModel(path, false) {
+    if (load) {
+        loadModel(path, options);
+    }
+}
+
 SDModel::~SDModel() = default;
 
 void SDModel::freeContext() {}
