@@ -66,8 +66,8 @@ bool TTSModel::loadModel(const std::string& path, TTSModelOptions options) {
     // getBackend() is used by mmproj loading, so resolve ANY to an available device.
     selectDevice(options.device);
 #ifdef __EMSCRIPTEN__
-    std::cout << "[AIOne TTS] WebGPU device: " << ggml_backend_dev_name(devices[0])
-              << "; requested GPU layers: all; CPU threads: " << threadCount << std::endl;
+    std::cout << "[AIOne TTS] Selected device: " << ggml_backend_dev_name(devices[0])
+              << "; GPU offload: all eligible layers; CPU threads: " << threadCount << std::endl;
 #endif
 
     // load model
