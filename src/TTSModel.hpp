@@ -24,9 +24,15 @@ struct mtmd_gen_audio_info {};
 
 class AIONE_API TTSModel : public Model {
 public:
+    TTSModel(const std::string& path, bool load = true);
+    TTSModel(const std::string& path, ModelOptions options, bool load = true);
+    TTSModel(const std::string& path, const std::string& mmprojPath, bool load = true);
+    TTSModel(const std::string& path, ModelOptions options, const std::string& mmprojPath, ModelOptions mmprojOptions, bool load = true);
     ~TTSModel();
 
+    bool loadModel();
     bool loadModel(const std::string& path, ModelOptions options = {});
+    bool loadMmproj();
     bool loadMmproj(const std::string& path, ModelOptions options = {});
     
     std::vector<std::string> getVoices();
@@ -35,6 +41,11 @@ public:
     TTSSynthesisResult synthesize(const std::string& prompt, TTSSynthesisOptions options = {});
 
 private:
+    std::string modelPath = "";
+    std::string mmprojPath = "";
+    ModelOptions modelOptions = {};
+    ModelOptions mmprojOptions = {};
+
     bool loaded = false;
     bool loadedMmproj = false;
     llama_model* model;
@@ -52,3 +63,5 @@ private:
         return false;
     }
 };
+
+typedef std::unique_ptr<TTSModel> TTSModelPtr;

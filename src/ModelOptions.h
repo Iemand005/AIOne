@@ -8,3 +8,8 @@ struct ModelOptions {
 
     ProgressCallback onProgress;
 };
+
+struct ModelOptionsAsync : CallbackAsyncBase, ModelOptions
+{
+    // FinishedCallback onDone = nullptr;
+};

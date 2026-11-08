@@ -16,19 +16,40 @@
 #include <mtmd.h>
 #include <mtmd-helper.h>
 
+TTSModel::TTSModel(const std::string& path, bool load) {
+    modelPath = path;
+    if (load) loadModel();
+}
+
+TTSModel::TTSModel(const std::string& path, ModelOptions options, bool load) : TTSModel(path, false) {
+    modelOptions = options;
+    if (load) loadModel();
+}
+
+TTSModel::TTSModel(const std::string& path, const std::string& mmprojPath, bool load) : TTSModel(path, false) {
+    this->mmprojPath = mmprojPath;
+
+    if (load) {
+        if (loadModel()) loadMmproj();
+    }
+}
+
+TTSModel::TTSModel(const std::string& path, ModelOptions options, const std::string& mmprojPath, ModelOptions mmprojOptions, bool load) : TTSModel(path, mmprojPath, false) {
+    modelOptions = options;
+    this->mmprojOptions = mmprojOptions;
+    
+    if (load) {
+        if (loadModel()) loadMmproj();
+    }
+}
+
+bool TTSModel::loadModel() {
+    return loadModel(modelPath, modelOptions);
+}
+
 bool TTSModel::loadModel(const std::string& path, ModelOptions options) {
     if (loaded) {
         return true;
-    }
-
-    // TODO verbosity: 
-    //mtmd_helper_log_set(common_log_default_callback, nullptr);
-
-    // init common + llama.cpp
-    common_init();
-
-    if (ggml_backend_reg_count() == 0) { // only load if not initialized yet
-        llama_backend_init();
     }
 
     // load model
@@ -58,6 +79,9 @@ bool TTSModel::loadModel(const std::string& path, ModelOptions options) {
     return true;
 }
 
+bool TTSModel::loadMmproj() {
+    return loadMmproj(mmprojPath, mmprojOptions);
+}
 
 bool TTSModel::loadMmproj(const std::string& path, ModelOptions options) {
     if (!loaded) {
@@ -275,10 +299,38 @@ static void throwMtmdDisabled() {
     throw std::runtime_error("libmtmd is disabled in this build");
 }
 
+TTSModel::TTSModel(const std::string& path, bool load) {
+    modelPath = path;
+    if (load) throwMtmdDisabled();
+}
+
+TTSModel::TTSModel(const std::string& path, ModelOptions options, bool load) : TTSModel(path, false) {
+    modelOptions = options;
+    if (load) throwMtmdDisabled();
+}
+
+TTSModel::TTSModel(const std::string& path, const std::string& mmprojPath, bool load) : TTSModel(path, false) {
+    this->mmprojPath = mmprojPath;
+    if (load) throwMtmdDisabled();
+}
+
+TTSModel::TTSModel(const std::string& path, ModelOptions options, const std::string& mmprojPath, ModelOptions mmprojOptions, bool load) : TTSModel(path, mmprojPath, false) {
+    modelOptions = options;
+    this->mmprojOptions = mmprojOptions;
+    if (load) throwMtmdDisabled();
+}
+
+bool TTSModel::loadModel() {
+    throwMtmdDisabled();
+}
+
 bool TTSModel::loadModel(const std::string& path, ModelOptions options) {
     throwMtmdDisabled();
 }
 
+bool TTSModel::loadMmproj() {
+    throwMtmdDisabled();
+}
 
 bool TTSModel::loadMmproj(const std::string& path, ModelOptions options) {
     throwMtmdDisabled();
