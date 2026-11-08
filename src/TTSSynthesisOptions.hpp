@@ -25,8 +25,8 @@ struct TTSSynthesisOptions
     TTSAudioType outputType;
     TTSVoice voice;
     std::string lang;
-    short topK = 40; // TODO find defaults
-    float topP = 0.05f; // TODO find defaults
+    short topK = 50;
+    float topP = 1.0f;
     uint32_t seed = 0xFFFFFFFF;
     int32_t batchSize = 512;
     int maxTokens = -1;

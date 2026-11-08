@@ -423,6 +423,8 @@ target_include_directories(AIOneCore PUBLIC
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/ggml/include>
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/src>
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/vendor>
+    $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/tools/mtmd>
+    $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/common>
     $<INSTALL_INTERFACE:include/AIOneCore>
 )
 

@@ -2,6 +2,7 @@
 #include "AIOneAPI.hpp"
 #include "Model.hpp"
 #include "ModelOptions.h"
+#include "TTSModelOptions.h"
 #include "TTSSynthesisOptions.hpp"
 #include "TTSSynthesisResult.hpp"
  
@@ -25,13 +26,13 @@ struct mtmd_gen_audio_info {};
 class AIONE_API TTSModel : public Model {
 public:
     TTSModel(const std::string& path, bool load = true);
-    TTSModel(const std::string& path, ModelOptions options, bool load = true);
+    TTSModel(const std::string& path, TTSModelOptions options, bool load = true);
     TTSModel(const std::string& path, const std::string& mmprojPath, bool load = true);
-    TTSModel(const std::string& path, ModelOptions options, const std::string& mmprojPath, ModelOptions mmprojOptions, bool load = true);
+    TTSModel(const std::string& path, TTSModelOptions options, const std::string& mmprojPath, ModelOptions mmprojOptions, bool load = true);
     ~TTSModel();
 
     bool loadModel();
-    bool loadModel(const std::string& path, ModelOptions options = {});
+    bool loadModel(const std::string& path, TTSModelOptions options = {});
     bool loadMmproj();
     bool loadMmproj(const std::string& path, ModelOptions options = {});
     
@@ -43,7 +44,7 @@ public:
 private:
     std::string modelPath = "";
     std::string mmprojPath = "";
-    ModelOptions modelOptions = {};
+    TTSModelOptions modelOptions = {};
     ModelOptions mmprojOptions = {};
 
     bool loaded = false;

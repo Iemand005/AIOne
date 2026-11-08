@@ -4,6 +4,7 @@
 #include <string>
 
 #include "ModelOptions.h"
+#include "TTSModelOptions.h"
 #include "TTSSynthesisOptions.hpp"
 #include "TTSSynthesisResult.hpp"
 #include "TTSAudio.hpp"
@@ -21,7 +22,7 @@ TTSModel::TTSModel(const std::string& path, bool load) {
     if (load) loadModel();
 }
 
-TTSModel::TTSModel(const std::string& path, ModelOptions options, bool load) : TTSModel(path, false) {
+TTSModel::TTSModel(const std::string& path, TTSModelOptions options, bool load) : TTSModel(path, false) {
     modelOptions = options;
     if (load) loadModel();
 }
@@ -34,7 +35,7 @@ TTSModel::TTSModel(const std::string& path, const std::string& mmprojPath, bool 
     }
 }
 
-TTSModel::TTSModel(const std::string& path, ModelOptions options, const std::string& mmprojPath, ModelOptions mmprojOptions, bool load) : TTSModel(path, mmprojPath, false) {
+TTSModel::TTSModel(const std::string& path, TTSModelOptions options, const std::string& mmprojPath, ModelOptions mmprojOptions, bool load) : TTSModel(path, mmprojPath, false) {
     modelOptions = options;
     this->mmprojOptions = mmprojOptions;
     
@@ -47,9 +48,14 @@ bool TTSModel::loadModel() {
     return loadModel(modelPath, modelOptions);
 }
 
-bool TTSModel::loadModel(const std::string& path, ModelOptions options) {
+bool TTSModel::loadModel(const std::string& path, TTSModelOptions options) {
     if (loaded) {
         return true;
+    }
+
+    // set preferred device
+    if (options.device != PreferredDevice::ANY) {
+        selectDevice(options.device);
     }
 
     // load model
@@ -173,7 +179,7 @@ TTSSynthesisResult TTSModel::synthesize(const std::string& prompt, TTSSynthesisO
     input.prompt = prompt.c_str();
     input.prompt_len = prompt.size();
     input.speaker_ref = speakerBmp.get();
-    input.lang = options.lang.c_str();
+    input.lang = options.lang.empty() ? nullptr : options.lang.c_str();
     input.top_k = options.topK;
     input.top_p = options.topP;
     input.seed = options.seed;
@@ -304,7 +310,7 @@ TTSModel::TTSModel(const std::string& path, bool load) {
     if (load) throwMtmdDisabled();
 }
 
-TTSModel::TTSModel(const std::string& path, ModelOptions options, bool load) : TTSModel(path, false) {
+TTSModel::TTSModel(const std::string& path, TTSModelOptions options, bool load) : TTSModel(path, false) {
     modelOptions = options;
     if (load) throwMtmdDisabled();
 }
@@ -314,7 +320,7 @@ TTSModel::TTSModel(const std::string& path, const std::string& mmprojPath, bool 
     if (load) throwMtmdDisabled();
 }
 
-TTSModel::TTSModel(const std::string& path, ModelOptions options, const std::string& mmprojPath, ModelOptions mmprojOptions, bool load) : TTSModel(path, mmprojPath, false) {
+TTSModel::TTSModel(const std::string& path, TTSModelOptions options, const std::string& mmprojPath, ModelOptions mmprojOptions, bool load) : TTSModel(path, mmprojPath, false) {
     modelOptions = options;
     this->mmprojOptions = mmprojOptions;
     if (load) throwMtmdDisabled();
@@ -324,7 +330,7 @@ bool TTSModel::loadModel() {
     throwMtmdDisabled();
 }
 
-bool TTSModel::loadModel(const std::string& path, ModelOptions options) {
+bool TTSModel::loadModel(const std::string& path, TTSModelOptions options) {
     throwMtmdDisabled();
 }
 

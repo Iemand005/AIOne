@@ -65,7 +65,7 @@ public:
     }
 
 
-    TTSModelPtr loadTTSM(const std::string path, ModelOptions options, const std::string mmprojPath, ModelOptions mmprojOptions) {
+    TTSModelPtr loadTTSM(const std::string path, TTSModelOptions options, const std::string mmprojPath, ModelOptions mmprojOptions) {
         return std::make_unique<TTSModel>(path, options, mmprojPath, mmprojOptions, true);
     }
 
@@ -73,7 +73,7 @@ public:
         loadTTSMAsync(path, {}, mmprojPath, {}, onDone);
     }
 
-    void loadTTSMAsync(const std::string path, ModelOptions options, const std::string mmprojPath, ModelOptions mmprojOptions = {}, LoadTTSModelFinished onDone = nullptr) {
+    void loadTTSMAsync(const std::string path, TTSModelOptions options, const std::string mmprojPath, ModelOptions mmprojOptions = {}, LoadTTSModelFinished onDone = nullptr) {
         runAsync([this, path, options, mmprojPath, mmprojOptions, onDone]() {
             onDone(loadTTSM(path, options, mmprojPath, mmprojOptions));
         });
