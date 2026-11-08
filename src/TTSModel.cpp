@@ -226,13 +226,16 @@ TTSSynthesisResult TTSModel::synthesize(const std::string& prompt, TTSSynthesisO
 
     mtmd_helper_gen_audio_inp input = mtmd_helper_gen_audio_inp_default();
     input.seq_id = 0;
-    input.prompt = prompt.c_str();
-    input.prompt_len = prompt.size();
+    input.prompt = modelPrompt.c_str();
+    input.prompt_len = modelPrompt.size();
     input.speaker_ref = speakerBmp.get();
     input.lang = options.lang.empty() ? nullptr : options.lang.c_str();
     input.top_k = options.topK;
     input.top_p = options.topP;
     input.seed = options.seed;
+#ifdef AIONE_ENABLE_TTS_INSTRUCT
+    input.instruct = options.instruction.c_str();
+#endif
 
     TTSAudioType actualOutputType = options.outputType;
     if (options.outputType == TTSAudioType::PCM) {

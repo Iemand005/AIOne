@@ -30,6 +30,10 @@ struct TTSSynthesisOptions
     uint32_t seed = 0xFFFFFFFF;
     int32_t batchSize = 512;
     int maxTokens = -1;
+
+#ifdef AIONE_ENABLE_TTS_INSTRUCT
+    std::string instruction;
+#endif
     
     FrameCallback onFrame = nullptr;
 };

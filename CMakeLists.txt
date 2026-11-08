@@ -22,6 +22,7 @@ option(AIONE_UWP "Enable UWP support (Disables mmap)" OFF)
 option(AIONE_ENABLE_OPENAI "Enable OpenAI/HTTPS provider and remote API support" OFF)
 option(AIONE_ENABLE_STABLE_DIFFUSION "Enable stable-diffusion.cpp image generation support" OFF)
 option(AIONE_ENABLE_TTS "Enable text-to-speech support (builds libmtmd)" OFF)
+option(AIONE_ENABLE_TTS_INSTRUCT "Enable text-to-speech instruction support (requires custom llama.cpp)" OFF)
 option(AIONE_VERBOSE "Enable verbose logging from AIOne and llama.cpp" OFF)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -373,6 +374,10 @@ endif()
 
 if(AIONE_ENABLE_TTS)
     target_compile_definitions(AIOneCore PUBLIC AIONE_ENABLE_TTS)
+
+    if (AIONE_ENABLE_TTS_INSTRUCT)
+        target_compile_definitions(AIOneCore PUBLIC AIONE_ENABLE_TTS_INSTRUCT)
+    endif()
 endif()
 
 if(AIONE_BUILD_SHARED_LIBS)
