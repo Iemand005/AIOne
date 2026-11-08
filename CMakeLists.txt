@@ -21,6 +21,7 @@ option(AIONE_DEPS_SHARED "Build llama.cpp and stable-diffusion.cpp as shared lib
 option(AIONE_UWP "Enable UWP support (Disables mmap)" OFF)
 option(AIONE_ENABLE_OPENAI "Enable OpenAI/HTTPS provider and remote API support" OFF)
 option(AIONE_ENABLE_STABLE_DIFFUSION "Enable stable-diffusion.cpp image generation support" OFF)
+option(AIONE_ENABLE_TTS "Enable text-to-speech support (builds libmtmd)" OFF)
 option(AIONE_VERBOSE "Enable verbose logging from AIOne and llama.cpp" OFF)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -297,6 +298,11 @@ if(AIONE_PRELOAD_GGML)
     FetchContent_MakeAvailable(ggml)
 endif()
 
+if (AIONE_ENABLE_TTS)
+    set(LLAMA_BUILD_MTMD ON CACHE BOOL "" FORCE)
+    set(MTMD_VIDEO OFF CACHE BOOL "" FORCE) # don't need video support for mtmd
+endif()
+
 add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
 
 # stable-diffusion.cpp is optional; when disabled SDModel compiles to a no-op stub.
@@ -365,6 +371,10 @@ if(AIONE_ENABLE_STABLE_DIFFUSION)
     target_compile_definitions(AIOneCore PUBLIC AIONE_ENABLE_STABLE_DIFFUSION)
 endif()
 
+if(AIONE_ENABLE_TTS)
+    target_compile_definitions(AIOneCore PUBLIC AIONE_ENABLE_TTS)
+endif()
+
 if(AIONE_BUILD_SHARED_LIBS)
     # CMake defines AIOneCore_EXPORTS for SHARED automatically.
     target_compile_definitions(AIOneCore PUBLIC AIONE_DYNAMIC)
@@ -396,6 +406,10 @@ if(AIONE_ENABLE_STABLE_DIFFUSION)
     target_link_libraries(AIOneCore PRIVATE stable-diffusion)
 endif()
 
+if(AIONE_ENABLE_TTS)
+    target_link_libraries(AIOneCore PRIVATE mtmd)
+endif()
+
 target_link_libraries(AIOneCore PRIVATE
     llama
     llama-common
@@ -409,12 +423,19 @@ target_include_directories(AIOneCore PUBLIC
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/ggml/include>
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/src>
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/vendor>
+    $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/common>
     $<INSTALL_INTERFACE:include/AIOneCore>
 )
 
 if(AIONE_ENABLE_STABLE_DIFFUSION)
     target_include_directories(AIOneCore PUBLIC
         $<BUILD_INTERFACE:${STABLE_DIFFUSION_CPP_DIR}>
+    )
+endif()
+
+if(AIONE_ENABLE_TTS)
+    target_include_directories(AIOneCore PUBLIC
+        $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/tools/mtmd>
     )
 endif()
 
