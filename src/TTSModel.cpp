@@ -54,10 +54,8 @@ bool TTSModel::loadModel(const std::string& path, TTSModelOptions options) {
         return true;
     }
 
-    // set preferred device
-    if (options.device != PreferredDevice::ANY) {
-        selectDevice(options.device);
-    }
+    // Allow any as getBackend() is used by mmproj loadingah
+    selectDevice(options.device);
 
     // load model
     common_params params;
