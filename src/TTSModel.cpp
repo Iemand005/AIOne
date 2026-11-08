@@ -54,7 +54,7 @@ bool TTSModel::loadModel(const std::string& path, TTSModelOptions options) {
         return true;
     }
 
-    // Allow any as getBackend() is used by mmproj loadingah
+    // getBackend() is used by mmproj loading, so resolve ANY to an available device.
     selectDevice(options.device);
 
     // load model
@@ -62,6 +62,7 @@ bool TTSModel::loadModel(const std::string& path, TTSModelOptions options) {
     params.model.path = path;
 #ifdef __EMSCRIPTEN__
     params.load_mode = LLAMA_LOAD_MODE_NONE;
+    params.fit_params = false;
 #endif
     params.devices = devices;
     params.flash_attn_type = (options.flashAttention ? LLAMA_FLASH_ATTN_TYPE_ENABLED : LLAMA_FLASH_ATTN_TYPE_DISABLED);
