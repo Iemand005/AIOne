@@ -21,6 +21,7 @@ option(AIONE_DEPS_SHARED "Build llama.cpp and stable-diffusion.cpp as shared lib
 option(AIONE_UWP "Enable UWP support (Disables mmap)" OFF)
 option(AIONE_ENABLE_OPENAI "Enable OpenAI/HTTPS provider and remote API support" OFF)
 option(AIONE_ENABLE_STABLE_DIFFUSION "Enable stable-diffusion.cpp image generation support" OFF)
+option(AIONE_ENABLE_TTS "Enable text-to-speech support (builds libmtmd)" OFF)
 option(AIONE_VERBOSE "Enable verbose logging from AIOne and llama.cpp" OFF)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -297,6 +298,10 @@ if(AIONE_PRELOAD_GGML)
     FetchContent_MakeAvailable(ggml)
 endif()
 
+if (AIONE_ENABLE_TTS)
+    set(LLAMA_BUILD_MTMD ON CACHE BOOL "" FORCE)
+endif()
+
 add_subdirectory(${LLAMA_CPP_DIR} ${CMAKE_BINARY_DIR}/llama.cpp_build)
 
 # stable-diffusion.cpp is optional; when disabled SDModel compiles to a no-op stub.
@@ -394,6 +399,10 @@ endif()
 
 if(AIONE_ENABLE_STABLE_DIFFUSION)
     target_link_libraries(AIOneCore PRIVATE stable-diffusion)
+endif()
+
+if(AIONE_ENABLE_TTS)
+    target_link_libraries(AIOneCore PRIVATE mtmd)
 endif()
 
 target_link_libraries(AIOneCore PRIVATE
