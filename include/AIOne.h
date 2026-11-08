@@ -142,7 +142,9 @@ typedef void (*aione_tts_load_progress_callback)(int stage, float progress, void
 
 typedef enum aione_tts_load_stage {
     AIONE_TTS_LOAD_STAGE_BACKBONE = 0,
-    AIONE_TTS_LOAD_STAGE_MMPROJ = 1
+    AIONE_TTS_LOAD_STAGE_MMPROJ = 1,
+    AIONE_TTS_LOAD_STAGE_BACKBONE_READY = 2,
+    AIONE_TTS_LOAD_STAGE_MMPROJ_READY = 3
 } aione_tts_load_stage;
 
 typedef struct aione_tts_load_options {

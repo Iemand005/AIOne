@@ -58,13 +58,17 @@ bool TTSModel::loadModel(const std::string& path, TTSModelOptions options) {
     }
 
 #ifdef __EMSCRIPTEN__
-    const int threadCount = std::min<int>(options.threadCount, 2);
+    const int threadCount = std::min<int>(options.threadCount, 3);
 #else
     const int threadCount = options.threadCount;
 #endif
 
     // getBackend() is used by mmproj loading, so resolve ANY to an available device.
     selectDevice(options.device);
+#ifdef __EMSCRIPTEN__
+    std::cout << "[AIOne TTS] WebGPU device: " << ggml_backend_dev_name(devices[0])
+              << "; requested GPU layers: all; CPU threads: " << threadCount << std::endl;
+#endif
 
     // load model
     common_params params;
@@ -72,6 +76,7 @@ bool TTSModel::loadModel(const std::string& path, TTSModelOptions options) {
 #ifdef __EMSCRIPTEN__
     params.load_mode = LLAMA_LOAD_MODE_NONE;
     params.fit_params = false;
+    params.n_gpu_layers = -1;
     params.n_ctx = 4096;
     params.n_batch = 512;
     params.n_ubatch = 128;
@@ -124,7 +129,7 @@ bool TTSModel::loadMmproj(const std::string& path, ModelOptions options) {
     }
 
 #ifdef __EMSCRIPTEN__
-    const int threadCount = std::min<int>(options.threadCount, 2);
+    const int threadCount = std::min<int>(options.threadCount, 3);
 #else
     const int threadCount = options.threadCount;
 #endif

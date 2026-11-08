@@ -698,10 +698,16 @@ static int loadTtsModel(
             setError("Failed to load TTS backbone model");
             return 0;
         }
+        if (progressCallback) {
+            progressCallback(AIONE_TTS_LOAD_STAGE_BACKBONE_READY, 1.0f, userData);
+        }
 
         if (!model->loadMmproj()) {
             setError("Failed to load TTS mmproj");
             return 0;
+        }
+        if (progressCallback) {
+            progressCallback(AIONE_TTS_LOAD_STAGE_MMPROJ_READY, 1.0f, userData);
         }
 
         tts->model = std::move(model);
