@@ -2,6 +2,7 @@
 #include "ModelFactory.hpp"
 #include <llama-cpp.h>
 #include <common.h>
+#include <log.h>
 
 #ifndef AIONE_VERBOSE
 static void llamaLogger(enum ggml_log_level level, const char *text, void *user_data) {}
@@ -10,7 +11,7 @@ static void llamaLogger(enum ggml_log_level level, const char *text, void *user_
 void ModelFactory::loadBackends() {
     if (loadedBackends) return;
 #ifndef AIONE_VERBOSE
-    llama_log_set(llamaLogger, this);
+    llama_log_set(llamaLogger, nullptr);
 #endif
     ggml_backend_load_all();
     loadedBackends = true;
@@ -19,7 +20,7 @@ void ModelFactory::loadBackends() {
 void ModelFactory::initLlama() {
     if (initializedLlama) return;
 #ifndef AIONE_VERBOSE
-    llama_log_set(llamaLogger, this);
+    llama_log_set(llamaLogger, nullptr);
 #endif
     llama_backend_init();
     initializedLlama = true;
@@ -28,8 +29,8 @@ void ModelFactory::initLlama() {
 void ModelFactory::initCommon() {
     if (initializedCommon) return;
 #ifndef AIONE_VERBOSE
-    // TODO verbosity:
-    //mtmd_helper_log_set(common_log_default_callback, nullptr);
+    common_log_set_verbosity_thold(LOG_LEVEL_OUTPUT);
+    mtmd_helper_log_set(llamaLogger, nullptr);
 #endif
     common_init();
     initializedCommon = true;

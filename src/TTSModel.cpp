@@ -167,7 +167,6 @@ TTSSynthesisResult TTSModel::synthesize(const std::string& prompt, TTSSynthesisO
     }
 
     // put prompt through the tts chat template if the model has one (e.g. LFM3-Audio)
-    std::cout << model->arch << std::endl;
     common_chat_templates_ptr templates = common_chat_templates_init(model, "");
     std::string modelPrompt = common_chat_get_tts_prompt(templates.get(), prompt, options.lang, options.voice.referenceFile.empty() ? options.voice.builtInName : "");
     if (modelPrompt.empty()) {
