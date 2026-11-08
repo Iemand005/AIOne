@@ -423,7 +423,6 @@ target_include_directories(AIOneCore PUBLIC
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/ggml/include>
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/src>
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/vendor>
-    $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/tools/mtmd>
     $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/common>
     $<INSTALL_INTERFACE:include/AIOneCore>
 )
@@ -431,6 +430,12 @@ target_include_directories(AIOneCore PUBLIC
 if(AIONE_ENABLE_STABLE_DIFFUSION)
     target_include_directories(AIOneCore PUBLIC
         $<BUILD_INTERFACE:${STABLE_DIFFUSION_CPP_DIR}>
+    )
+endif()
+
+if(AIONE_ENABLE_TTS)
+    target_include_directories(AIOneCore PUBLIC
+        $<BUILD_INTERFACE:${LLAMA_CPP_DIR}/tools/mtmd>
     )
 endif()
 
