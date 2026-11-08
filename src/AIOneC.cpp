@@ -5,6 +5,7 @@
 #include "Message.hpp"
 #include "ModelFactory.hpp"
 #include "ModelSession.hpp"
+#include "TTSModel.hpp"
 
 #include <ggml-backend.h>
 
@@ -20,6 +21,11 @@
 
 struct aione_session {
     AIOne::ModelSession session;
+};
+
+struct aione_tts {
+    ModelFactory factory;
+    TTSModelPtr model;
 };
 
 namespace {
@@ -143,6 +149,64 @@ AIOne::GenerateCallbacks makeCallbacks(const aione_generate_callbacks* callbacks
         };
     }
 
+    return result;
+}
+
+PreferredDevice makeTtsDevice(int device) {
+    switch (device) {
+        case AIONE_TTS_DEVICE_CPU: return PreferredDevice::CPU;
+        case AIONE_TTS_DEVICE_IGPU: return PreferredDevice::IGPU;
+        case AIONE_TTS_DEVICE_DGPU: return PreferredDevice::DGPU;
+        case AIONE_TTS_DEVICE_ACCELERATOR: return PreferredDevice::ACCELERATOR;
+        default: return PreferredDevice::ANY;
+    }
+}
+
+TTSModelOptions makeTtsModelOptions(const aione_tts_load_options* options) {
+    TTSModelOptions result;
+    if (!options) return result;
+
+    if (options->thread_count > 0) {
+        result.threadCount = static_cast<short>(options->thread_count);
+    }
+    result.flashAttention = options->flash_attention != 0;
+    result.device = makeTtsDevice(options->device);
+    return result;
+}
+
+ModelOptions makeTtsMmprojOptions(const aione_tts_load_options* options) {
+    ModelOptions result;
+    if (!options) return result;
+
+    if (options->thread_count > 0) {
+        result.threadCount = static_cast<short>(options->thread_count);
+    }
+    result.flashAttention = options->flash_attention != 0;
+    return result;
+}
+
+TTSSynthesisOptions makeTtsSynthesisOptions(const aione_tts_synthesis_options* options) {
+    TTSSynthesisOptions result{};
+    if (!options) return result;
+
+    result.outputType = options->output_type == AIONE_TTS_AUDIO_WAV
+        ? TTSAudioType::WAV
+        : TTSAudioType::PCM;
+    if (options->voice.reference_file) {
+        result.voice.referenceFile = options->voice.reference_file;
+    }
+    if (options->voice.built_in_name) {
+        result.voice.builtInName = options->voice.built_in_name;
+    }
+    result.voice.builtInIndex = options->voice.built_in_index;
+    if (options->lang) {
+        result.lang = options->lang;
+    }
+    result.topK = static_cast<short>(options->top_k);
+    result.topP = options->top_p;
+    result.seed = options->seed;
+    result.batchSize = options->batch_size;
+    result.maxTokens = options->max_tokens;
     return result;
 }
 
@@ -558,6 +622,180 @@ char* aione_system_info_json(void) {
         setError("Failed to read system information");
     }
     return nullptr;
+}
+
+aione_tts* aione_tts_create(void) {
+    try {
+        return new aione_tts();
+    } catch (const std::exception& e) {
+        setError(e.what());
+    } catch (...) {
+        setError("Failed to create TTS handle");
+    }
+    return nullptr;
+}
+
+void aione_tts_destroy(aione_tts* tts) {
+    delete tts;
+}
+
+int aione_tts_load_model(
+    aione_tts* tts,
+    const char* model_path,
+    const char* mmproj_path,
+    const aione_tts_load_options* options
+) {
+    if (!tts || !model_path || !mmproj_path) {
+        setError("Invalid argument");
+        return 0;
+    }
+
+    try {
+        tts->factory.loadBackends();
+        tts->factory.initLlama();
+        tts->factory.initCommon();
+
+        auto model = std::make_unique<TTSModel>(
+            model_path,
+            makeTtsModelOptions(options),
+            mmproj_path,
+            makeTtsMmprojOptions(options),
+            false
+        );
+
+        if (!model->loadModel()) {
+            setError("Failed to load TTS backbone model");
+            return 0;
+        }
+
+        if (!model->loadMmproj()) {
+            setError("Failed to load TTS mmproj");
+            return 0;
+        }
+
+        tts->model = std::move(model);
+        return 1;
+    } catch (const std::exception& e) {
+        setError(e.what());
+    } catch (...) {
+        setError("Failed to load TTS model");
+    }
+    return 0;
+}
+
+void aione_tts_unload_model(aione_tts* tts) {
+    if (!tts) return;
+    tts->model.reset();
+}
+
+int aione_tts_is_loaded(const aione_tts* tts) {
+    if (!tts || !tts->model) return 0;
+    return tts->model->isReady() ? 1 : 0;
+}
+
+char* aione_tts_voices_json(aione_tts* tts) {
+    if (!tts || !tts->model) {
+        setError("No TTS model loaded");
+        return nullptr;
+    }
+
+    try {
+        nlohmann::json result = nlohmann::json::array();
+        for (const auto& voice : tts->model->getVoices()) {
+            result.push_back(voice);
+        }
+        return duplicateString(result.dump());
+    } catch (const std::exception& e) {
+        setError(e.what());
+    } catch (...) {
+        setError("Failed to list TTS voices");
+    }
+    return nullptr;
+}
+
+aione_tts_synthesis_result aione_tts_synthesize(
+    aione_tts* tts,
+    const char* prompt,
+    const aione_tts_synthesis_options* options,
+    aione_tts_frame_callback on_frame,
+    void* user_data
+) {
+    aione_tts_synthesis_result result{};
+
+    if (!tts || !tts->model || !prompt) {
+        setError("Invalid argument");
+        return result;
+    }
+
+    try {
+        TTSSynthesisOptions synthesisOptions = makeTtsSynthesisOptions(options);
+        if (on_frame) {
+            synthesisOptions.onFrame = [on_frame, user_data](const int frameIdx, const mtmd_helper::gen_audio&) {
+                on_frame(frameIdx, user_data);
+            };
+        }
+
+        const TTSSynthesisResult generated = tts->model->synthesize(prompt, synthesisOptions);
+
+        result.sample_rate = generated.sampleRate;
+        result.samples = generated.samples;
+        result.audio_type = static_cast<int>(generated.audio.type);
+        result.data_size = static_cast<unsigned long long>(generated.audio.data.size());
+        if (result.data_size > 0) {
+            result.data = static_cast<char*>(std::malloc(static_cast<size_t>(result.data_size)));
+            if (!result.data) {
+                setError("Out of memory");
+                result.data_size = 0;
+                return result;
+            }
+            std::memcpy(result.data, generated.audio.data.data(), static_cast<size_t>(result.data_size));
+        }
+        result.prompt_eval_ms = generated.promptEvalMs;
+        result.generation_ms = generated.generationMs;
+        result.conversion_ms = generated.conversionMs;
+        result.ok = 1;
+    } catch (const std::exception& e) {
+        setError(e.what());
+    } catch (...) {
+        setError("Failed to synthesize speech");
+    }
+
+    return result;
+}
+
+void aione_tts_synthesis_result_free(aione_tts_synthesis_result* result) {
+    if (!result) return;
+    std::free(result->data);
+    result->data = nullptr;
+    result->data_size = 0;
+    result->ok = 0;
+}
+
+int aione_tts_save_wav(
+    aione_tts* tts,
+    const char* filename,
+    const char* data,
+    unsigned long long data_size
+) {
+    if (!tts || !tts->model || !filename || (data_size > 0 && !data)) {
+        setError("Invalid argument");
+        return 0;
+    }
+
+    try {
+        TTSAudio audio;
+        audio.type = TTSAudioType::WAV;
+        if (data_size > 0) {
+            audio.data.assign(data, data + static_cast<size_t>(data_size));
+        }
+
+        return tts->model->saveAudioAsWAV(audio, filename) ? 1 : 0;
+    } catch (const std::exception& e) {
+        setError(e.what());
+    } catch (...) {
+        setError("Failed to save WAV file");
+    }
+    return 0;
 }
 
 void aione_string_free(char* value) {

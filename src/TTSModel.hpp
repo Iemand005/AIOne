@@ -42,6 +42,10 @@ public:
 
     TTSSynthesisResult synthesize(const std::string& prompt, TTSSynthesisOptions options = {});
 
+    bool isModelLoaded() const { return loaded; }
+    bool isMmprojLoaded() const { return loadedMmproj; }
+    bool isReady() const { return loaded && loadedMmproj; }
+
 private:
     std::string modelPath = "";
     std::string mmprojPath = "";

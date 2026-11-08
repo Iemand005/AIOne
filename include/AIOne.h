@@ -121,6 +121,85 @@ AIONE_API int aione_chat_update_metadata(
 AIONE_API int aione_chat_delete(const char* folder);
 AIONE_API void aione_string_free(char* value);
 
+/* Text-to-speech (TTS) models. Requires an AIOne build with AIONE_ENABLE_TTS. */
+typedef struct aione_tts aione_tts;
+
+typedef enum aione_tts_audio_type {
+    AIONE_TTS_AUDIO_PCM = 0,
+    AIONE_TTS_AUDIO_WAV = 1
+} aione_tts_audio_type;
+
+typedef enum aione_tts_device {
+    AIONE_TTS_DEVICE_ANY = 0,
+    AIONE_TTS_DEVICE_CPU = 1,
+    AIONE_TTS_DEVICE_IGPU = 2,
+    AIONE_TTS_DEVICE_DGPU = 3,
+    AIONE_TTS_DEVICE_ACCELERATOR = 4
+} aione_tts_device;
+
+typedef void (*aione_tts_frame_callback)(int frame_index, void* user_data);
+
+typedef struct aione_tts_load_options {
+    int thread_count;
+    int flash_attention;
+    int device; /* aione_tts_device */
+} aione_tts_load_options;
+
+typedef struct aione_tts_voice {
+    const char* reference_file;
+    const char* built_in_name;
+    int built_in_index;
+} aione_tts_voice;
+
+typedef struct aione_tts_synthesis_options {
+    int output_type; /* aione_tts_audio_type */
+    aione_tts_voice voice;
+    const char* lang;
+    int top_k;
+    float top_p;
+    unsigned int seed;
+    int batch_size;
+    int max_tokens;
+} aione_tts_synthesis_options;
+
+typedef struct aione_tts_synthesis_result {
+    int sample_rate;
+    long long samples;
+    int audio_type; /* aione_tts_audio_type */
+    char* data;
+    unsigned long long data_size;
+    double prompt_eval_ms;
+    double generation_ms;
+    double conversion_ms;
+    int ok;
+} aione_tts_synthesis_result;
+
+AIONE_API aione_tts* aione_tts_create(void);
+AIONE_API void aione_tts_destroy(aione_tts* tts);
+AIONE_API int aione_tts_load_model(
+    aione_tts* tts,
+    const char* model_path,
+    const char* mmproj_path,
+    const aione_tts_load_options* options
+);
+AIONE_API void aione_tts_unload_model(aione_tts* tts);
+AIONE_API int aione_tts_is_loaded(const aione_tts* tts);
+AIONE_API char* aione_tts_voices_json(aione_tts* tts);
+AIONE_API aione_tts_synthesis_result aione_tts_synthesize(
+    aione_tts* tts,
+    const char* prompt,
+    const aione_tts_synthesis_options* options,
+    aione_tts_frame_callback on_frame,
+    void* user_data
+);
+AIONE_API void aione_tts_synthesis_result_free(aione_tts_synthesis_result* result);
+AIONE_API int aione_tts_save_wav(
+    aione_tts* tts,
+    const char* filename,
+    const char* data,
+    unsigned long long data_size
+);
+
 #ifdef __cplusplus
 }
 #endif
