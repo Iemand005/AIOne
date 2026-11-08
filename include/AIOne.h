@@ -149,8 +149,6 @@ typedef struct aione_tts_load_options {
     int thread_count;
     int flash_attention;
     int device; /* aione_tts_device */
-    aione_tts_load_progress_callback on_progress;
-    void* user_data;
 } aione_tts_load_options;
 
 typedef struct aione_tts_voice {
@@ -189,6 +187,15 @@ AIONE_API int aione_tts_load_model(
     const char* model_path,
     const char* mmproj_path,
     const aione_tts_load_options* options
+);
+/* Reports backbone or mmproj loading progress; progress is between 0 and 1. */
+AIONE_API int aione_tts_load_model_with_progress(
+    aione_tts* tts,
+    const char* model_path,
+    const char* mmproj_path,
+    const aione_tts_load_options* options,
+    aione_tts_load_progress_callback on_progress,
+    void* user_data
 );
 AIONE_API void aione_tts_unload_model(aione_tts* tts);
 AIONE_API int aione_tts_is_loaded(const aione_tts* tts);

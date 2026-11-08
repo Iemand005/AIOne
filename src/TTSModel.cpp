@@ -47,7 +47,9 @@ TTSModel::TTSModel(const std::string& path, TTSModelOptions options, const std::
 }
 
 bool TTSModel::loadModel() {
-    return loadModel(modelPath, modelOptions);
+    auto options = modelOptions;
+    modelOptions.onProgress = nullptr;
+    return loadModel(modelPath, options);
 }
 
 bool TTSModel::loadModel(const std::string& path, TTSModelOptions options) {
@@ -110,7 +112,9 @@ bool TTSModel::loadModel(const std::string& path, TTSModelOptions options) {
 }
 
 bool TTSModel::loadMmproj() {
-    return loadMmproj(mmprojPath, mmprojOptions);
+    auto options = mmprojOptions;
+    mmprojOptions.onProgress = nullptr;
+    return loadMmproj(mmprojPath, options);
 }
 
 bool TTSModel::loadMmproj(const std::string& path, ModelOptions options) {

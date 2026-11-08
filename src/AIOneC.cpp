@@ -163,18 +163,21 @@ PreferredDevice makeTtsDevice(int device) {
     }
 }
 
-TTSModelOptions makeTtsModelOptions(const aione_tts_load_options* options) {
+TTSModelOptions makeTtsModelOptions(
+    const aione_tts_load_options* options,
+    aione_tts_load_progress_callback progressCallback,
+    void* userData
+) {
     TTSModelOptions result;
-    if (!options) return result;
-
-    if (options->thread_count > 0) {
-        result.threadCount = static_cast<short>(options->thread_count);
+    if (options) {
+        if (options->thread_count > 0) {
+            result.threadCount = static_cast<short>(options->thread_count);
+        }
+        result.flashAttention = options->flash_attention != 0;
+        result.device = makeTtsDevice(options->device);
     }
-    result.flashAttention = options->flash_attention != 0;
-    result.device = makeTtsDevice(options->device);
-    if (options->on_progress) {
-        const auto callback = options->on_progress;
-        const auto userData = options->user_data;
+    if (progressCallback) {
+        const auto callback = progressCallback;
         auto lastPercent = std::make_shared<int>(-1);
         result.onProgress = [callback, userData, lastPercent](float progress, int, int) {
             const int percent = static_cast<int>(progress * 100.0f);
@@ -186,17 +189,20 @@ TTSModelOptions makeTtsModelOptions(const aione_tts_load_options* options) {
     return result;
 }
 
-ModelOptions makeTtsMmprojOptions(const aione_tts_load_options* options) {
+ModelOptions makeTtsMmprojOptions(
+    const aione_tts_load_options* options,
+    aione_tts_load_progress_callback progressCallback,
+    void* userData
+) {
     ModelOptions result;
-    if (!options) return result;
-
-    if (options->thread_count > 0) {
-        result.threadCount = static_cast<short>(options->thread_count);
+    if (options) {
+        if (options->thread_count > 0) {
+            result.threadCount = static_cast<short>(options->thread_count);
+        }
+        result.flashAttention = options->flash_attention != 0;
     }
-    result.flashAttention = options->flash_attention != 0;
-    if (options->on_progress) {
-        const auto callback = options->on_progress;
-        const auto userData = options->user_data;
+    if (progressCallback) {
+        const auto callback = progressCallback;
         auto lastPercent = std::make_shared<int>(-1);
         result.onProgress = [callback, userData, lastPercent](float progress, int, int) {
             const int percent = static_cast<int>(progress * 100.0f);
@@ -662,11 +668,13 @@ void aione_tts_destroy(aione_tts* tts) {
     delete tts;
 }
 
-int aione_tts_load_model(
+static int loadTtsModel(
     aione_tts* tts,
     const char* model_path,
     const char* mmproj_path,
-    const aione_tts_load_options* options
+    const aione_tts_load_options* options,
+    aione_tts_load_progress_callback progressCallback,
+    void* userData
 ) {
     if (!tts || !model_path || !mmproj_path) {
         setError("Invalid argument");
@@ -680,9 +688,9 @@ int aione_tts_load_model(
 
         auto model = std::make_unique<TTSModel>(
             model_path,
-            makeTtsModelOptions(options),
+            makeTtsModelOptions(options, progressCallback, userData),
             mmproj_path,
-            makeTtsMmprojOptions(options),
+            makeTtsMmprojOptions(options, progressCallback, userData),
             false
         );
 
@@ -704,6 +712,26 @@ int aione_tts_load_model(
         setError("Failed to load TTS model");
     }
     return 0;
+}
+
+int aione_tts_load_model(
+    aione_tts* tts,
+    const char* model_path,
+    const char* mmproj_path,
+    const aione_tts_load_options* options
+) {
+    return loadTtsModel(tts, model_path, mmproj_path, options, nullptr, nullptr);
+}
+
+int aione_tts_load_model_with_progress(
+    aione_tts* tts,
+    const char* model_path,
+    const char* mmproj_path,
+    const aione_tts_load_options* options,
+    aione_tts_load_progress_callback on_progress,
+    void* user_data
+) {
+    return loadTtsModel(tts, model_path, mmproj_path, options, on_progress, user_data);
 }
 
 void aione_tts_unload_model(aione_tts* tts) {
