@@ -57,12 +57,17 @@ private:
     mtmd::context_ptr mctx;
     mtmd_gen_audio_info mctxInfo;
 
-    bool requireFull() {
+    bool requireFull(bool throwQ = false) {
         if (loaded && loadedMmproj) {
             return true;
         }
         
-        std::cerr << "Backbone model and/or mmproj not loaded, call loadModel(...) and loadMmproj(...) first" << std::endl;
+        if (throwQ) {
+            throw std::runtime_error("Backbone model and/or mmproj not loaded, call loadModel(...) and loadMmproj(...) first");
+        } else {
+            std::cerr << "Backbone model and/or mmproj not loaded, call loadModel(...) and loadMmproj(...) first" << std::endl;
+        }
+
         return false;
     }
 };

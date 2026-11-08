@@ -139,6 +139,10 @@ std::vector<std::string> TTSModel::getVoices() {
 }
 
 TTSSynthesisResult TTSModel::synthesize(const std::string& prompt, TTSSynthesisOptions options) {
+    if (!requireFull(true)) {
+        return {};
+    }
+
     /*
        stage 0: process speaker reference file, if any
     */
@@ -289,11 +293,17 @@ bool TTSModel::saveAudioAsWAV(const TTSAudio& audio, const std::string& filename
 }
 
 TTSModel::~TTSModel() {
-    mctx.reset();
-    sampler = nullptr;
-    ctx = nullptr;
-    model = nullptr;
-    llamaInit.reset();
+    if (loadedMmproj) {
+        mctx.reset();
+    }
+
+    if (loaded) {
+        sampler = nullptr;
+        ctx = nullptr;
+        model = nullptr;
+        llamaInit.reset();
+    }
+    
     loaded = false;
     loadedMmproj = false;
 }
