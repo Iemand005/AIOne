@@ -140,11 +140,11 @@ public:
         return !tokens.empty() ? tokens[0] : -1;
     }
 
-    std::shared_ptr<TextContext> getBestContext(const std::string& prompt, const std::vector<std::shared_ptr<TextContext>>& contexts, size_t* cacheMissIndex) {
-        return getBestContext(tokenize(prompt, true), contexts, cacheMissIndex);
+    std::shared_ptr<TextContext> getBestContext(const std::string& prompt, const std::vector<std::shared_ptr<TextContext>>& contexts, size_t* cacheMissIndex, size_t* contextIndex) {
+        return getBestContext(tokenize(prompt, true), contexts, cacheMissIndex, contextIndex);
     }
 
-    std::shared_ptr<TextContext> getBestContext(std::vector<llama_token> prefix, const std::vector<std::shared_ptr<TextContext>>& contexts, size_t* cacheMissIndex) {
+    std::shared_ptr<TextContext> getBestContext(std::vector<llama_token> prefix, const std::vector<std::shared_ptr<TextContext>>& contexts, size_t* cacheMissIndex, size_t* contextIndex) {
         if (contexts.empty()) {
             return nullptr;
         }
@@ -162,6 +162,10 @@ public:
             }
         }
 
+        if (contextIndex != nullptr) {
+
+        }
+
         if (cacheMissIndex != nullptr) {
             *cacheMissIndex = bestCached;
         }
@@ -176,7 +180,7 @@ public:
         std::vector<llama_token> promptTokens = tokenize(prompt, true);
         size_t cacheMissIndex;
 
-        std::shared_ptr<TextContext> context = getBestContext(prompt, registeredContexts, &cacheMissIndex);
+        std::shared_ptr<TextContext> context = getBestContext(prompt, registeredContexts, nullptr, &cacheMissIndex);
 
         if (context == nullptr)
             throw std::runtime_error("No registered contexts; cannot complete request");
