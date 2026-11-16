@@ -162,12 +162,12 @@ public:
             }
         }
 
-        if (contextIndex != nullptr) {
-
-        }
-
         if (cacheMissIndex != nullptr) {
             *cacheMissIndex = bestCached;
+        }
+
+        if (contextIndex != nullptr) {
+            *contextIndex = bestIndex;
         }
 
         return contexts[bestIndex];
@@ -180,7 +180,7 @@ public:
         std::vector<llama_token> promptTokens = tokenize(prompt, true);
         size_t cacheMissIndex;
 
-        std::shared_ptr<TextContext> context = getBestContext(prompt, registeredContexts, nullptr, &cacheMissIndex);
+        std::shared_ptr<TextContext> context = getBestContext(prompt, registeredContexts, &cacheMissIndex, nullptr);
 
         if (context == nullptr)
             throw std::runtime_error("No registered contexts; cannot complete request");
