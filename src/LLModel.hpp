@@ -140,22 +140,21 @@ public:
         return !tokens.empty() ? tokens[0] : -1;
     }
 
-    /**
-     * Complete using any registered context.
-     */
-    TextGenResult completeAny(std::string prompt, const TextGenOptions options = {}) {
-        if (registeredContexts.empty())
-            throw std::runtime_error("No registered contexts; cannot complete request");
+    std::shared_ptr<TextContext> getBestContext(const std::string& prompt, const std::vector<std::shared_ptr<TextContext>>& contexts, size_t* cacheMissIndex) {
+        return getBestContext(tokenize(prompt, true), contexts, cacheMissIndex);
+    }
 
-        // tokenize prompt
-        std::vector<llama_token> promptTokens = tokenize(prompt, true);
+    std::shared_ptr<TextContext> getBestContext(std::vector<llama_token> prefix, const std::vector<std::shared_ptr<TextContext>>& contexts, size_t* cacheMissIndex) {
+        if (contexts.empty()) {
+            return nullptr;
+        }
         
         // find the registered context with the most token cache hits
         size_t bestCached = 0;
         size_t bestIndex = 0;
 
-        for (size_t i = 0; i < registeredContexts.size(); i++) {
-            size_t cacheMissIndex = registeredContexts[i]->findCache(promptTokens);
+        for (size_t i = 0; i < contexts.size(); i++) {
+            size_t cacheMissIndex = contexts[i]->findCache(prefix);
 
             if (cacheMissIndex > bestCached) {
                 bestCached = cacheMissIndex;
@@ -163,8 +162,27 @@ public:
             }
         }
 
+        if (cacheMissIndex != nullptr) {
+            *cacheMissIndex = bestCached;
+        }
+
+        return contexts[bestIndex];
+    }
+
+    /**
+     * Complete using any registered context.
+     */
+    TextGenResult completeAny(const std::string& prompt, const TextGenOptions options = {}) {
+        std::vector<llama_token> promptTokens = tokenize(prompt, true);
+        size_t cacheMissIndex;
+
+        std::shared_ptr<TextContext> context = getBestContext(prompt, registeredContexts, &cacheMissIndex);
+
+        if (context == nullptr)
+            throw std::runtime_error("No registered contexts; cannot complete request");
+
         // complete with the best matching registered context
-        return complete(registeredContexts[bestIndex], promptTokens, bestCached, options);
+        return complete(context, promptTokens, cacheMissIndex, options);
     }
 
     TextGenResult complete(
